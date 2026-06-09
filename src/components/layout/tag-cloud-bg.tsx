@@ -41,8 +41,18 @@ export function TagCloudBg() {
       if (!canvas) return;
       const el  = canvas as HTMLCanvasElement;
       const ctx = el.getContext("2d")!;
-      let W = (el.width  = window.innerWidth);
-      let H = (el.height = window.innerHeight);
+      const dpr = window.devicePixelRatio || 1;
+      let W = window.innerWidth;
+      let H = window.innerHeight;
+
+      function resizeCanvas() {
+        el.width        = W * dpr;
+        el.height       = H * dpr;
+        el.style.width  = W + "px";
+        el.style.height = H + "px";
+        ctx.scale(dpr, dpr);
+      }
+      resizeCanvas();
 
       const engine = Engine.create({ gravity: { x: 0, y: 0 } });
       const world  = engine.world;
@@ -108,8 +118,9 @@ export function TagCloudBg() {
       window.addEventListener("mousemove", onMouseMove);
 
       function onResize() {
-        W = el.width  = window.innerWidth;
-        H = el.height = window.innerHeight;
+        W = window.innerWidth;
+        H = window.innerHeight;
+        resizeCanvas();
         makeWalls();
       }
       window.addEventListener("resize", onResize);

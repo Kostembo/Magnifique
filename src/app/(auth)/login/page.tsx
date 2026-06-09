@@ -59,8 +59,8 @@ export default function LoginPage() {
           src="/api/logo?v=light"
           alt="Magnifique"
           className="h-24 md:h-48 w-auto"
+          style={{ filter: "drop-shadow(0 0 20px #000) drop-shadow(0 0 20px #000) drop-shadow(0 0 16px #000) drop-shadow(0 0 10px #000)" }}
         />
-        <p className="text-[hsl(38,62%,48%)] text-base md:text-2xl tracking-widest" style={{ marginTop: -4 }}>Catering group</p>
       </div>
 
       {/* Form card */}
