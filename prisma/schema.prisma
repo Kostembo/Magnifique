@@ -1,0 +1,174 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum Role {
+  waiter
+  cook
+  bartender
+  warehouse
+  manager
+}
+
+enum Tier {
+  core
+  regular
+  trainee
+}
+
+enum EventStatus {
+  draft
+  recruiting
+  staffed
+  done
+}
+
+enum AssignmentStatus {
+  invited
+  confirmed
+  declined
+  expired
+}
+
+enum RequisitionStatus {
+  draft
+  sent
+  picking
+  done
+}
+
+model Employee {
+  id                String    @id @default(cuid())
+  full_name         String
+  phone             String    @unique
+  password_hash     String
+  role              Role
+  tier              Tier      @default(regular)
+  passport_data_enc String?
+  is_active         Boolean   @default(true)
+  push_subscription Json?
+  created_at        DateTime  @default(now())
+
+  created_events    Event[]        @relation("CreatedEvents")
+  assignments       Assignment[]
+  requisitions      Requisition[]  @relation("AssignedRequisitions")
+  comments          Comment[]
+  time_entries      TimeEntry[]
+
+  @@map("employees")
+}
+
+model Event {
+  id         String      @id @default(cuid())
+  title      String
+  client     String?
+  location   String?
+  starts_at  DateTime
+  status     EventStatus @default(draft)
+  created_by String
+  created_at DateTime    @default(now())
+
+  creator    Employee    @relation("CreatedEvents", fields: [created_by], references: [id])
+  positions  EventPosition[]
+  assignments Assignment[]
+  requisitions Requisition[]
+  comments   Comment[]
+  time_entries TimeEntry[]
+
+  @@map("events")
+}
+
+model EventPosition {
+  id                Int      @id @default(autoincrement())
+  event_id          String
+  role              Role
+  needed_count      Int
+  reserved_for_core Int      @default(0)
+  priority_deadline DateTime?
+
+  event       Event        @relation(fields: [event_id], references: [id], onDelete: Cascade)
+  assignments Assignment[]
+
+  @@map("event_positions")
+}
+
+model Assignment {
+  id          String           @id @default(cuid())
+  event_id    String
+  position_id Int
+  employee_id String
+  status      AssignmentStatus @default(invited)
+  is_priority Boolean          @default(false)
+  invited_at  DateTime         @default(now())
+  responded_at DateTime?
+
+  event    Event         @relation(fields: [event_id], references: [id], onDelete: Cascade)
+  position EventPosition @relation(fields: [position_id], references: [id], onDelete: Cascade)
+  employee Employee      @relation(fields: [employee_id], references: [id])
+
+  @@unique([position_id, employee_id])
+  @@map("assignments")
+}
+
+model Requisition {
+  id          String            @id @default(cuid())
+  event_id    String
+  status      RequisitionStatus @default(draft)
+  assignee_id String?
+  sent_at     DateTime?
+  created_at  DateTime          @default(now())
+
+  event    Event              @relation(fields: [event_id], references: [id], onDelete: Cascade)
+  assignee Employee?          @relation("AssignedRequisitions", fields: [assignee_id], references: [id])
+  items    RequisitionItem[]
+
+  @@map("requisitions")
+}
+
+model RequisitionItem {
+  id             Int     @id @default(autoincrement())
+  requisition_id String
+  name           String
+  quantity       Decimal @db.Decimal(10, 2)
+  unit           String  @default("шт")
+  is_picked      Boolean @default(false)
+
+  requisition Requisition @relation(fields: [requisition_id], references: [id], onDelete: Cascade)
+
+  @@map("requisition_items")
+}
+
+model TimeEntry {
+  id          String   @id @default(cuid())
+  employee_id String
+  event_id    String
+  work_date   DateTime @db.Date
+  start_time  String
+  end_time    String
+  created_at  DateTime @default(now())
+
+  employee Employee @relation(fields: [employee_id], references: [id])
+  event    Event    @relation(fields: [event_id], references: [id], onDelete: Cascade)
+
+  @@unique([employee_id, event_id])
+  @@map("time_entries")
+}
+
+model Comment {
+  id         String   @id @default(cuid())
+  event_id   String
+  author_id  String
+  body       String
+  created_at DateTime @default(now())
+
+  event  Event    @relation(fields: [event_id], references: [id], onDelete: Cascade)
+  author Employee @relation(fields: [author_id], references: [id])
+
+  @@map("comments")
+}

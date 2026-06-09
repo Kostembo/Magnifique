@@ -1,0 +1,74 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 40 20% 98%;
+    --foreground: 30 10% 8%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 30 10% 8%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 30 10% 8%;
+
+    /* Bronze */
+    --primary: 38 62% 48%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 40 15% 94%;
+    --secondary-foreground: 30 10% 15%;
+
+    --muted: 40 15% 94%;
+    --muted-foreground: 30 8% 46%;
+
+    --accent: 40 15% 93%;
+    --accent-foreground: 38 62% 38%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 40 15% 88%;
+    --input: 40 15% 88%;
+    --ring: 38 62% 48%;
+    --radius: 0.75rem;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+
+  /* Минимальный tap-target 44px */
+  button, a, [role="button"] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  * {
+    touch-action: manipulation;
+  }
+}
+
+
+@layer components {
+  /* Бронзовое свечение на primary-кнопках */
+  .btn-primary-glow {
+    transition: box-shadow 0.25s ease, transform 0.15s ease;
+  }
+  .btn-primary-glow:hover:not(:disabled) {
+    box-shadow: 0 0 0 3px hsl(38 62% 48% / 0.2), 0 6px 20px hsl(38 62% 48% / 0.35);
+    transform: translateY(-1px);
+  }
+  .btn-primary-glow:active:not(:disabled) {
+    transform: translateY(0);
+    box-shadow: 0 0 0 3px hsl(38 62% 48% / 0.15);
+  }
+}
