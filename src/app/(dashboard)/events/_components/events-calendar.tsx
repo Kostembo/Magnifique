@@ -37,7 +37,8 @@ export function EventsCalendar({ events }: Props) {
         .fc-dark .fc-col-header-cell { background: #18181b; }
         .fc-dark .fc-col-header-cell-cushion { color: hsl(38,62%,48%); font-weight: 500; text-decoration: none; }
         .fc-dark .fc-daygrid-day { background: #09090b; }
-        .fc-dark .fc-day-other { background: transparent !important; border-color: transparent !important; pointer-events: none; }
+        .fc-dark .fc-day-other { background: #09090b !important; opacity: 0.35; pointer-events: none; }
+        .fc-dark .fc-day-other .fc-daygrid-day-number { color: #52525b; }
         .fc-dark .fc-daygrid-day:hover { background: #18181b; }
         .fc-dark .fc-daygrid-day-number { color: #a1a1aa; text-decoration: none; font-size: 0.8rem; }
         .fc-dark .fc-day-today { background: #1c1400 !important; }
@@ -58,7 +59,9 @@ export function EventsCalendar({ events }: Props) {
         .fc-dark .fc-popover { background: #18181b; border-color: #27272a; }
         .fc-dark .fc-popover-header { background: #27272a; color: #f4f4f5; }
         .fc-dark .fc-popover-body { color: #a1a1aa; }
+        .fc-dark .fc-daygrid-day-frame { height: 120px !important; min-height: 0 !important; }
         @media (max-width: 640px) {
+          .fc-dark .fc-daygrid-day-frame { height: 80px !important; }
           .fc-dark .fc .fc-toolbar-title { font-size: 0.8rem; padding: 0 8px; height: 32px; }
           .fc-dark .fc-button { font-size: 0.75rem; padding: 0.3em 0.5em; }
           .fc-dark .fc-toolbar.fc-header-toolbar { gap: 6px; }
@@ -72,10 +75,10 @@ export function EventsCalendar({ events }: Props) {
         events={calEvents}
         headerToolbar={{ left: "title", center: "", right: "prev,next today" }}
         buttonText={{ today: "текущий месяц" }}
-        showNonCurrentDates={false}
-        fixedWeekCount={false}
-        height="calc(98dvh - 160px)"
-        expandRows={true}
+        showNonCurrentDates={true}
+        fixedWeekCount={true}
+        height="auto"
+        expandRows={false}
         dayMaxEvents={4}
         eventClick={(info) => router.push(`/events/${info.event.id}`)}
         eventDisplay="block"

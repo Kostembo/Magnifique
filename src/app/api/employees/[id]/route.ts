@@ -25,15 +25,14 @@ export async function GET(
     where: { id: params.id },
     select: {
       id: true, full_name: true, phone: true, role: true, tier: true,
-      is_active: true, created_at: true, passport_data_enc: true,
+      is_active: true, created_at: true, passport_data_enc: true, photo_url: true,
     },
   });
 
   if (!employee) return NextResponse.json({ error: "Не найден" }, { status: 404 });
 
   const { passport_data_enc, ...rest } = employee;
-  const passport_data =
-    passport_data_enc ? decryptPassportData(passport_data_enc) : null;
+  const passport_data = passport_data_enc ? decryptPassportData(passport_data_enc) : null;
 
   return NextResponse.json({ ...rest, passport_data });
 }
@@ -42,7 +41,7 @@ const updateSchema = z.object({
   full_name: z.string().min(2).optional(),
   phone: z.string().min(10).optional(),
   password: z.string().min(6).optional(),
-  role: z.enum(["waiter", "cook", "bartender", "warehouse", "manager"]).optional(),
+  role: z.enum(["waiter", "cook", "warehouse", "manager"]).optional(),
   tier: z.enum(["core", "regular", "trainee"]).optional(),
   passport_data: z.string().optional().nullable(),
   is_active: z.boolean().optional(),
@@ -67,7 +66,14 @@ export async function PATCH(
   const updateData: Record<string, unknown> = { ...rest };
 
   if (phone) {
-    updateData.phone = normalizePhone(phone);
+    const normalizedPhone = normalizePhone(phone);
+    const conflict = await prisma.employee.findFirst({
+      where: { phone: normalizedPhone, id: { not: params.id } },
+    });
+    if (conflict) {
+      return NextResponse.json({ error: "Сотрудник с таким номером уже существует" }, { status: 409 });
+    }
+    updateData.phone = normalizedPhone;
   }
 
   if (password) {

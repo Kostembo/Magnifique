@@ -23,7 +23,7 @@ export async function GET(_req: Request, { params }: { params: { id: string } })
   });
 
   const ROLE_LABELS: Record<string, string> = {
-    waiter: "Официант", cook: "Повар", bartender: "Бармен", warehouse: "Склад", manager: "Менеджер",
+    waiter: "Официант", cook: "Повар", warehouse: "Склад", manager: "Менеджер",
   };
   const TIER_LABELS: Record<string, string> = {
     core: "Костяк", regular: "Основной", trainee: "Стажёр",

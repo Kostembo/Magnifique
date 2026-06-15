@@ -11,7 +11,7 @@ function requireManager(session: { user?: { role?: string } } | null) {
 }
 
 const positionSchema = z.object({
-  role: z.enum(["waiter", "cook", "bartender", "warehouse"]),
+  role: z.enum(["waiter", "cook", "warehouse"]),
   needed_count: z.number().int().min(1),
   reserved_for_core: z.number().int().min(0).default(0),
   priority_deadline: z.string().datetime().optional().nullable(),
@@ -21,6 +21,7 @@ const createSchema = z.object({
   title: z.string().min(1),
   client: z.string().optional(),
   location: z.string().optional(),
+  guests_count: z.number().int().min(1).optional(),
   starts_at: z.string().datetime(),
   positions: z.array(positionSchema).min(1, "Добавьте хотя бы одну позицию"),
 });

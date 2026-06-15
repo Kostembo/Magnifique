@@ -13,20 +13,21 @@ export default async function EditEmployeePage({ params }: { params: { id: strin
     where: { id: params.id },
     select: {
       id: true, full_name: true, phone: true, role: true,
-      tier: true, is_active: true, passport_data_enc: true,
+      tier: true, is_active: true, passport_data_enc: true, photo_url: true,
     },
   });
 
   if (!employee) notFound();
 
-  const { passport_data_enc, ...rest } = employee;
+  const { passport_data_enc, photo_url, ...rest } = employee;
 
   return (
     <EmployeeForm
       mode="edit"
       defaultValues={{
         ...rest,
-        passport_data: "", // не передаём расшифрованные данные в форму по умолчанию
+        photo_url: photo_url ?? undefined,
+        passport_data: "",
       }}
     />
   );

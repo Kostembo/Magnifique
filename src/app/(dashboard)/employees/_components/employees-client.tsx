@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import {
-  Plus, Search, MoreHorizontal, Pencil, UserX, UserCheck, KeyRound, Loader2,
+  Plus, Search, MoreHorizontal, Pencil, UserX, UserCheck, KeyRound, Loader2, User,
 } from "lucide-react";
 import { ROLE_LABELS, TIER_LABELS, formatPhone } from "@/lib/utils";
 
@@ -33,6 +33,7 @@ type Employee = {
   tier: string;
   is_active: boolean;
   created_at: Date;
+  photo_url?: string | null;
 };
 
 const TIER_BADGE: Record<string, "success" | "info" | "warning"> = {
@@ -197,7 +198,17 @@ export function EmployeesClient({ initialEmployees }: Props) {
             )}
             {filtered.map((emp) => (
               <TableRow key={emp.id} className={!emp.is_active ? "opacity-50" : ""}>
-                <TableCell className="font-medium">{emp.full_name}</TableCell>
+                <TableCell className="font-medium">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-10 h-10 rounded-full bg-zinc-800 border border-zinc-700 overflow-hidden flex-shrink-0 flex items-center justify-center">
+                      {emp.photo_url
+                        // eslint-disable-next-line @next/next/no-img-element
+                        ? <img src={emp.photo_url} alt="" className="w-full h-full object-cover" />
+                        : <User className="h-5 w-5 text-zinc-500" />}
+                    </div>
+                    {emp.full_name}
+                  </div>
+                </TableCell>
                 <TableCell className="text-muted-foreground">{formatPhone(emp.phone)}</TableCell>
                 <TableCell>
                   <Badge variant="outline">{ROLE_LABELS[emp.role] ?? emp.role}</Badge>
@@ -254,9 +265,17 @@ export function EmployeesClient({ initialEmployees }: Props) {
             className={`rounded-lg border p-4 space-y-2 ${!emp.is_active ? "opacity-60" : ""}`}
           >
             <div className="flex items-start justify-between gap-2">
-              <div>
-                <p className="font-medium">{emp.full_name}</p>
-                <p className="text-sm text-muted-foreground">{formatPhone(emp.phone)}</p>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-zinc-800 border border-zinc-700 overflow-hidden flex-shrink-0 flex items-center justify-center">
+                  {emp.photo_url
+                    // eslint-disable-next-line @next/next/no-img-element
+                    ? <img src={emp.photo_url} alt="" className="w-full h-full object-cover" />
+                    : <User className="h-5 w-5 text-zinc-500" />}
+                </div>
+                <div>
+                  <p className="font-medium">{emp.full_name}</p>
+                  <p className="text-sm text-muted-foreground">{formatPhone(emp.phone)}</p>
+                </div>
               </div>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>

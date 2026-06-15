@@ -10,7 +10,7 @@ const createSchema = z.object({
   full_name: z.string().min(2, "Укажите ФИО"),
   phone: z.string().min(10, "Укажите телефон"),
   password: z.string().min(6, "Пароль минимум 6 символов"),
-  role: z.enum(["waiter", "cook", "bartender", "warehouse", "manager"]),
+  role: z.enum(["waiter", "cook", "warehouse", "manager"]),
   tier: z.enum(["core", "regular", "trainee"]).default("regular"),
   passport_data: z.string().optional(),
 });
@@ -35,7 +35,7 @@ export async function GET(req: NextRequest) {
 
   const employees = await prisma.employee.findMany({
     where: {
-      ...(role ? { role: role as "waiter" | "cook" | "bartender" | "warehouse" | "manager" } : {}),
+      ...(role ? { role: role as "waiter" | "cook" | "warehouse" | "manager" } : {}),
       ...(tier ? { tier: tier as "core" | "regular" | "trainee" } : {}),
       ...(active !== null ? { is_active: active === "true" } : {}),
       ...(search
@@ -86,7 +86,7 @@ export async function POST(req: NextRequest) {
 
   const employee = await prisma.employee.create({
     data: { full_name, phone: normalizedPhone, password_hash, role, tier, passport_data_enc },
-    select: { id: true, full_name: true, phone: true, role: true, tier: true, is_active: true, created_at: true },
+    select: { id: true, full_name: true, phone: true, role: true, tier: true, is_active: true, created_at: true, photo_url: true },
   });
 
   return NextResponse.json(employee, { status: 201 });

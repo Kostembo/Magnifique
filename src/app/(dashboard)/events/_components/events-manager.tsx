@@ -3,7 +3,6 @@
 import { useState, useMemo } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { EventCard, type EventCardData } from "@/components/events/event-card";
 import { Plus, AlertTriangle } from "lucide-react";
 import dynamic from "next/dynamic";
@@ -109,6 +108,16 @@ export function EventsManager({ events }: Props) {
           <EventsCalendar events={events} />
         </div>
       )}
+
+      {/* Mobile FAB */}
+      <Link
+        href="/events/new"
+        className="md:hidden fixed bottom-6 right-6 z-30 flex items-center justify-center w-14 h-14 rounded-full bg-primary text-primary-foreground shadow-lg active:scale-95 transition-transform"
+        aria-label="Создать мероприятие"
+        style={{ bottom: "calc(1.5rem + env(safe-area-inset-bottom))" }}
+      >
+        <Plus className="h-6 w-6" />
+      </Link>
     </div>
   );
 }

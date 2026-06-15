@@ -31,7 +31,7 @@ export default async function EventsPage() {
   }
 
   // Сотрудник: личный экран с приглашениями и сменами
-  if (["waiter", "cook", "bartender"].includes(role)) {
+  if (["waiter", "cook"].includes(role)) {
     const [invitations, shifts] = await Promise.all([
       prisma.assignment.findMany({
         where: {

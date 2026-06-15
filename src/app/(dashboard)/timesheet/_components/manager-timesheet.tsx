@@ -28,7 +28,7 @@ function fmtHours(mins: number): string {
 }
 
 const ROLE_LABELS: Record<string, string> = {
-  waiter: "Официант", cook: "Повар", bartender: "Бармен", warehouse: "Склад", manager: "Менеджер",
+  waiter: "Официант", cook: "Повар", warehouse: "Склад", manager: "Менеджер",
 };
 
 export function ManagerTimesheet({ initial, initialMonth }: { initial: TimeEntry[]; initialMonth: string }) {

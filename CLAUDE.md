@@ -1,93 +1,152 @@
-# Magnifique — Внутренний инструмент кейтеринговой компании
+# Magnifique — Правила для агента
 
-PWA для управления персоналом, мероприятиями, набором и складскими заявками.
+Внутренний PWA-инструмент кейтеринговой компании (~150 сотрудников, ~60 мероприятий/месяц в сезон).
+Детальная документация — в папке `docs/`. Она является **источником правды**.
 
-## Стек
+---
 
-- **Next.js 14** (App Router) + TypeScript
-- **PostgreSQL** + Prisma ORM
-- **NextAuth v5** — вход по телефону + пароль, JWT сессии 30 дней
-- **shadcn/ui** + Tailwind CSS (mobile-first, tap targets 44px)
-- **Web Push** (VAPID) — Фаза 2
+## Карта модулей
 
-## Первый запуск
-
-### 1. Переменные окружения и VAPID-ключи
-
-Сгенерировать VAPID-ключи (один раз):
-```bash
-npx web-push generate-vapid-keys
+```
+src/
+├── app/
+│   ├── (auth)/login/          # Страница входа — только публичный маршрут
+│   ├── (dashboard)/           # Всё, что требует авторизации
+│   │   ├── employees/         # CRUD сотрудников — только role=manager
+│   │   ├── events/            # Мероприятия и набор — все роли (доступ разный)
+│   │   ├── requisitions/      # Складские заявки — manager + warehouse
+│   │   ├── timesheet/         # Табель рабочего времени
+│   │   ├── settings/          # Смена пароля — все роли
+│   │   └── calendar/          # Календарь мероприятий
+│   └── api/                   # Route Handlers — вся серверная логика здесь
+│       ├── auth/              # NextAuth эндпоинты (не трогать)
+│       ├── employees/         # CRUD сотрудников
+│       ├── events/            # Мероприятия + назначения + комментарии
+│       ├── requisitions/      # Складские заявки + позиции
+│       ├── assignments/       # Ответы на приглашения
+│       ├── push/              # Web Push подписки и отправка
+│       ├── me/                # Текущий пользователь (смена пароля)
+│       ├── staff/             # Список приглашений для сотрудника
+│       └── time-entries/      # Записи рабочего времени
+├── components/
+│   ├── ui/                    # shadcn/ui примитивы — НЕ редактировать вручную
+│   ├── events/                # EventCard, StaffingBar — переиспользуемые
+│   ├── layout/                # Sidebar, NavLinks, Logo, PWA-обёртки
+│   └── push/                  # PushSubscribeButton
+├── lib/
+│   ├── auth.ts                # NextAuth конфиг — трогать только по явному ТЗ
+│   ├── db.ts                  # Prisma Client singleton
+│   ├── crypto.ts              # AES-256-GCM шифрование паспортных данных
+│   ├── push.ts                # VAPID-отправка push-уведомлений
+│   └── utils.ts               # normalizePhone(), cn()
+├── hooks/use-toast.ts
+├── types/next-auth.d.ts       # Расширение типов сессии
+└── middleware.ts              # Auth guard + редиректы по ролям
+prisma/
+├── schema.prisma              # Единственный источник правды для структуры БД
+└── seed.ts                    # Первый менеджер (не менять телефон/пароль в seed)
 ```
 
-### 2. Переменные окружения
+---
 
-Скопировать `.env.example` → `.env.local`:
+## Запреты
 
-```bash
-cp .env.example .env.local
+- **НЕ изменять `prisma/schema.prisma`** без явного указания в задаче. Схема = миграция = риск данных.
+- **НЕ добавлять npm-пакеты** без обсуждения. Сначала проверь, есть ли уже нужное в зависимостях.
+- **НЕ хардкодить секреты** — только `process.env.*`. Секреты в `.env.local`, не в коде.
+- **НЕ отключать проверки авторизации** "чтобы быстрее заработало".
+- **НЕ трогать `src/components/ui/`** — shadcn/ui, обновляется только через CLI.
+- **НЕ делать запросы в БД из клиентских компонентов** — только через API-маршруты.
+- **НЕ использовать `any`** в TypeScript без крайней необходимости.
+- **НЕ писать файлы длиннее 300 строк.** Длинный файл = признак нарушения границ модуля.
+
+---
+
+## Обязанности при каждом изменении
+
+1. Каждая новая функция — тест (хотя бы один: happy path + отказ авторизации).
+2. После изменений — `npm run lint` без ошибок.
+3. Каждое завершённое изменение — атомарный коммит с осмысленным сообщением.
+4. Новый API-маршрут — пройти чеклист из `docs/SECURITY.md` перед коммитом.
+
+---
+
+## Паттерн API-маршрута (обязательный шаблон)
+
+```typescript
+import { auth } from "@/lib/auth";
+import { prisma } from "@/lib/db";
+import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
+
+// 1. Zod-схема — всегда, для любого входящего тела
+const schema = z.object({ /* ... */ });
+
+// 2. Хелпер проверки роли (при необходимости)
+function requireManager(session: ReturnType<typeof auth> extends Promise<infer T> ? T : never) {
+  if (!session?.user || session.user.role !== "manager")
+    return NextResponse.json({ error: "Нет доступа" }, { status: 403 });
+  return null;
+}
+
+export async function POST(req: NextRequest) {
+  // 3. Auth — ПЕРВЫМ, до любой логики
+  const session = await auth();
+  const denied = requireManager(session);
+  if (denied) return denied;
+
+  // 4. Парсинг и валидация
+  const body = await req.json();
+  const parsed = schema.safeParse(body);
+  if (!parsed.success)
+    return NextResponse.json({ error: "Ошибка валидации", details: parsed.error.flatten() }, { status: 400 });
+
+  // 5. Бизнес-логика через Prisma
+  // 6. Возврат
+}
 ```
 
-Заполнить:
-- `DATABASE_URL` — строка подключения к PostgreSQL
-- `AUTH_SECRET` — случайная строка: `openssl rand -base64 32`
-- `NEXTAUTH_URL` — URL приложения (http://localhost:3000 для разработки)
-- `PASSPORT_ENCRYPTION_KEY` — 64 символа hex: `openssl rand -hex 32`
+---
 
-### 2. База данных
+## Роли и матрица доступа
 
-```bash
-# Применить схему (создаёт таблицы)
-npm run db:push
+| Роль | Сотрудники | Мероприятия | Заявки | Табель |
+|------|-----------|-------------|--------|--------|
+| `manager` | CRUD | Создание, набор, все | Создание, отправка | Все |
+| `cook` | — | Свои (информационно) | — | Своё |
+| `waiter` | — | Свои + ответ на приглашение | — | Своё |
+| `warehouse` | — | — | Получение, сборка | — |
 
-# Создать первого менеджера (телефон: +7 900 000-00-00, пароль: admin123)
-npm run db:seed
-```
+**Роли `bartender` нет.** Официанты и бармены — одна роль `waiter`.
+`cook + tier=core` = шеф-повар (получает уведомления о кухонных позициях первым).
 
-Сменить пароль после первого входа!
+Middleware защищает страницы. **Каждый API-маршрут проверяет роль независимо.**
 
-### 3. Запуск
+---
 
-```bash
-npm run dev       # разработка
-npm run build     # сборка
-npm run start     # продакшн
-```
+## Документация
 
-## Роли
+| Файл | Содержание |
+|------|-----------|
+| `docs/PRODUCT.md` | Продукт, пользователи, что вне скоупа |
+| `docs/DATA_MODEL.md` | Модель данных, инварианты, стейт-машины |
+| `docs/ARCHITECTURE.md` | Архитектурная карта, потоки данных |
+| `docs/SECURITY.md` | Чеклист безопасности (до каждого PR и перед деплоем) |
+| `docs/WORKFLOW.md` | Процесс Архитектор / Исполнитель / Ревьюер |
 
-| Роль | Доступ |
-|------|--------|
-| `manager` | Сотрудники, Мероприятия, Заявки |
-| `waiter/cook/bartender` | Свои мероприятия и приглашения |
-| `warehouse` | Заявки на сбор |
-
-## Иконки PWA (нужно добавить)
-
-Создать папку `public/icons/` с файлами:
-- `icon-192.png` (192×192)
-- `icon-512.png` (512×512)
-
-Генерация из любого логотипа: https://maskable.app/
-
-## Безопасность
-
-- `passport_data_enc` — AES-256-GCM шифрование, ключ в env
-- Все API проверяют роль на уровне сервера, не только на фронте
-- Персональные данные — только на серверах РФ (152-ФЗ)
-- Получить согласие сотрудников на обработку ПД перед вводом паспортных данных
-
-## Фазы разработки
-
-- [x] **Фаза 1** — Сотрудники, аутентификация, CRUD, экспорт CSV/PDF
-- [x] **Фаза 2** — Мероприятия, набор персонала, Web Push уведомления
-- [ ] **Фаза 3** — Складские заявки (requisitions)
-- [ ] **Фаза 4** — Обсуждения (асинхронные комментарии)
+---
 
 ## Команды
 
 ```bash
-npm run db:push      # применить изменения схемы к БД
-npm run db:seed      # создать первого менеджера
-npm run db:studio    # Prisma Studio (GUI для БД)
-npm run db:migrate   # создать и применить миграцию
+npm run dev          # разработка
+npm run build        # production-сборка
+npm run lint         # ESLint (запускать перед коммитом)
+npm run db:push      # применить изменения схемы к БД (без миграции)
+npm run db:migrate   # создать SQL-миграцию + применить
+npm run db:seed      # первый менеджер (+7 900 000-00-00 / admin123)
+npm run db:studio    # Prisma Studio — GUI для БД
 ```
+
+Переменные окружения: `DATABASE_URL`, `DIRECT_URL`, `AUTH_SECRET`, `NEXTAUTH_URL`,
+`PASSPORT_ENCRYPTION_KEY`, `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT`.

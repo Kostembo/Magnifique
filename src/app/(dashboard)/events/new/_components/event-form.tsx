@@ -17,7 +17,7 @@ import { Loader2, ArrowLeft, Plus, Trash2 } from "lucide-react";
 import Link from "next/link";
 
 const positionSchema = z.object({
-  role: z.enum(["waiter", "cook", "bartender", "warehouse"]),
+  role: z.enum(["waiter", "cook", "warehouse"]),
   needed_count: z.coerce.number().int().min(1),
   reserved_for_core: z.coerce.number().int().min(0).default(0),
   priority_deadline: z.string().optional(),
@@ -27,6 +27,7 @@ const formSchema = z.object({
   title: z.string().min(1, "Укажите название"),
   client: z.string().optional(),
   location: z.string().optional(),
+  guests_count: z.coerce.number().int().min(1).optional(),
   starts_at: z.string().min(1, "Укажите дату и время"),
   positions: z.array(positionSchema).min(1, "Добавьте хотя бы одну позицию"),
 });
@@ -34,9 +35,8 @@ const formSchema = z.object({
 type FormData = z.infer<typeof formSchema>;
 
 const ROLE_OPTIONS = [
-  { value: "waiter", label: "Официанты" },
   { value: "cook", label: "Повара" },
-  { value: "bartender", label: "Бармены" },
+  { value: "waiter", label: "Официанты / Бармены" },
   { value: "warehouse", label: "Склад" },
 ];
 
@@ -112,10 +112,16 @@ export function EventForm() {
               </div>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="starts_at">Дата и время начала *</Label>
-              <Input id="starts_at" type="datetime-local" {...register("starts_at")} />
-              {errors.starts_at && <p className="text-sm text-destructive">{errors.starts_at.message}</p>}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="starts_at">Дата и время начала *</Label>
+                <Input id="starts_at" type="datetime-local" {...register("starts_at")} />
+                {errors.starts_at && <p className="text-sm text-destructive">{errors.starts_at.message}</p>}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="guests_count">Количество гостей</Label>
+                <Input id="guests_count" type="number" min={1} placeholder="100" {...register("guests_count")} />
+              </div>
             </div>
           </CardContent>
         </Card>

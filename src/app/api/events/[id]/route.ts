@@ -65,12 +65,21 @@ export async function GET(
   return NextResponse.json(event);
 }
 
+const positionSchema = z.object({
+  role: z.enum(["waiter", "cook", "warehouse"]),
+  needed_count: z.number().int().min(1),
+  reserved_for_core: z.number().int().min(0).default(0),
+  priority_deadline: z.string().datetime().optional().nullable(),
+});
+
 const updateSchema = z.object({
   title: z.string().min(1).optional(),
   client: z.string().optional(),
   location: z.string().optional(),
+  guests_count: z.number().int().min(1).optional().nullable(),
   starts_at: z.string().datetime().optional(),
   status: z.enum(["draft", "recruiting", "staffed", "done"]).optional(),
+  positions: z.array(positionSchema).optional(),
 });
 
 export async function PATCH(
@@ -84,10 +93,10 @@ export async function PATCH(
   const body = await req.json();
   const parsed = updateSchema.safeParse(body);
   if (!parsed.success) {
-    return NextResponse.json({ error: "Ошибка валидации" }, { status: 400 });
+    return NextResponse.json({ error: "Ошибка валидации", details: parsed.error.flatten() }, { status: 400 });
   }
 
-  const { starts_at, ...rest } = parsed.data;
+  const { starts_at, positions, ...rest } = parsed.data;
 
   const event = await prisma.event.update({
     where: { id: params.id },
@@ -95,9 +104,43 @@ export async function PATCH(
       ...rest,
       ...(starts_at ? { starts_at: new Date(starts_at) } : {}),
     },
+    include: { positions: true },
   });
 
-  return NextResponse.json(event);
+  // Upsert позиций: добавляем новые, обновляем существующие по role.
+  // Существующие позиции с assignments не удаляем — это защищает уже созданные приглашения.
+  if (positions && positions.length > 0) {
+    for (const pos of positions) {
+      const existing = event.positions.find((p) => p.role === pos.role);
+      if (existing) {
+        await prisma.eventPosition.update({
+          where: { id: existing.id },
+          data: {
+            needed_count: pos.needed_count,
+            reserved_for_core: pos.reserved_for_core,
+            priority_deadline: pos.priority_deadline ? new Date(pos.priority_deadline) : null,
+          },
+        });
+      } else {
+        await prisma.eventPosition.create({
+          data: {
+            event_id: params.id,
+            role: pos.role,
+            needed_count: pos.needed_count,
+            reserved_for_core: pos.reserved_for_core,
+            priority_deadline: pos.priority_deadline ? new Date(pos.priority_deadline) : null,
+          },
+        });
+      }
+    }
+  }
+
+  const updated = await prisma.event.findUnique({
+    where: { id: params.id },
+    include: { positions: true },
+  });
+
+  return NextResponse.json(updated);
 }
 
 export async function DELETE(

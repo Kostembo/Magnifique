@@ -11,7 +11,6 @@ datasource db {
 enum Role {
   waiter
   cook
-  bartender
   warehouse
   manager
 }
@@ -51,6 +50,7 @@ model Employee {
   role              Role
   tier              Tier      @default(regular)
   passport_data_enc String?
+  photo_url         String?
   is_active         Boolean   @default(true)
   push_subscription Json?
   created_at        DateTime  @default(now())
@@ -66,10 +66,11 @@ model Employee {
 
 model Event {
   id         String      @id @default(cuid())
-  title      String
-  client     String?
-  location   String?
-  starts_at  DateTime
+  title        String
+  client       String?
+  location     String?
+  guests_count Int?
+  starts_at    DateTime
   status     EventStatus @default(draft)
   created_by String
   created_at DateTime    @default(now())

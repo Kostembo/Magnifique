@@ -37,3 +37,9 @@ next-env.d.ts
 
 # prisma
 prisma/migrations/
+
+# user uploads (data, not code)
+public/uploads/
+
+# dev tools
+test-cycle.mjs

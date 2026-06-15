@@ -13,7 +13,7 @@ const navLinks: NavLink[] = [
     href: "/events",
     label: "Мероприятия",
     icon: <CalendarDays className="h-5 w-5" />,
-    roles: ["manager", "waiter", "cook", "bartender"],
+    roles: ["manager", "waiter", "cook"],
   },
   {
     href: "/employees",
@@ -31,13 +31,13 @@ const navLinks: NavLink[] = [
     href: "/timesheet",
     label: "Табель",
     icon: <Clock className="h-5 w-5" />,
-    roles: ["manager", "waiter", "cook", "bartender"],
+    roles: ["manager", "waiter", "cook"],
   },
   {
     href: "/settings",
     label: "Настройки",
     icon: <Settings className="h-5 w-5" />,
-    roles: ["manager", "waiter", "cook", "bartender", "warehouse"],
+    roles: ["manager", "waiter", "cook", "warehouse"],
   },
 ];
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -15,17 +15,19 @@ import {
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, ArrowLeft, Eye, EyeOff } from "lucide-react";
+import { Loader2, ArrowLeft, Eye, EyeOff, Camera, User } from "lucide-react";
 import Link from "next/link";
+import { ImageCropModal } from "./image-crop-modal";
 
 const baseSchema = z.object({
   full_name: z.string().min(2, "Укажите ФИО"),
   phone: z.string().min(10, "Укажите телефон"),
-  role: z.enum(["waiter", "cook", "bartender", "warehouse", "manager"], {
+  role: z.enum(["waiter", "cook", "warehouse", "manager"], {
     required_error: "Выберите роль",
   }),
   tier: z.enum(["core", "regular", "trainee"]),
   passport_data: z.string().optional(),
+  photo_url: z.string().optional(),
   is_active: z.boolean().optional(),
 });
 
@@ -50,6 +52,10 @@ export function EmployeeForm({ mode, defaultValues }: EmployeeFormProps) {
   const { toast } = useToast();
   const [showPassword, setShowPassword] = useState(false);
   const [showPassport, setShowPassport] = useState(false);
+  const [photoUrl, setPhotoUrl] = useState<string | null>(defaultValues?.photo_url ?? null);
+  const [photoUploading, setPhotoUploading] = useState(false);
+  const [cropSrc, setCropSrc] = useState<string | null>(null);
+  const photoInputRef = useRef<HTMLInputElement>(null);
 
   const schema = mode === "create" ? createSchema : editSchema;
 
@@ -67,6 +73,40 @@ export function EmployeeForm({ mode, defaultValues }: EmployeeFormProps) {
   });
 
   const isActive = watch("is_active");
+
+  function openCropper(file: File) {
+    if (!defaultValues?.id) return;
+    const url = URL.createObjectURL(file);
+    setCropSrc(url);
+  }
+
+  function closeCropper() {
+    if (cropSrc) URL.revokeObjectURL(cropSrc);
+    setCropSrc(null);
+  }
+
+  async function uploadPhoto(blob: Blob) {
+    closeCropper();
+    if (!defaultValues?.id) return;
+    setPhotoUploading(true);
+    try {
+      const form = new FormData();
+      form.append("photo", blob, "photo.webp");
+      const res = await fetch(`/api/employees/${defaultValues.id}/photo`, { method: "POST", body: form });
+      if (res.ok) {
+        const data = await res.json();
+        setPhotoUrl(data.photo_url + "?v=" + Date.now());
+        toast({ title: "Фото обновлено", variant: "success" });
+      } else {
+        const err = await res.json().catch(() => ({}));
+        toast({ title: "Ошибка", description: err.error ?? "Не удалось загрузить фото", variant: "destructive" });
+      }
+    } catch {
+      toast({ title: "Ошибка", description: "Не удалось загрузить фото", variant: "destructive" });
+    } finally {
+      setPhotoUploading(false);
+    }
+  }
 
   async function onSubmit(data: EditData) {
     const payload: Record<string, unknown> = {
@@ -117,6 +157,44 @@ export function EmployeeForm({ mode, defaultValues }: EmployeeFormProps) {
         </h1>
       </div>
 
+      {/* Фото */}
+      <div className="flex flex-col items-center gap-3 py-2">
+        <div
+          className="relative w-24 h-24 rounded-full border-2 border-dashed border-zinc-600 overflow-hidden bg-zinc-800 flex items-center justify-center cursor-pointer hover:border-zinc-400 transition-colors"
+          onClick={() => photoInputRef.current?.click()}
+        >
+          {photoUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={photoUrl} alt="Фото" className="w-full h-full object-cover" />
+          ) : (
+            <User className="h-10 w-10 text-zinc-500" />
+          )}
+          <div className="absolute inset-0 bg-black/40 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center">
+            {photoUploading
+              ? <Loader2 className="h-6 w-6 text-white animate-spin" />
+              : <Camera className="h-6 w-6 text-white" />}
+          </div>
+        </div>
+        {mode === "edit" && (
+          <p className="text-xs text-muted-foreground">Нажмите, чтобы загрузить фото</p>
+        )}
+        {mode === "create" && (
+          <p className="text-xs text-muted-foreground">Фото можно добавить после создания</p>
+        )}
+        <input
+          ref={photoInputRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          disabled={mode === "create"}
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            if (file) openCropper(file);
+            e.target.value = "";
+          }}
+        />
+      </div>
+
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <Card>
           <CardHeader><CardTitle className="text-base">Основные данные</CardTitle></CardHeader>
@@ -154,9 +232,8 @@ export function EmployeeForm({ mode, defaultValues }: EmployeeFormProps) {
                     <SelectValue placeholder="Выберите роль" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="waiter">Официант</SelectItem>
+                    <SelectItem value="waiter">Официант / Бармен</SelectItem>
                     <SelectItem value="cook">Повар</SelectItem>
-                    <SelectItem value="bartender">Бармен</SelectItem>
                     <SelectItem value="warehouse">Склад</SelectItem>
                     <SelectItem value="manager">Менеджер</SelectItem>
                   </SelectContent>
@@ -270,6 +347,14 @@ export function EmployeeForm({ mode, defaultValues }: EmployeeFormProps) {
           </Button>
         </div>
       </form>
+
+      {cropSrc && (
+        <ImageCropModal
+          src={cropSrc}
+          onConfirm={uploadPhoto}
+          onCancel={closeCropper}
+        />
+      )}
     </div>
   );
 }

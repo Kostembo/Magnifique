@@ -8,7 +8,7 @@ export async function GET() {
   if (!session?.user) return NextResponse.json({ error: "Нет доступа" }, { status: 401 });
 
   const role = session.user.role;
-  if (!["waiter", "cook", "bartender"].includes(role)) {
+  if (!["waiter", "cook"].includes(role)) {
     return NextResponse.json({ error: "Нет доступа" }, { status: 403 });
   }
 

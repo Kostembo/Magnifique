@@ -13,7 +13,7 @@ export default async function EmployeesPage() {
     orderBy: [{ role: "asc" }, { full_name: "asc" }],
     select: {
       id: true, full_name: true, phone: true, role: true,
-      tier: true, is_active: true, created_at: true,
+      tier: true, is_active: true, created_at: true, photo_url: true,
     },
   });
 

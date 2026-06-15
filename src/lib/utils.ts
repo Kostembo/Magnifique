@@ -8,7 +8,6 @@ export function cn(...inputs: ClassValue[]) {
 export const ROLE_LABELS: Record<string, string> = {
   waiter: "Официант",
   cook: "Повар",
-  bartender: "Бармен",
   warehouse: "Склад",
   manager: "Менеджер",
 };
