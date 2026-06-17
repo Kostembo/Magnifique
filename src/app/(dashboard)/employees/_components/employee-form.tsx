@@ -22,7 +22,7 @@ import { ImageCropModal } from "./image-crop-modal";
 const baseSchema = z.object({
   full_name: z.string().min(2, "Укажите ФИО"),
   phone: z.string().min(10, "Укажите телефон"),
-  role: z.enum(["waiter", "cook", "warehouse", "manager"], {
+  role: z.enum(["waiter", "cook", "warehouse", "manager", "sales", "chef", "owner", "admin"], {
     required_error: "Выберите роль",
   }),
   tier: z.enum(["core", "regular", "trainee"]),
@@ -236,6 +236,10 @@ export function EmployeeForm({ mode, defaultValues }: EmployeeFormProps) {
                     <SelectItem value="cook">Повар</SelectItem>
                     <SelectItem value="warehouse">Склад</SelectItem>
                     <SelectItem value="manager">Менеджер</SelectItem>
+                    <SelectItem value="sales">Менеджер по продажам</SelectItem>
+                    <SelectItem value="chef">Шеф-повар</SelectItem>
+                    <SelectItem value="owner">Владелец</SelectItem>
+                    <SelectItem value="admin">Администратор</SelectItem>
                   </SelectContent>
                 </Select>
                 {errors.role && <p className="text-sm text-destructive">{errors.role.message}</p>}

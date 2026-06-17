@@ -4,6 +4,18 @@ import type { NextRequest } from "next/server";
 
 const PUBLIC_PATHS = ["/login"];
 
+// Roles with unrestricted access to all protected pages
+const SUPER_ROLES = ["owner", "admin"];
+
+// Roles that can access the employees section
+const EMPLOYEE_ADMIN_ROLES = ["manager", "owner", "admin"];
+
+// Roles that can access the events section
+const EVENT_ROLES = ["manager", "owner", "admin", "sales", "chef", "waiter", "cook"];
+
+// Roles that can access requisitions
+const REQUISITION_ROLES = ["manager", "owner", "admin", "warehouse"];
+
 export default auth(function middleware(req: NextRequest & { auth: { user?: { role?: string } } | null }) {
   const { pathname } = req.nextUrl;
 
@@ -20,10 +32,20 @@ export default auth(function middleware(req: NextRequest & { auth: { user?: { ro
     return NextResponse.redirect(loginUrl);
   }
 
-  const role = req.auth.user.role;
+  const role = req.auth.user.role ?? "";
 
-  // Только менеджер видит раздел сотрудников
-  if (pathname.startsWith("/employees") && role !== "manager") {
+  // Super roles bypass all restrictions
+  if (SUPER_ROLES.includes(role)) return NextResponse.next();
+
+  if (pathname.startsWith("/employees") && !EMPLOYEE_ADMIN_ROLES.includes(role)) {
+    return NextResponse.redirect(new URL("/", req.url));
+  }
+
+  if (pathname.startsWith("/events") && !EVENT_ROLES.includes(role)) {
+    return NextResponse.redirect(new URL("/", req.url));
+  }
+
+  if (pathname.startsWith("/requisitions") && !REQUISITION_ROLES.includes(role)) {
     return NextResponse.redirect(new URL("/", req.url));
   }
 

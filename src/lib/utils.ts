@@ -10,6 +10,10 @@ export const ROLE_LABELS: Record<string, string> = {
   cook: "Повар",
   warehouse: "Склад",
   manager: "Менеджер",
+  sales: "Менеджер по продажам",
+  chef: "Шеф-повар",
+  owner: "Владелец",
+  admin: "Администратор",
 };
 
 export const TIER_LABELS: Record<string, string> = {

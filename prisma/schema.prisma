@@ -85,6 +85,7 @@ model Event {
   requisitions Requisition[]
   comments   Comment[]
   time_entries TimeEntry[]
+  event_menu EventMenuItem[]
 
   @@map("events")
 }
@@ -176,4 +177,44 @@ model Comment {
   author Employee @relation(fields: [author_id], references: [id])
 
   @@map("comments")
+}
+
+model MenuItem {
+  id         Int      @id @default(autoincrement())
+  name       String
+  category   String   @default("")
+  unit       String   @default("порц")
+  is_active  Boolean  @default(true)
+  created_at DateTime @default(now())
+
+  event_menu EventMenuItem[]
+
+  @@map("menu_items")
+}
+
+model EventMenuItem {
+  id           Int      @id @default(autoincrement())
+  event_id     String
+  menu_item_id Int?
+  name         String
+  quantity     Decimal  @db.Decimal(10, 2)
+  unit         String   @default("порц")
+  note         String?
+  created_at   DateTime @default(now())
+
+  event     Event      @relation(fields: [event_id], references: [id], onDelete: Cascade)
+  menu_item MenuItem?  @relation(fields: [menu_item_id], references: [id])
+
+  @@map("event_menu_items")
+}
+
+model WarehouseItem {
+  id         Int      @id @default(autoincrement())
+  name       String
+  unit       String   @default("шт")
+  category   String   @default("")
+  is_active  Boolean  @default(true)
+  created_at DateTime @default(now())
+
+  @@map("warehouse_items")
 }

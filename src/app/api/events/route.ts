@@ -2,16 +2,17 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { z } from "zod";
+import { canCreateEvents } from "@/lib/roles";
 
-function requireManager(session: { user?: { role?: string } } | null) {
-  if (!session?.user || session.user.role !== "manager") {
+function requireEventCreator(session: { user?: { role?: string } } | null) {
+  if (!session?.user || !canCreateEvents(session.user.role ?? "")) {
     return NextResponse.json({ error: "Нет доступа" }, { status: 403 });
   }
   return null;
 }
 
 const positionSchema = z.object({
-  role: z.enum(["waiter", "cook", "warehouse"]),
+  role: z.enum(["waiter", "cook", "warehouse", "chef"]),
   needed_count: z.number().int().min(1),
   reserved_for_core: z.number().int().min(0).default(0),
   priority_deadline: z.string().datetime().optional().nullable(),
@@ -78,7 +79,7 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   const session = await auth();
-  const denied = requireManager(session);
+  const denied = requireEventCreator(session);
   if (denied) return denied;
 
   const body = await req.json();

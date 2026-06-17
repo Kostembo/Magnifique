@@ -2,12 +2,13 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { encryptPassportData, decryptPassportData } from "@/lib/crypto";
+import { isPrivileged } from "@/lib/roles";
 import { z } from "zod";
 import bcrypt from "bcryptjs";
 import { normalizePhone } from "@/lib/utils";
 
 function requireManager(session: { user?: { role?: string } } | null) {
-  if (!session?.user || session.user.role !== "manager") {
+  if (!session?.user || !isPrivileged(session.user.role ?? "")) {
     return NextResponse.json({ error: "Нет доступа" }, { status: 403 });
   }
   return null;

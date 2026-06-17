@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { isPrivileged } from "@/lib/roles";
 import { z } from "zod";
 
 export async function GET(_req: NextRequest, { params }: { params: { id: string } }) {
@@ -51,10 +52,10 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
 
   const { status, assignee_id } = parsed.data;
 
-  if (status === "sent" && role !== "manager") {
+  if (status === "sent" && !isPrivileged(role)) {
     return NextResponse.json({ error: "Нет доступа" }, { status: 403 });
   }
-  if ((status === "picking" || status === "done") && role !== "warehouse") {
+  if ((status === "picking" || status === "done") && role !== "warehouse" && !isPrivileged(role)) {
     return NextResponse.json({ error: "Нет доступа" }, { status: 403 });
   }
 

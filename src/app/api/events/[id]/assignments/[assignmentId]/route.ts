@@ -2,13 +2,14 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { sendPushToEmployee } from "@/lib/push";
+import { isPrivileged } from "@/lib/roles";
 
 export async function DELETE(
   _req: Request,
   { params }: { params: { id: string; assignmentId: string } }
 ) {
   const session = await auth();
-  if (!session?.user || session.user.role !== "manager") {
+  if (!session?.user || !isPrivileged(session.user.role ?? "")) {
     return NextResponse.json({ error: "Нет доступа" }, { status: 403 });
   }
 

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { sendPushToMany, sendPushToManagers } from "@/lib/push";
+import { isPrivileged } from "@/lib/roles";
 import { z } from "zod";
 
 const inviteSchema = z.object({
@@ -14,7 +15,7 @@ export async function POST(
   { params }: { params: { id: string } }
 ) {
   const session = await auth();
-  if (!session?.user || session.user.role !== "manager") {
+  if (!session?.user || !isPrivileged(session.user.role ?? "")) {
     return NextResponse.json({ error: "Нет доступа" }, { status: 403 });
   }
 

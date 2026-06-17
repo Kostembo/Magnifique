@@ -1,11 +1,12 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { isPrivileged } from "@/lib/roles";
 import { ROLE_LABELS, TIER_LABELS, formatPhone } from "@/lib/utils";
 
 export async function GET() {
   const session = await auth();
-  if (!session?.user || session.user.role !== "manager") {
+  if (!session?.user || !isPrivileged(session.user.role ?? "")) {
     return NextResponse.json({ error: "Нет доступа" }, { status: 403 });
   }
 

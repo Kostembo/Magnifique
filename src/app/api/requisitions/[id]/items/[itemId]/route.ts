@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { isPrivileged } from "@/lib/roles";
 
 export async function PATCH(
   req: NextRequest,
@@ -34,7 +35,7 @@ export async function DELETE(
   { params }: { params: { id: string; itemId: string } }
 ) {
   const session = await auth();
-  if (session?.user?.role !== "manager") {
+  if (!session?.user || !isPrivileged(session.user.role ?? "")) {
     return NextResponse.json({ error: "Нет доступа" }, { status: 403 });
   }
 

@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { isPrivileged } from "@/lib/roles";
 import { z } from "zod";
 
 function requireManager(session: { user?: { role?: string } } | null) {
-  if (!session?.user || session.user.role !== "manager") {
+  if (!session?.user || !isPrivileged(session.user.role ?? "")) {
     return NextResponse.json({ error: "Нет доступа" }, { status: 403 });
   }
   return null;
@@ -51,7 +52,7 @@ export async function GET(
 
   // Проверка доступа: staff видит только свои мероприятия (через assignments)
   const role = session.user.role;
-  if (role !== "manager" && role !== "warehouse") {
+  if (role === "waiter" || role === "cook") {
     const hasAssignment = event.positions.some((pos) =>
       pos.assignments.some(
         (a) => a.employee_id === session.user.id && a.status === "confirmed"

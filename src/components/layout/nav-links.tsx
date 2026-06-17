@@ -14,37 +14,37 @@ const navLinks: NavLink[] = [
     href: "/events",
     label: "Мероприятия",
     icon: <CalendarDays className="h-5 w-5" />,
-    roles: ["manager", "waiter", "cook"],
+    roles: ["manager", "waiter", "cook", "owner", "admin", "sales", "chef"],
   },
   {
     href: "/employees",
     label: "Сотрудники",
     icon: <Users className="h-5 w-5" />,
-    roles: ["manager"],
+    roles: ["manager", "owner", "admin"],
   },
   {
     href: "/requisitions",
     label: "Заявки",
     icon: <ClipboardList className="h-5 w-5" />,
-    roles: ["manager", "warehouse"],
+    roles: ["manager", "warehouse", "owner", "admin"],
   },
   {
     href: "/calendar",
     label: "Календарь",
     icon: <Calendar className="h-5 w-5" />,
-    roles: ["manager", "waiter", "cook"],
+    roles: ["manager", "waiter", "cook", "owner", "admin", "sales", "chef"],
   },
   {
     href: "/timesheet",
     label: "Табель",
     icon: <Clock className="h-5 w-5" />,
-    roles: ["manager", "waiter", "cook"],
+    roles: ["manager", "waiter", "cook", "owner", "admin"],
   },
   {
     href: "/settings",
     label: "Настройки",
     icon: <Settings className="h-5 w-5" />,
-    roles: ["manager", "waiter", "cook", "warehouse"],
+    roles: ["manager", "waiter", "cook", "warehouse", "owner", "admin", "sales", "chef"],
   },
 ];
 
