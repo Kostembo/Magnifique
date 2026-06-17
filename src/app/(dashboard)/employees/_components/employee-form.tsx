@@ -44,7 +44,7 @@ type EditData = z.infer<typeof editSchema>;
 
 interface EmployeeFormProps {
   mode: "create" | "edit";
-  defaultValues?: Partial<EditData & { id: string }>;
+  defaultValues?: Partial<EditData & { id: string; hasPassportData?: boolean }>;
 }
 
 export function EmployeeForm({ mode, defaultValues }: EmployeeFormProps) {
@@ -117,7 +117,7 @@ export function EmployeeForm({ mode, defaultValues }: EmployeeFormProps) {
       is_active: data.is_active,
     };
 
-    if (data.passport_data) payload.passport_data = data.passport_data;
+    if (showPassport) payload.passport_data = data.passport_data ?? "";
     if (data.password) payload.password = data.password;
 
     const url = mode === "create" ? "/api/employees" : `/api/employees/${defaultValues?.id}`;
@@ -305,7 +305,11 @@ export function EmployeeForm({ mode, defaultValues }: EmployeeFormProps) {
                 onClick={() => setShowPassport((v) => !v)}
                 className="text-xs text-primary hover:underline min-h-0 min-w-0"
               >
-                {showPassport ? "Скрыть поле" : "Показать / ввести паспортные данные"}
+                {showPassport
+                  ? "Скрыть поле"
+                  : defaultValues?.hasPassportData
+                    ? "Изменить / удалить паспортные данные"
+                    : "Ввести паспортные данные"}
               </button>
             </div>
             {showPassport && (
@@ -317,7 +321,8 @@ export function EmployeeForm({ mode, defaultValues }: EmployeeFormProps) {
             )}
             <p className="text-xs text-muted-foreground">
               Хранятся в зашифрованном виде. Доступны только менеджеру.
-              {mode === "edit" && " Оставьте пустым, чтобы не изменять."}
+              {mode === "edit" && showPassport && " Оставьте пустым, чтобы удалить паспортные данные."}
+              {mode === "edit" && !showPassport && defaultValues?.hasPassportData && " Данные сохранены."}
             </p>
           </CardContent>
         </Card>

@@ -24,6 +24,7 @@ import {
   Plus, Search, MoreHorizontal, Pencil, UserX, UserCheck, KeyRound, Loader2, User,
 } from "lucide-react";
 import { ROLE_LABELS, TIER_LABELS, formatPhone } from "@/lib/utils";
+import { EmployeeMobileCard } from "./employee-mobile-card";
 
 type Employee = {
   id: string;
@@ -80,9 +81,7 @@ export function EmployeesClient({ initialEmployees }: Props) {
       body: JSON.stringify({ is_active: !current }),
     });
     if (res.ok) {
-      setEmployees((prev) =>
-        prev.map((e) => (e.id === id ? { ...e, is_active: !current } : e))
-      );
+      setEmployees((prev) => prev.map((e) => (e.id === id ? { ...e, is_active: !current } : e)));
       toast({
         title: current ? "Сотрудник деактивирован" : "Сотрудник активирован",
         variant: current ? "default" : "success",
@@ -111,7 +110,6 @@ export function EmployeesClient({ initialEmployees }: Props) {
     }
   }
 
-
   return (
     <div className="p-4 md:p-6 space-y-5">
       {/* Header */}
@@ -127,7 +125,7 @@ export function EmployeesClient({ initialEmployees }: Props) {
             <Plus className="h-4 w-4 mr-2" />
             Добавить
           </Link>
-        </Button>
+          </Button>
       </div>
 
       {/* Filters */}
@@ -259,56 +257,15 @@ export function EmployeesClient({ initialEmployees }: Props) {
             Нет сотрудников по заданным фильтрам
           </p>
         )}
-        {filtered.map((emp) => (
-          <div
+        {filtered.map((emp, i) => (
+          <EmployeeMobileCard
             key={emp.id}
-            className={`rounded-lg border p-4 space-y-2 ${!emp.is_active ? "opacity-60" : ""}`}
-          >
-            <div className="flex items-start justify-between gap-2">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-zinc-800 border border-zinc-700 overflow-hidden flex-shrink-0 flex items-center justify-center">
-                  {emp.photo_url
-                    // eslint-disable-next-line @next/next/no-img-element
-                    ? <img src={emp.photo_url} alt="" className="w-full h-full object-cover" />
-                    : <User className="h-5 w-5 text-zinc-500" />}
-                </div>
-                <div>
-                  <p className="font-medium">{emp.full_name}</p>
-                  <p className="text-sm text-muted-foreground">{formatPhone(emp.phone)}</p>
-                </div>
-              </div>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" aria-label="Действия">
-                    <MoreHorizontal className="h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={() => router.push(`/employees/${emp.id}/edit`)}>
-                    <Pencil className="h-4 w-4 mr-2" /> Редактировать
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => { setResetTarget(emp); setNewPassword(""); }}>
-                    <KeyRound className="h-4 w-4 mr-2" /> Сбросить пароль
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => toggleActive(emp.id, emp.is_active)}>
-                    {emp.is_active
-                      ? <><UserX className="h-4 w-4 mr-2" /> Деактивировать</>
-                      : <><UserCheck className="h-4 w-4 mr-2" /> Активировать</>}
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-            <div className="flex flex-wrap gap-1.5">
-              <Badge variant="outline">{ROLE_LABELS[emp.role] ?? emp.role}</Badge>
-              <Badge variant={TIER_BADGE[emp.tier] ?? "outline"}>
-                {TIER_LABELS[emp.tier] ?? emp.tier}
-              </Badge>
-              {emp.is_active
-                ? <Badge variant="success">Активен</Badge>
-                : <Badge variant="secondary">Неактивен</Badge>}
-            </div>
-          </div>
+            emp={emp}
+            index={i}
+            onEdit={(id) => router.push(`/employees/${id}/edit`)}
+            onResetPassword={(e) => { setResetTarget(e); setNewPassword(""); }}
+            onToggleActive={toggleActive}
+          />
         ))}
       </div>
 

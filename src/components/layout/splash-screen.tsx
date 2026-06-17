@@ -31,6 +31,7 @@ export function SplashScreen() {
         pointerEvents: fading ? "none" : "auto",
       }}
     >
+      {/* eslint-disable-next-line @next/next/no-img-element */}
       <img src="/api/logo?v=light" alt="Magnifique" style={{ height: 72, width: "auto" }} />
       <p style={{
         color: "hsl(38,62%,48%)",

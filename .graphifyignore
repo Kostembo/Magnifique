@@ -1,0 +1,35 @@
+# Secrets & environment variables
+.env
+.env.*
+!.env.example
+!.env.*.example
+
+# Deploy configs — могут содержать пути, пароли, connection strings
+deploy/ecosystem.config.js
+deploy/db_setup.sh
+
+# Generated / build output
+.next/
+node_modules/
+coverage/
+graphify-out/
+
+# User-uploaded content (data, not code)
+public/uploads/
+
+# DB migrations — содержат DDL, иногда default-данные
+prisma/migrations/
+
+# Certificates & keys
+*.pem
+*.key
+*.cert
+*.p12
+*.pfx
+
+# Claude Code internal
+.claude/
+
+# Logs
+*.log
+npm-debug.log*

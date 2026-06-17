@@ -193,40 +193,49 @@ export function EventDetailClient({ event, isManager, currentUserId }: Props) {
     const { default: jsPDF } = await import("jspdf");
     const { default: autoTable } = await import("jspdf-autotable");
 
-    const doc = new jsPDF();
     const ROLE_LABELS_LOCAL: Record<string, string> = {
       waiter: "Официант", cook: "Повар", warehouse: "Склад", manager: "Менеджер",
     };
-    const TIER_LABELS: Record<string, string> = {
+    const TIER_LABELS_LOCAL: Record<string, string> = {
       core: "Костяк", regular: "Основной", trainee: "Стажёр",
     };
 
+    // Load Arial from /public/fonts — supports Cyrillic
+    const fontBuffer = await fetch("/fonts/Arial.ttf").then((r) => r.arrayBuffer());
+    const bytes = new Uint8Array(fontBuffer);
+    let binary = "";
+    for (let i = 0; i < bytes.length; i += 8192) {
+      binary += String.fromCharCode(...bytes.subarray(i, i + 8192));
+    }
+    const fontBase64 = btoa(binary);
+
+    const doc = new jsPDF();
+    doc.addFileToVFS("Arial.ttf", fontBase64);
+    doc.addFont("Arial.ttf", "Arial", "normal");
+    doc.setFont("Arial");
+
     const dateStr = format(new Date(event.starts_at), "d MMMM yyyy, HH:mm", { locale: ru });
-    doc.setFont("helvetica", "bold");
     doc.setFontSize(16);
     doc.text(event.title, 14, 18);
-    doc.setFont("helvetica", "normal");
     doc.setFontSize(10);
     doc.setTextColor(120);
     doc.text(dateStr, 14, 26);
     doc.setTextColor(0);
 
     const confirmed = positions.flatMap((p) =>
-      p.assignments
-        .filter((a) => a.status === "confirmed")
-        .map((a) => [
-          a.employee.full_name,
-          a.employee.phone,
-          ROLE_LABELS_LOCAL[a.employee.role] ?? a.employee.role,
-          TIER_LABELS[a.employee.tier] ?? a.employee.tier,
-        ])
+      p.assignments.filter((a) => a.status === "confirmed").map((a) => [
+        a.employee.full_name,
+        a.employee.phone,
+        ROLE_LABELS_LOCAL[a.employee.role] ?? a.employee.role,
+        TIER_LABELS_LOCAL[a.employee.tier] ?? a.employee.tier,
+      ])
     );
 
     autoTable(doc, {
       startY: 32,
       head: [["ФИО", "Телефон", "Должность", "Уровень"]],
       body: confirmed.length ? confirmed : [["Нет подтверждённых сотрудников", "", "", ""]],
-      styles: { fontSize: 9 },
+      styles: { font: "Arial", fontSize: 9 },
       headStyles: { fillColor: [39, 39, 42], textColor: [244, 244, 245] },
     });
 

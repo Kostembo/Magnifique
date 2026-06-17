@@ -19,7 +19,7 @@ export default async function EditEmployeePage({ params }: { params: { id: strin
 
   if (!employee) notFound();
 
-  const { passport_data_enc, photo_url, ...rest } = employee;
+  const { passport_data_enc: _enc, photo_url, ...rest } = employee;
 
   return (
     <EmployeeForm
@@ -28,6 +28,7 @@ export default async function EditEmployeePage({ params }: { params: { id: strin
         ...rest,
         photo_url: photo_url ?? undefined,
         passport_data: "",
+        hasPassportData: !!_enc,
       }}
     />
   );

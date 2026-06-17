@@ -10,6 +10,7 @@ export function PullToRefresh({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const containerRef = useRef<HTMLDivElement>(null);
   const startYRef = useRef(0);
+  const pullDistRef = useRef(0);
   const [pullDist, setPullDist] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
   const pullingRef = useRef(false);
@@ -29,17 +30,20 @@ export function PullToRefresh({ children }: { children: React.ReactNode }) {
       const dist = Math.max(0, e.touches[0].clientY - startYRef.current);
       if (dist > 0 && el!.scrollTop === 0) {
         e.preventDefault();
-        setPullDist(Math.min(dist * 0.5, THRESHOLD + 20));
+        const clamped = Math.min(dist * 0.5, THRESHOLD + 20);
+        pullDistRef.current = clamped;
+        setPullDist(clamped);
       }
     }
 
     function onTouchEnd() {
       if (!pullingRef.current) return;
       pullingRef.current = false;
-      if (pullDist >= THRESHOLD) {
+      if (pullDistRef.current >= THRESHOLD) {
         setRefreshing(true);
-        setTimeout(() => { window.location.reload(); }, 300);
+        setTimeout(() => { router.refresh(); }, 300);
       } else {
+        pullDistRef.current = 0;
         setPullDist(0);
       }
     }
@@ -52,7 +56,7 @@ export function PullToRefresh({ children }: { children: React.ReactNode }) {
       el.removeEventListener("touchmove", onTouchMove);
       el.removeEventListener("touchend", onTouchEnd);
     };
-  }, [pullDist, router]);
+  }, [router]);
 
   const progress = Math.min(pullDist / THRESHOLD, 1);
 
@@ -73,7 +77,9 @@ export function PullToRefresh({ children }: { children: React.ReactNode }) {
           }}
         />
       </div>
-      {children}
+      <div style={{ paddingBottom: "env(safe-area-inset-bottom)" }}>
+        {children}
+      </div>
     </div>
   );
 }
