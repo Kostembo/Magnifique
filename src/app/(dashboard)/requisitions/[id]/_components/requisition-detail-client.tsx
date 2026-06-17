@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useEffect, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { format } from "date-fns";
@@ -44,6 +44,8 @@ const STATUS_VARIANT: Record<string, "secondary" | "warning" | "info" | "success
   done: "success",
 };
 
+type CatalogItem = { id: number; name: string; unit: string; category: string };
+
 interface Props {
   requisition: Requisition;
   isManager: boolean;
@@ -60,6 +62,14 @@ export function RequisitionDetailClient({ requisition: initial, isManager }: Pro
   const [adding, setAdding] = useState(false);
   const [togglingId, setTogglingId] = useState<number | null>(null);
   const [deletingId, setDeletingId] = useState<number | null>(null);
+  const [catalog, setCatalog] = useState<CatalogItem[]>([]);
+  const [suggestions, setSuggestions] = useState<CatalogItem[]>([]);
+
+  useEffect(() => {
+    if (isManager && req.status === "draft") {
+      fetch("/api/warehouse-items").then((r) => r.ok ? r.json() : []).then(setCatalog).catch(() => {});
+    }
+  }, [isManager, req.status]);
 
   const total = req.items.length;
   const picked = req.items.filter((i) => i.is_picked).length;
@@ -234,13 +244,44 @@ export function RequisitionDetailClient({ requisition: initial, isManager }: Pro
       {isManager && req.status === "draft" && (
         <form onSubmit={addItem} className="rounded-lg border bg-card p-4 space-y-3">
           <p className="text-sm font-medium">Добавить позицию</p>
-          <div className="flex gap-2">
+          <div className="relative">
             <Input
-              placeholder="Название"
+              placeholder="Название..."
               value={addName}
-              onChange={(e) => setAddName(e.target.value)}
-              className="flex-1"
+              onChange={(e) => {
+                const val = e.target.value;
+                setAddName(val);
+                if (val.length > 1) {
+                  const q = val.toLowerCase();
+                  setSuggestions(catalog.filter((c) => c.name.toLowerCase().includes(q)).slice(0, 6));
+                } else {
+                  setSuggestions([]);
+                }
+              }}
+              onBlur={() => setTimeout(() => setSuggestions([]), 150)}
+              autoComplete="off"
             />
+            {suggestions.length > 0 && (
+              <div className="absolute top-full left-0 right-0 z-20 bg-popover border rounded-md shadow-lg mt-1 overflow-hidden">
+                {suggestions.map((s) => (
+                  <button
+                    key={s.id}
+                    type="button"
+                    onMouseDown={() => {
+                      setAddName(s.name);
+                      setAddUnit(s.unit);
+                      setSuggestions([]);
+                    }}
+                    className="w-full text-left px-3 py-2 text-sm hover:bg-muted flex items-center justify-between gap-2"
+                  >
+                    <span>{s.name}</span>
+                    <span className="text-muted-foreground text-xs shrink-0">{s.unit}{s.category ? ` · ${s.category}` : ""}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+          <div className="flex gap-2">
             <Input
               type="number"
               min="0.01"
@@ -248,13 +289,13 @@ export function RequisitionDetailClient({ requisition: initial, isManager }: Pro
               placeholder="Кол-во"
               value={addQty}
               onChange={(e) => setAddQty(e.target.value)}
-              className="w-24"
+              className="flex-1"
             />
             <Input
               placeholder="Ед."
               value={addUnit}
               onChange={(e) => setAddUnit(e.target.value)}
-              className="w-16"
+              className="w-20"
             />
             <Button type="submit" size="icon" disabled={adding || !addName.trim() || !addQty}>
               {adding ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
