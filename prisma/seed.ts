@@ -4,35 +4,32 @@ import bcrypt from "bcryptjs";
 const prisma = new PrismaClient();
 
 async function main() {
-  console.log("Seed: создаём первого менеджера...");
+  console.log("Seed: создаём служебные аккаунты...");
 
-  const existing = await prisma.employee.findUnique({
-    where: { phone: "79000000000" },
-  });
+  const accounts = [
+    { full_name: "Администратор",   phone: "79000000000", password: "admin000", role: "admin"  as const, tier: "core" as const },
+    { full_name: "Владелец 1",      phone: "79001111111", password: "111111",   role: "owner"  as const, tier: "core" as const },
+    { full_name: "Владелец 2",      phone: "79002222222", password: "222222",   role: "owner"  as const, tier: "core" as const },
+  ];
 
-  if (existing) {
-    console.log("Менеджер уже существует, пропускаем.");
-    return;
+  for (const acc of accounts) {
+    const password_hash = await bcrypt.hash(acc.password, 12);
+    const emp = await prisma.employee.upsert({
+      where: { phone: acc.phone },
+      update: { role: acc.role, password_hash, full_name: acc.full_name, is_active: true },
+      create: {
+        full_name: acc.full_name,
+        phone: acc.phone,
+        password_hash,
+        role: acc.role,
+        tier: acc.tier,
+        is_active: true,
+      },
+    });
+    console.log(`✓ ${acc.role.padEnd(7)} ${emp.full_name}  +7 ${acc.phone.slice(1, 4)} ${acc.phone.slice(4, 7)}-${acc.phone.slice(7, 9)}-${acc.phone.slice(9)}`);
   }
 
-  const password_hash = await bcrypt.hash("admin123", 12);
-
-  const manager = await prisma.employee.create({
-    data: {
-      full_name: "Администратор",
-      phone: "79000000000",
-      password_hash,
-      role: "manager",
-      tier: "core",
-      is_active: true,
-    },
-  });
-
-  console.log(`✓ Менеджер создан:`);
-  console.log(`  ID:       ${manager.id}`);
-  console.log(`  Телефон:  +7 900 000-00-00`);
-  console.log(`  Пароль:   admin123`);
-  console.log(`  ⚠️  Смените пароль после первого входа!`);
+  console.log("\n⚠️  Смените пароли после первого входа!");
 }
 
 main()
