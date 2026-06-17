@@ -1,6 +1,7 @@
 import { auth } from "@/lib/auth";
 import { redirect, notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
+import { isPrivileged, canCreateEvents, canManageKitchen } from "@/lib/roles";
 import { EventDetailClient } from "./_components/event-detail-client";
 
 export const metadata = { title: "Мероприятие — Magnifique" };
@@ -37,10 +38,10 @@ export default async function EventDetailPage({ params }: { params: { id: string
   if (!event) notFound();
 
   const role = session.user.role;
-  const isManager = role === "manager";
+  const isManager = isPrivileged(role) || canCreateEvents(role) || canManageKitchen(role);
 
-  // Не-менеджеры видят только свои мероприятия
-  if (!isManager && role !== "warehouse") {
+  // waiter/cook видят только мероприятия, в которых подтверждены
+  if (role === "waiter" || role === "cook") {
     const hasAccess = event.positions.some((p) =>
       p.assignments.some(
         (a) => a.employee_id === session.user.id && a.status === "confirmed"
@@ -53,6 +54,7 @@ export default async function EventDetailPage({ params }: { params: { id: string
     <EventDetailClient
       event={event}
       isManager={isManager}
+      role={role}
       currentUserId={session.user.id}
     />
   );

@@ -13,12 +13,13 @@ import { useToast } from "@/hooks/use-toast";
 import {
   ArrowLeft, Pencil, Users, Package, MessageSquare,
   User, Clock, MapPin, UserCheck, UserX, Loader2,
-  Bell, BellRing, Plus, ExternalLink, Check, X, FileDown, Trash2,
+  Bell, BellRing, Plus, ExternalLink, Check, X, FileDown, Trash2, ChefHat,
 } from "lucide-react";
 import { ROLE_LABELS } from "@/lib/utils";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { EventMenuTab } from "./event-menu-tab";
 
 type AssignmentStatus = "invited" | "confirmed" | "declined" | "expired";
 
@@ -84,10 +85,13 @@ const STATUS_BADGE: Record<AssignmentStatus, "warning" | "success" | "danger" | 
 interface Props {
   event: EventDetail;
   isManager: boolean;
+  role: string;
   currentUserId: string;
 }
 
-export function EventDetailClient({ event, isManager, currentUserId }: Props) {
+export function EventDetailClient({ event, isManager, role, currentUserId }: Props) {
+  const canEditMenu = ["manager", "owner", "admin", "sales"].includes(role);
+  const canSeeMenu = canEditMenu || role === "chef";
   const router = useRouter();
   const { toast } = useToast();
   const [isPending, startTransition] = useTransition();
@@ -308,7 +312,7 @@ export function EventDetailClient({ event, isManager, currentUserId }: Props) {
       )}
 
       <Tabs defaultValue="recruiting">
-        <TabsList className="w-full justify-start">
+        <TabsList className="w-full justify-start flex-wrap">
           <TabsTrigger value="recruiting" className="flex-1 sm:flex-none gap-1.5">
             <Users className="h-4 w-4" />
             Набор
@@ -317,6 +321,12 @@ export function EventDetailClient({ event, isManager, currentUserId }: Props) {
             <Package className="h-4 w-4" />
             Сбор
           </TabsTrigger>
+          {canSeeMenu && (
+            <TabsTrigger value="menu" className="flex-1 sm:flex-none gap-1.5">
+              <ChefHat className="h-4 w-4" />
+              Меню
+            </TabsTrigger>
+          )}
           <TabsTrigger value="discussion" className="flex-1 sm:flex-none gap-1.5">
             <MessageSquare className="h-4 w-4" />
             Обсуждение
@@ -477,6 +487,13 @@ export function EventDetailClient({ event, isManager, currentUserId }: Props) {
             </div>
           )}
         </TabsContent>
+
+        {/* ===== МЕНЮ ===== */}
+        {canSeeMenu && (
+          <TabsContent value="menu">
+            <EventMenuTab eventId={event.id} canEdit={canEditMenu} />
+          </TabsContent>
+        )}
 
         {/* ===== ОБСУЖДЕНИЕ ===== */}
         <TabsContent value="discussion" className="space-y-3">

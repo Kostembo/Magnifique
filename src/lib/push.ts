@@ -75,7 +75,7 @@ export async function sendPushToMany(
 
 export async function sendPushToManagers(payload: PushPayload): Promise<void> {
   const managers = await prisma.employee.findMany({
-    where: { role: "manager", is_active: true },
+    where: { role: { in: ["manager", "owner", "admin"] }, is_active: true },
     select: { id: true, push_subscription: true },
   });
   const withSub = managers.filter((m) => m.push_subscription !== null);
