@@ -12,7 +12,9 @@ export default async function CalendarPage() {
 
   const { role, id: userId } = session.user;
 
-  if (role === "manager") {
+  const isPrivilegedRole = ["manager", "owner", "admin", "sales", "chef"].includes(role);
+
+  if (isPrivilegedRole) {
     const events = await prisma.event.findMany({
       where: { status: { not: "done" } },
       select: {
@@ -20,25 +22,16 @@ export default async function CalendarPage() {
         client: true, location: true, guests_count: true,
         positions: {
           select: {
+            role: true,
             needed_count: true,
-            assignments: { where: { status: "confirmed" }, select: { id: true } },
+            _count: { select: { assignments: { where: { status: "confirmed" } } } },
           },
         },
       },
       orderBy: { starts_at: "asc" },
     });
 
-    const mapped = events.map((e) => ({
-      id: e.id,
-      title: e.title,
-      starts_at: e.starts_at,
-      status: e.status,
-      client: e.client,
-      location: e.location,
-      guests_count: e.guests_count,
-      confirmed_count: e.positions.reduce((s, p) => s + p.assignments.length, 0),
-      needed_count: e.positions.reduce((s, p) => s + p.needed_count, 0),
-    }));
+    const mapped = events;
 
     return (
       <div className="p-4 md:p-6">

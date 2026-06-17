@@ -33,7 +33,7 @@ type Employee = {
   role: string;
   tier: string;
   is_active: boolean;
-  created_at: Date;
+  created_at?: Date;
   photo_url?: string | null;
 };
 
