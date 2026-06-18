@@ -2,10 +2,25 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { isPrivileged } from "@/lib/roles";
-import { writeFile, mkdir } from "fs/promises";
+import { writeFile, mkdir, readFile } from "fs/promises";
 import path from "path";
 
-const MAX_SIZE = 2 * 1024 * 1024; // 2 MB — клиент всегда сжимает до ~50-80 КБ
+const MAX_SIZE = 2 * 1024 * 1024;
+
+export async function GET(
+  _req: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  const filePath = path.join(process.cwd(), "public", "uploads", "employees", `${params.id}.webp`);
+  try {
+    const buf = await readFile(filePath);
+    return new NextResponse(buf, {
+      headers: { "Content-Type": "image/webp", "Cache-Control": "public, max-age=31536000, immutable" },
+    });
+  } catch {
+    return new NextResponse(null, { status: 404 });
+  }
+}
 
 export async function POST(
   req: NextRequest,
@@ -31,7 +46,7 @@ export async function POST(
   const bytes = await file.arrayBuffer();
   await writeFile(path.join(uploadDir, filename), Buffer.from(bytes));
 
-  const photo_url = `/uploads/employees/${filename}`;
+  const photo_url = `/api/employees/${params.id}/photo`;
 
   await prisma.employee.update({
     where: { id: params.id },

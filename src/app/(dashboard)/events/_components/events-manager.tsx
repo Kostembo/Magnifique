@@ -114,7 +114,7 @@ export function EventsManager({ events }: Props) {
         href="/events/new"
         className="md:hidden fixed bottom-6 right-6 z-30 flex items-center justify-center w-14 h-14 rounded-full bg-primary text-primary-foreground shadow-lg active:scale-95 transition-transform"
         aria-label="Создать мероприятие"
-        style={{ bottom: "calc(1.5rem + env(safe-area-inset-bottom))" }}
+        style={{ bottom: "calc(56px + 1.5rem + env(safe-area-inset-bottom))" }}
       >
         <Plus className="h-6 w-6" />
       </Link>
