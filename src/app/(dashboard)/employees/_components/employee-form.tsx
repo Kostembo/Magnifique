@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, ArrowLeft, Eye, EyeOff, Camera, User } from "lucide-react";
+import { Loader2, ArrowLeft, Eye, EyeOff, Camera, User, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { ImageCropModal } from "./image-crop-modal";
 
@@ -74,6 +74,23 @@ export function EmployeeForm({ mode, defaultValues }: EmployeeFormProps) {
 
   const isActive = watch("is_active");
   const selectedRole = watch("role");
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
+  async function deleteEmployee() {
+    if (!defaultValues?.id) return;
+    setDeleting(true);
+    const res = await fetch(`/api/employees/${defaultValues.id}`, { method: "DELETE" });
+    setDeleting(false);
+    if (res.ok) {
+      toast({ title: "Сотрудник деактивирован", variant: "success" });
+      router.push("/employees");
+      router.refresh();
+    } else {
+      toast({ title: "Ошибка удаления", variant: "destructive" });
+      setConfirmDelete(false);
+    }
+  }
 
   function openCropper(file: File) {
     if (!defaultValues?.id) return;
@@ -354,6 +371,39 @@ export function EmployeeForm({ mode, defaultValues }: EmployeeFormProps) {
         )}
 
         <div className="flex gap-3 justify-end">
+          {mode === "edit" && !confirmDelete && (
+            <Button
+              type="button"
+              variant="ghost"
+              className="mr-auto text-destructive hover:text-destructive hover:bg-destructive/10"
+              onClick={() => setConfirmDelete(true)}
+            >
+              <Trash2 className="h-4 w-4 mr-2" />
+              Удалить
+            </Button>
+          )}
+          {mode === "edit" && confirmDelete && (
+            <div className="mr-auto flex items-center gap-2">
+              <span className="text-sm text-muted-foreground">Деактивировать сотрудника?</span>
+              <Button
+                type="button"
+                size="sm"
+                variant="destructive"
+                disabled={deleting}
+                onClick={deleteEmployee}
+              >
+                {deleting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Да, удалить"}
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                onClick={() => setConfirmDelete(false)}
+              >
+                Отмена
+              </Button>
+            </div>
+          )}
           <Button variant="outline" asChild>
             <Link href="/employees">Отмена</Link>
           </Button>
