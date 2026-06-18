@@ -102,11 +102,7 @@ export async function DELETE(
   const denied = requireManager(session);
   if (denied) return denied;
 
-  // Мягкое удаление — деактивация
-  await prisma.employee.update({
-    where: { id: params.id },
-    data: { is_active: false },
-  });
+  await prisma.employee.delete({ where: { id: params.id } });
 
   return NextResponse.json({ ok: true });
 }

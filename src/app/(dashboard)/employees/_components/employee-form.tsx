@@ -83,7 +83,7 @@ export function EmployeeForm({ mode, defaultValues }: EmployeeFormProps) {
     const res = await fetch(`/api/employees/${defaultValues.id}`, { method: "DELETE" });
     setDeleting(false);
     if (res.ok) {
-      toast({ title: "Сотрудник деактивирован", variant: "success" });
+      toast({ title: "Сотрудник удалён", variant: "success" });
       router.push("/employees");
       router.refresh();
     } else {
@@ -384,7 +384,7 @@ export function EmployeeForm({ mode, defaultValues }: EmployeeFormProps) {
           )}
           {mode === "edit" && confirmDelete && (
             <div className="mr-auto flex items-center gap-2">
-              <span className="text-sm text-muted-foreground">Деактивировать сотрудника?</span>
+              <span className="text-sm text-muted-foreground">Удалить сотрудника навсегда?</span>
               <Button
                 type="button"
                 size="sm"
