@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { isPrivileged } from "@/lib/roles";
+import { sendPushToWarehouse } from "@/lib/push";
 import { z } from "zod";
 
 export async function GET(_req: NextRequest, { params }: { params: { id: string } }) {
@@ -71,6 +72,19 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
       items: { orderBy: { id: "asc" } },
     },
   });
+
+  if (status === "sent") {
+    const eventTitle = updated.event?.title ?? "Мероприятие";
+    const dateStr = updated.event?.starts_at
+      ? new Date(updated.event.starts_at).toLocaleDateString("ru-RU", { day: "numeric", month: "long" })
+      : "";
+    await sendPushToWarehouse({
+      title: "Новая заявка на сбор",
+      body: `${eventTitle}${dateStr ? ` — ${dateStr}` : ""}`,
+      url: `/requisitions/${updated.id}`,
+      tag: `requisition-${updated.id}`,
+    });
+  }
 
   return NextResponse.json(updated);
 }

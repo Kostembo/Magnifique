@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { isPrivileged } from "@/lib/roles";
+import { canCreateEvents } from "@/lib/roles";
 import { z } from "zod";
 
 const patchSchema = z.object({
@@ -14,7 +14,7 @@ export async function PATCH(
   { params }: { params: { id: string } }
 ) {
   const session = await auth();
-  if (!session?.user || !isPrivileged(session.user.role ?? ""))
+  if (!session?.user || !canCreateEvents(session.user.role ?? ""))
     return NextResponse.json({ error: "Нет доступа" }, { status: 403 });
 
   const body = await req.json();
@@ -38,7 +38,7 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   const session = await auth();
-  if (!session?.user || !isPrivileged(session.user.role ?? ""))
+  if (!session?.user || !canCreateEvents(session.user.role ?? ""))
     return NextResponse.json({ error: "Нет доступа" }, { status: 403 });
 
   const entry = await prisma.timeEntry.findUnique({ where: { id: params.id } });

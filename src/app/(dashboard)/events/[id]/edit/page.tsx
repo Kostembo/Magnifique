@@ -1,13 +1,14 @@
 import { auth } from "@/lib/auth";
 import { redirect, notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
+import { canCreateEvents } from "@/lib/roles";
 import { EventEditClient } from "./_components/event-edit-client";
 
 export const metadata = { title: "Редактировать мероприятие — Magnifique" };
 
 export default async function EditEventPage({ params }: { params: { id: string } }) {
   const session = await auth();
-  if (!session?.user || session.user.role !== "manager") redirect("/");
+  if (!session?.user || !canCreateEvents(session.user.role)) redirect("/");
 
   const event = await prisma.event.findUnique({
     where: { id: params.id },

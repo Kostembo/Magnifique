@@ -50,8 +50,16 @@ export async function POST(
     });
 
     if (confirmed >= assignment.position.needed_count) {
-      // Слотов нет — переводим в лист ожидания (оставляем invited, фронт покажет)
-      return NextResponse.json({ status: "waitlisted", message: "Все слоты заняты, вы в листе ожидания" });
+      await prisma.assignment.update({
+        where: { id: params.id },
+        data: { status: "waitlisted", responded_at: new Date() },
+      });
+      await sendPushToManagers({
+        title: `⏳ Хочет подтвердить: ${assignment.employee.full_name}`,
+        body: `${assignment.event.title} — мест нет, но сотрудник хочет участвовать`,
+        url: `/events/${assignment.event_id}`,
+      });
+      return NextResponse.json({ status: "waitlisted" });
     }
 
     await prisma.assignment.update({

@@ -2,6 +2,7 @@ import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { format } from "date-fns";
+import { canCreateEvents } from "@/lib/roles";
 import { StaffTimesheet } from "./_components/staff-timesheet";
 import { ManagerTimesheet } from "./_components/manager-timesheet";
 
@@ -9,7 +10,7 @@ export default async function TimesheetPage() {
   const session = await auth();
   if (!session?.user) redirect("/login");
 
-  const isManager = session.user.role === "manager";
+  const isManager = canCreateEvents(session.user.role);
 
   if (isManager) {
     const now = new Date();

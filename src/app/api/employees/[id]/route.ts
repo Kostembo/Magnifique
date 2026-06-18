@@ -42,7 +42,7 @@ const updateSchema = z.object({
   full_name: z.string().min(2).optional(),
   phone: z.string().min(10).optional(),
   password: z.string().min(6).optional(),
-  role: z.enum(["waiter", "cook", "warehouse", "manager"]).optional(),
+  role: z.enum(["waiter", "cook", "warehouse", "manager", "sales", "chef", "owner", "admin"]).optional(),
   tier: z.enum(["core", "regular", "trainee"]).optional(),
   passport_data: z.string().optional().nullable(),
   is_active: z.boolean().optional(),

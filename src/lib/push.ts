@@ -48,18 +48,17 @@ export async function sendPushToEmployee(
     );
     return "sent";
   } catch (err: unknown) {
-    if (
-      typeof err === "object" &&
-      err !== null &&
-      "statusCode" in err &&
-      ((err as { statusCode: number }).statusCode === 404 || (err as { statusCode: number }).statusCode === 410)
-    ) {
-      // Подписка устарела — очищаем
+    const statusCode =
+      typeof err === "object" && err !== null && "statusCode" in err
+        ? (err as { statusCode: number }).statusCode
+        : undefined;
+    if (statusCode === 404 || statusCode === 410) {
       await prisma.employee.update({
         where: { id: employeeId },
         data: { push_subscription: Prisma.DbNull },
       });
     }
+    console.error("[push] sendPushToEmployee error for", employeeId, err);
     return "error";
   }
 }
@@ -80,6 +79,15 @@ export async function sendPushToManagers(payload: PushPayload): Promise<void> {
   });
   const withSub = managers.filter((m) => m.push_subscription !== null);
   await sendPushToMany(withSub.map((m) => m.id), payload);
+}
+
+export async function sendPushToWarehouse(payload: PushPayload): Promise<void> {
+  const staff = await prisma.employee.findMany({
+    where: { role: "warehouse", is_active: true },
+    select: { id: true, push_subscription: true },
+  });
+  const withSub = staff.filter((e) => e.push_subscription !== null);
+  await sendPushToMany(withSub.map((e) => e.id), payload);
 }
 
 export function getVapidPublicKey(): string {

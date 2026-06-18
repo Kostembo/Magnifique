@@ -7,10 +7,9 @@ import { ChevronLeft, ChevronRight, Pencil, Trash2, Loader2 } from "lucide-react
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
+import { MobileTimesheetView, type EmpRow } from "./manager-timesheet-mobile";
 
 interface TimeEntry {
   id: string;
@@ -39,11 +38,12 @@ function fmtHours(mins: number): string {
   if (!mins) return "";
   const h = Math.floor(mins / 60);
   const m = mins % 60;
-  return m > 0 ? `${h}ч${m}м` : `${h}ч`;
+  return m > 0 ? `${h}ч ${m}м` : `${h}ч`;
 }
 
 const ROLE_LABELS: Record<string, string> = {
-  waiter: "Официант", cook: "Повар", warehouse: "Склад", manager: "Менеджер",
+  waiter: "Официант", cook: "Повар", warehouse: "Склад",
+  manager: "Менеджер", owner: "Владелец", admin: "Администратор", sales: "Менеджер по продажам",
 };
 
 export function ManagerTimesheet({ initial, initialMonth }: { initial: TimeEntry[]; initialMonth: string }) {
@@ -59,8 +59,7 @@ export function ManagerTimesheet({ initial, initialMonth }: { initial: TimeEntry
 
   async function loadMonth(m: Date) {
     setLoading(true);
-    const key = format(m, "yyyy-MM");
-    const res = await fetch(`/api/time-entries?month=${key}`);
+    const res = await fetch(`/api/time-entries?month=${format(m, "yyyy-MM")}`);
     if (res.ok) setEntries(await res.json());
     setLoading(false);
   }
@@ -69,16 +68,20 @@ export function ManagerTimesheet({ initial, initialMonth }: { initial: TimeEntry
   function nextMonth() { const m = addMonths(month, 1); setMonth(m); loadMonth(m); }
 
   function openEdit(entry: TimeEntry) {
-    const day = new Date(entry.work_date).getDate();
     setEditTarget({
       entryId: entry.id,
       employeeName: entry.employee.full_name,
-      day,
+      day: new Date(entry.work_date).getDate(),
       start_time: entry.start_time,
       end_time: entry.end_time,
     });
     setEditStart(entry.start_time);
     setEditEnd(entry.end_time);
+  }
+
+  function openEditById(entryId: string) {
+    const entry = entries.find((e) => e.id === entryId);
+    if (entry) openEdit(entry);
   }
 
   async function saveEdit() {
@@ -115,30 +118,34 @@ export function ManagerTimesheet({ initial, initialMonth }: { initial: TimeEntry
     }
   }
 
-  // Group entries by employee + day, store entryId for editing
-  const activeDays = Array.from(
-    new Set(entries.map((e) => new Date(e.work_date).getDate()))
-  ).sort((a, b) => a - b);
+  // Build data
+  const activeDays = Array.from(new Set(entries.map((e) => new Date(e.work_date).getDate()))).sort((a, b) => a - b);
 
-  type EmpRow = { name: string; role: string; days: Record<number, { mins: number; entryId: string }> };
   const employeeMap = new Map<string, EmpRow>();
   for (const entry of entries) {
     if (!employeeMap.has(entry.employee_id)) {
-      employeeMap.set(entry.employee_id, { name: entry.employee.full_name, role: entry.employee.role, days: {} });
+      employeeMap.set(entry.employee_id, { name: entry.employee.full_name, role: entry.employee.role, days: {}, totalMins: 0 });
     }
+    const row = employeeMap.get(entry.employee_id)!;
     const day = new Date(entry.work_date).getDate();
     const mins = calcMins(entry.start_time, entry.end_time);
-    employeeMap.get(entry.employee_id)!.days[day] = { mins, entryId: entry.id };
+    row.days[day] = { mins, entryId: entry.id, startTime: entry.start_time, endTime: entry.end_time };
+    row.totalMins += mins;
   }
 
   const employees = Array.from(employeeMap.entries()).sort((a, b) => a[1].name.localeCompare(b[1].name, "ru"));
 
-  // For edit dialog: find full entry by id
-  function findEntry(id: string) { return entries.find((e) => e.id === id); }
+  const dayTotals: Record<number, number> = {};
+  for (const [, emp] of employees) {
+    for (const [d, cell] of Object.entries(emp.days)) {
+      dayTotals[Number(d)] = (dayTotals[Number(d)] ?? 0) + cell.mins;
+    }
+  }
+  const grandTotal = Object.values(dayTotals).reduce((s, v) => s + v, 0);
 
   return (
     <div className="space-y-4">
-      {/* Month navigation */}
+      {/* Month nav */}
       <div className="flex items-center gap-3">
         <button onClick={prevMonth} className="p-2 rounded-lg hover:bg-zinc-800 text-zinc-400 hover:text-zinc-100 transition-colors">
           <ChevronLeft className="h-5 w-5" />
@@ -149,29 +156,38 @@ export function ManagerTimesheet({ initial, initialMonth }: { initial: TimeEntry
         <button onClick={nextMonth} className="p-2 rounded-lg hover:bg-zinc-800 text-zinc-400 hover:text-zinc-100 transition-colors">
           <ChevronRight className="h-5 w-5" />
         </button>
-        {loading && <span className="text-xs text-zinc-500">Загрузка...</span>}
+        {loading && <Loader2 className="h-4 w-4 animate-spin text-zinc-500" />}
       </div>
 
+      {/* Mobile */}
+      <div className="md:hidden">
+        <MobileTimesheetView employees={employees} month={month} onEdit={openEditById} />
+      </div>
+
+      {/* Desktop table */}
       {employees.length === 0 ? (
-        <p className="text-zinc-500 text-sm py-8 text-center">Нет отметок за этот месяц</p>
+        <p className="hidden md:block text-zinc-500 text-sm py-8 text-center">Нет отметок за этот месяц</p>
       ) : (
-        <div className="overflow-x-auto rounded-xl border border-zinc-800">
+        <div className="hidden md:block overflow-x-auto rounded-xl border border-zinc-800">
           <table className="min-w-full text-sm">
             <thead>
               <tr className="border-b border-zinc-800">
-                <th className="text-left px-4 py-3 text-zinc-400 font-medium whitespace-nowrap sticky left-0 bg-zinc-950 z-10">
+                <th className="text-left px-4 py-3 text-zinc-400 font-medium whitespace-nowrap sticky left-0 bg-zinc-950 z-10 min-w-[180px]">
                   Сотрудник
                 </th>
                 {activeDays.map((day) => (
-                  <th key={day} className="px-3 py-3 text-zinc-400 font-medium text-center whitespace-nowrap min-w-[56px]">
+                  <th key={day} className="px-2 py-3 text-zinc-400 font-medium text-center whitespace-nowrap min-w-[52px]">
                     {day}
                   </th>
                 ))}
+                <th className="px-4 py-3 text-zinc-300 font-semibold text-center whitespace-nowrap sticky right-0 bg-zinc-950 z-10 border-l border-zinc-800">
+                  Итого
+                </th>
               </tr>
             </thead>
             <tbody>
               {employees.map(([, emp]) => (
-                <tr key={emp.name} className="border-b border-zinc-800/50 last:border-0 hover:bg-zinc-900/50 transition-colors">
+                <tr key={emp.name} className="border-b border-zinc-800/50 last:border-0 hover:bg-zinc-900/40 transition-colors">
                   <td className="px-4 py-3 sticky left-0 bg-zinc-950 z-10">
                     <p className="text-zinc-100 whitespace-nowrap">{emp.name}</p>
                     <p className="text-zinc-500 text-xs">{ROLE_LABELS[emp.role] ?? emp.role}</p>
@@ -179,12 +195,11 @@ export function ManagerTimesheet({ initial, initialMonth }: { initial: TimeEntry
                   {activeDays.map((day) => {
                     const cell = emp.days[day];
                     return (
-                      <td key={day} className="px-3 py-3 text-center">
+                      <td key={day} className="px-2 py-3 text-center">
                         {cell ? (
                           <button
-                            onClick={() => { const e = findEntry(cell.entryId); if (e) openEdit(e); }}
+                            onClick={() => openEditById(cell.entryId)}
                             className="group inline-flex items-center gap-1 text-[hsl(38,72%,62%)] font-medium hover:text-[hsl(38,72%,75%)] transition-colors"
-                            title="Редактировать"
                           >
                             {fmtHours(cell.mins)}
                             <Pencil className="h-3 w-3 opacity-0 group-hover:opacity-60 transition-opacity" />
@@ -195,8 +210,24 @@ export function ManagerTimesheet({ initial, initialMonth }: { initial: TimeEntry
                       </td>
                     );
                   })}
+                  <td className="px-4 py-3 text-center sticky right-0 bg-zinc-950 z-10 border-l border-zinc-800">
+                    <span className="font-semibold text-zinc-100">{fmtHours(emp.totalMins) || "—"}</span>
+                  </td>
                 </tr>
               ))}
+              <tr className="border-t-2 border-zinc-700 bg-zinc-900/60">
+                <td className="px-4 py-2.5 sticky left-0 bg-zinc-900 z-10">
+                  <p className="text-zinc-400 font-medium text-xs uppercase tracking-wide">Итого часов</p>
+                </td>
+                {activeDays.map((day) => (
+                  <td key={day} className="px-2 py-2.5 text-center">
+                    <span className="text-zinc-300 text-xs font-medium">{fmtHours(dayTotals[day]) || "—"}</span>
+                  </td>
+                ))}
+                <td className="px-4 py-2.5 text-center sticky right-0 bg-zinc-900 z-10 border-l border-zinc-800">
+                  <span className="font-bold text-zinc-100">{fmtHours(grandTotal) || "—"}</span>
+                </td>
+              </tr>
             </tbody>
           </table>
         </div>

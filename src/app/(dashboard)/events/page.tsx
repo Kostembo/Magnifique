@@ -6,14 +6,16 @@ import { EventsStaff } from "./_components/events-staff";
 
 export const metadata = { title: "Мероприятия — Magnifique" };
 
+const MANAGER_VIEW_ROLES = ["manager", "owner", "admin", "sales", "chef"];
+
 export default async function EventsPage() {
   const session = await auth();
   if (!session?.user) redirect("/login");
 
   const role = session.user.role;
 
-  // Менеджер: список всех активных мероприятий
-  if (role === "manager") {
+  // Менеджер / владелец / admin / sales / шеф: список всех мероприятий
+  if (MANAGER_VIEW_ROLES.includes(role)) {
     const events = await prisma.event.findMany({
       where: {},
       include: {
@@ -30,35 +32,21 @@ export default async function EventsPage() {
     return <EventsManager events={events} />;
   }
 
-  // Сотрудник: личный экран с приглашениями и сменами
+  // Сотрудник: только подтверждённые смены
   if (["waiter", "cook"].includes(role)) {
-    const [invitations, shifts] = await Promise.all([
-      prisma.assignment.findMany({
-        where: {
-          employee_id: session.user.id,
-          status: "invited",
-          event: { starts_at: { gte: new Date() }, status: { notIn: ["done"] } },
-        },
-        include: {
-          event: { select: { id: true, title: true, client: true, location: true, starts_at: true } },
-          position: { select: { role: true, needed_count: true } },
-        },
-        orderBy: { event: { starts_at: "asc" } },
-      }),
-      prisma.assignment.findMany({
-        where: {
-          employee_id: session.user.id,
-          status: "confirmed",
-          event: { starts_at: { gte: new Date() } },
-        },
-        include: {
-          event: { select: { id: true, title: true, client: true, location: true, starts_at: true, status: true } },
-        },
-        orderBy: { event: { starts_at: "asc" } },
-      }),
-    ]);
+    const shifts = await prisma.assignment.findMany({
+      where: {
+        employee_id: session.user.id,
+        status: "confirmed",
+        event: { starts_at: { gte: new Date() } },
+      },
+      include: {
+        event: { select: { id: true, title: true, client: true, location: true, starts_at: true, status: true } },
+      },
+      orderBy: { event: { starts_at: "asc" } },
+    });
 
-    return <EventsStaff invitations={invitations} shifts={shifts} />;
+    return <EventsStaff shifts={shifts} />;
   }
 
   redirect("/");

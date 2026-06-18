@@ -78,7 +78,7 @@ export async function POST(
     await sendPushToMany(invitedIds, {
       title: `Приглашение на мероприятие`,
       body: `${event.title}${event.starts_at ? ` — ${new Date(event.starts_at).toLocaleDateString("ru-RU")}` : ""}`,
-      url: `/events/${event.id}`,
+      url: `/invite/${event.id}`,
       tag: `invite-${event.id}`,
     });
 
@@ -131,8 +131,8 @@ export async function POST(
 
     await sendPushToMany(invitedIds, {
       title: `Открыт набор: ${event.title}`,
-      body: `Мероприятие ${new Date(event.starts_at).toLocaleDateString("ru-RU")} — подтвердите участие`,
-      url: `/events`,
+      body: `${new Date(event.starts_at).toLocaleDateString("ru-RU")} — подтвердите участие`,
+      url: `/invite/${event.id}`,
       tag: `pool-${event.id}`,
     });
 
@@ -154,7 +154,7 @@ export async function POST(
     await sendPushToMany(silentIds, {
       title: `Напоминание: ответьте на приглашение`,
       body: `${event.title} — ${new Date(event.starts_at).toLocaleDateString("ru-RU")}`,
-      url: `/events`,
+      url: `/invite/${event.id}`,
       tag: `remind-${event.id}`,
     });
 

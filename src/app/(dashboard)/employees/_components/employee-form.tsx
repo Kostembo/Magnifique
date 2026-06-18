@@ -68,11 +68,12 @@ export function EmployeeForm({ mode, defaultValues }: EmployeeFormProps) {
       tier: defaultValues?.tier ?? "regular",
       passport_data: "",
       is_active: defaultValues?.is_active ?? true,
-      password: "",
+      password: "000000",
     },
   });
 
   const isActive = watch("is_active");
+  const selectedRole = watch("role");
 
   function openCropper(file: File) {
     if (!defaultValues?.id) return;
@@ -226,13 +227,16 @@ export function EmployeeForm({ mode, defaultValues }: EmployeeFormProps) {
                 <Label>Роль *</Label>
                 <Select
                   defaultValue={defaultValues?.role}
-                  onValueChange={(v) => setValue("role", v as EditData["role"])}
+                  onValueChange={(v) => {
+                    setValue("role", v as EditData["role"]);
+                    if (v !== "waiter") setValue("tier", "regular");
+                  }}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Выберите роль" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="waiter">Официант / Бармен</SelectItem>
+                    <SelectItem value="waiter">Официант</SelectItem>
                     <SelectItem value="cook">Повар</SelectItem>
                     <SelectItem value="warehouse">Склад</SelectItem>
                     <SelectItem value="manager">Менеджер</SelectItem>
@@ -245,22 +249,25 @@ export function EmployeeForm({ mode, defaultValues }: EmployeeFormProps) {
                 {errors.role && <p className="text-sm text-destructive">{errors.role.message}</p>}
               </div>
 
-              <div className="space-y-2">
-                <Label>Уровень *</Label>
-                <Select
-                  defaultValue={defaultValues?.tier ?? "regular"}
-                  onValueChange={(v) => setValue("tier", v as EditData["tier"])}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="core">Костяк</SelectItem>
-                    <SelectItem value="regular">Основной</SelectItem>
-                    <SelectItem value="trainee">Стажёр</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+              {selectedRole === "waiter" && (
+                <div className="space-y-2">
+                  <Label>Уровень *</Label>
+                  <Select
+                    key={selectedRole}
+                    defaultValue={defaultValues?.tier ?? "regular"}
+                    onValueChange={(v) => setValue("tier", v as EditData["tier"])}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="core">Костяк</SelectItem>
+                      <SelectItem value="regular">Основной</SelectItem>
+                      <SelectItem value="trainee">Стажёр</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>

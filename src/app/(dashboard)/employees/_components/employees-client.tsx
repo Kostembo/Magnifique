@@ -21,10 +21,11 @@ import {
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import {
-  Plus, Search, MoreHorizontal, Pencil, UserX, UserCheck, KeyRound, Loader2, User,
+  Plus, Search, MoreHorizontal, Pencil, UserX, UserCheck, KeyRound, Loader2, User, CalendarPlus,
 } from "lucide-react";
 import { ROLE_LABELS, TIER_LABELS, formatPhone } from "@/lib/utils";
 import { EmployeeMobileCard } from "./employee-mobile-card";
+import { InviteToEventDialog } from "./invite-to-event-dialog";
 
 type Employee = {
   id: string;
@@ -59,6 +60,8 @@ export function EmployeesClient({ initialEmployees }: Props) {
   const [resetTarget, setResetTarget] = useState<Employee | null>(null);
   const [newPassword, setNewPassword] = useState("");
   const [resetting, setResetting] = useState(false);
+  const [loadingIds, setLoadingIds] = useState<Set<string>>(new Set());
+  const [inviteTarget, setInviteTarget] = useState<Employee | null>(null);
 
   const filtered = useMemo(() => {
     return employees.filter((e) => {
@@ -75,19 +78,24 @@ export function EmployeesClient({ initialEmployees }: Props) {
   }, [employees, search, roleFilter, tierFilter, activeFilter]);
 
   async function toggleActive(id: string, current: boolean) {
-    const res = await fetch(`/api/employees/${id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ is_active: !current }),
-    });
-    if (res.ok) {
-      setEmployees((prev) => prev.map((e) => (e.id === id ? { ...e, is_active: !current } : e)));
-      toast({
-        title: current ? "Сотрудник деактивирован" : "Сотрудник активирован",
-        variant: current ? "default" : "success",
+    setLoadingIds((prev) => new Set(prev).add(id));
+    try {
+      const res = await fetch(`/api/employees/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ is_active: !current }),
       });
-    } else {
-      toast({ title: "Ошибка", description: "Не удалось обновить статус", variant: "destructive" });
+      if (res.ok) {
+        setEmployees((prev) => prev.map((e) => (e.id === id ? { ...e, is_active: !current } : e)));
+        toast({
+          title: current ? "Сотрудник деактивирован" : "Сотрудник активирован",
+          variant: current ? "default" : "success",
+        });
+      } else {
+        toast({ title: "Ошибка", description: "Не удалось обновить статус", variant: "destructive" });
+      }
+    } finally {
+      setLoadingIds((prev) => { const s = new Set(prev); s.delete(id); return s; });
     }
   }
 
@@ -222,27 +230,36 @@ export function EmployeesClient({ initialEmployees }: Props) {
                     : <Badge variant="secondary">Неактивен</Badge>}
                 </TableCell>
                 <TableCell>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon" aria-label="Действия">
-                        <MoreHorizontal className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => router.push(`/employees/${emp.id}/edit`)}>
-                        <Pencil className="h-4 w-4 mr-2" /> Редактировать
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => { setResetTarget(emp); setNewPassword(""); }}>
-                        <KeyRound className="h-4 w-4 mr-2" /> Сбросить пароль
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem onClick={() => toggleActive(emp.id, emp.is_active)}>
-                        {emp.is_active
-                          ? <><UserX className="h-4 w-4 mr-2" /> Деактивировать</>
-                          : <><UserCheck className="h-4 w-4 mr-2" /> Активировать</>}
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                  {loadingIds.has(emp.id)
+                    ? <Loader2 className="h-4 w-4 animate-spin text-muted-foreground mx-auto" />
+                    : (
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" aria-label="Действия">
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => router.push(`/employees/${emp.id}/edit`)}>
+                          <Pencil className="h-4 w-4 mr-2" /> Редактировать
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => { setResetTarget(emp); setNewPassword(""); }}>
+                          <KeyRound className="h-4 w-4 mr-2" /> Сбросить пароль
+                        </DropdownMenuItem>
+                        {emp.is_active && (
+                          <DropdownMenuItem onClick={() => setInviteTarget(emp)}>
+                            <CalendarPlus className="h-4 w-4 mr-2" /> Пригласить на мероприятие
+                          </DropdownMenuItem>
+                        )}
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem onClick={() => toggleActive(emp.id, emp.is_active)}>
+                          {emp.is_active
+                            ? <><UserX className="h-4 w-4 mr-2" /> Деактивировать</>
+                            : <><UserCheck className="h-4 w-4 mr-2" /> Активировать</>}
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  )}
                 </TableCell>
               </TableRow>
             ))}
@@ -265,9 +282,12 @@ export function EmployeesClient({ initialEmployees }: Props) {
             onEdit={(id) => router.push(`/employees/${id}/edit`)}
             onResetPassword={(e) => { setResetTarget(e); setNewPassword(""); }}
             onToggleActive={toggleActive}
+            onInvite={(e) => setInviteTarget(e)}
           />
         ))}
       </div>
+
+      <InviteToEventDialog employee={inviteTarget} onClose={() => setInviteTarget(null)} />
 
       {/* Диалог сброса пароля */}
       <Dialog open={!!resetTarget} onOpenChange={(open) => { if (!open) { setResetTarget(null); setNewPassword(""); } }}>

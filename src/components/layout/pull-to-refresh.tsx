@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { RefreshCw } from "lucide-react";
 
@@ -12,7 +12,7 @@ export function PullToRefresh({ children }: { children: React.ReactNode }) {
   const startYRef = useRef(0);
   const pullDistRef = useRef(0);
   const [pullDist, setPullDist] = useState(0);
-  const [refreshing, setRefreshing] = useState(false);
+  const [isPending, startTransition] = useTransition();
   const pullingRef = useRef(false);
 
   useEffect(() => {
@@ -39,12 +39,11 @@ export function PullToRefresh({ children }: { children: React.ReactNode }) {
     function onTouchEnd() {
       if (!pullingRef.current) return;
       pullingRef.current = false;
-      if (pullDistRef.current >= THRESHOLD) {
-        setRefreshing(true);
-        setTimeout(() => { router.refresh(); }, 300);
-      } else {
-        pullDistRef.current = 0;
-        setPullDist(0);
+      const dist = pullDistRef.current;
+      pullDistRef.current = 0;
+      setPullDist(0);
+      if (dist >= THRESHOLD) {
+        startTransition(() => { router.refresh(); });
       }
     }
 
@@ -56,7 +55,7 @@ export function PullToRefresh({ children }: { children: React.ReactNode }) {
       el.removeEventListener("touchmove", onTouchMove);
       el.removeEventListener("touchend", onTouchEnd);
     };
-  }, [router]);
+  }, [router, startTransition]);
 
   const progress = Math.min(pullDist / THRESHOLD, 1);
 
@@ -65,19 +64,19 @@ export function PullToRefresh({ children }: { children: React.ReactNode }) {
       {/* Pull indicator */}
       <div
         className="flex items-center justify-center overflow-hidden transition-all duration-200"
-        style={{ height: pullDist > 0 || refreshing ? (refreshing ? THRESHOLD : pullDist) : 0 }}
+        style={{ height: isPending ? THRESHOLD : pullDist > 0 ? pullDist : 0 }}
       >
         <RefreshCw
           className="text-[hsl(38,62%,48%)]"
           style={{
             width: 22, height: 22,
-            transform: `rotate(${refreshing ? 0 : progress * 360}deg)`,
-            animation: refreshing ? "spin 0.7s linear infinite" : "none",
-            opacity: progress,
+            transform: `rotate(${isPending ? 0 : progress * 360}deg)`,
+            animation: isPending ? "spin 0.7s linear infinite" : "none",
+            opacity: isPending ? 1 : progress,
           }}
         />
       </div>
-      <div style={{ paddingBottom: "env(safe-area-inset-bottom)" }}>
+      <div className="pb-16 md:pb-0">
         {children}
       </div>
     </div>

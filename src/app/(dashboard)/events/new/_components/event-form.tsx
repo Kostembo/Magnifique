@@ -36,8 +36,7 @@ type FormData = z.infer<typeof formSchema>;
 
 const ROLE_OPTIONS = [
   { value: "cook", label: "Повара" },
-  { value: "waiter", label: "Официанты / Бармены" },
-  { value: "warehouse", label: "Склад" },
+  { value: "waiter", label: "Официанты" },
 ];
 
 export function EventForm() {

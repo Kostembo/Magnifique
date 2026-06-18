@@ -2,6 +2,7 @@ import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { ChangePasswordForm } from "./_components/change-password-form";
 import { PushSection } from "./_components/push-section";
+import { LogoutButton } from "./_components/logout-button";
 
 export default async function SettingsPage() {
   const session = await auth();
@@ -15,6 +16,7 @@ export default async function SettingsPage() {
       </div>
       <PushSection />
       <ChangePasswordForm />
+      <LogoutButton />
     </div>
   );
 }

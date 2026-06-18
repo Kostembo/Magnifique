@@ -7,7 +7,7 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
   DropdownMenuSeparator, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { MoreHorizontal, Pencil, UserX, UserCheck, KeyRound, User } from "lucide-react";
+import { MoreHorizontal, Pencil, UserX, UserCheck, KeyRound, User, CalendarPlus } from "lucide-react";
 import { ROLE_LABELS, TIER_LABELS, formatPhone } from "@/lib/utils";
 
 const TIER_BADGE: Record<string, "success" | "info" | "warning"> = {
@@ -32,9 +32,10 @@ interface Props {
   onEdit: (id: string) => void;
   onResetPassword: (emp: Employee) => void;
   onToggleActive: (id: string, current: boolean) => void;
+  onInvite: (emp: Employee) => void;
 }
 
-export function EmployeeMobileCard({ emp, index, onEdit, onResetPassword, onToggleActive }: Props) {
+export function EmployeeMobileCard({ emp, index, onEdit, onResetPassword, onToggleActive, onInvite }: Props) {
   return (
     <motion.div
       key={emp.id}
@@ -69,6 +70,11 @@ export function EmployeeMobileCard({ emp, index, onEdit, onResetPassword, onTogg
             <DropdownMenuItem onClick={() => onResetPassword(emp)}>
               <KeyRound className="h-4 w-4 mr-2" /> Сбросить пароль
             </DropdownMenuItem>
+            {emp.is_active && (
+              <DropdownMenuItem onClick={() => onInvite(emp)}>
+                <CalendarPlus className="h-4 w-4 mr-2" /> Пригласить на мероприятие
+              </DropdownMenuItem>
+            )}
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => onToggleActive(emp.id, emp.is_active)}>
               {emp.is_active

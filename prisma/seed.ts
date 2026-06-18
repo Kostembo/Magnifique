@@ -7,9 +7,9 @@ async function main() {
   console.log("Seed: создаём служебные аккаунты...");
 
   const accounts = [
-    { full_name: "Администратор",   phone: "79000000000", password: "admin000", role: "admin"  as const, tier: "core" as const },
-    { full_name: "Владелец 1",      phone: "79001111111", password: "111111",   role: "owner"  as const, tier: "core" as const },
-    { full_name: "Владелец 2",      phone: "79002222222", password: "222222",   role: "owner"  as const, tier: "core" as const },
+    { full_name: "Администратор",   phone: "79000000000", password: "000000", role: "admin"  as const, tier: "core" as const },
+    { full_name: "Владелец 1",      phone: "79001111111", password: "000000",   role: "owner"  as const, tier: "core" as const },
+    { full_name: "Владелец 2",      phone: "79002222222", password: "000000",   role: "owner"  as const, tier: "core" as const },
   ];
 
   for (const acc of accounts) {
