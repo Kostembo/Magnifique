@@ -35,7 +35,7 @@ export default async function CalendarPage() {
 
     return (
       <div className="p-4 md:p-6">
-        <h1 className="text-xl font-semibold text-zinc-100 mb-6">Календарь мероприятий</h1>
+        <h1 className="text-xl font-semibold text-zinc-900 mb-6">Календарь мероприятий</h1>
         <EventsCalendar events={mapped} />
       </div>
     );
@@ -50,7 +50,7 @@ export default async function CalendarPage() {
 
   return (
     <div className="p-4 md:p-6">
-      <h1 className="text-xl font-semibold text-zinc-100 mb-6">Мои смены</h1>
+      <h1 className="text-xl font-semibold text-zinc-900 mb-6">Мои смены</h1>
       <StaffCalendar shifts={shifts} />
     </div>
   );

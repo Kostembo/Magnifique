@@ -53,7 +53,7 @@ export function EventCard({ event }: { event: EventCardData }) {
           "shadow-[0_1px_2px_rgba(0,0,0,0.04),0_4px_16px_rgba(0,0,0,0.06)]",
           "hover:shadow-[0_4px_12px_rgba(0,0,0,0.08),0_12px_32px_rgba(0,0,0,0.12)]",
           "hover:-translate-y-0.5 transition-all duration-150",
-          isUrgent && "border-red-800 bg-red-950/40"
+          isUrgent && "border-red-300 bg-red-50/40"
         )}
       >
           <div className="flex items-start justify-between gap-2">

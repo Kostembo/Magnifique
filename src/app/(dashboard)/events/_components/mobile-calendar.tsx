@@ -14,7 +14,7 @@ const DOT: Record<string, string> = {
   draft: "bg-zinc-500",
   recruiting: "bg-blue-500",
   staffed: "bg-green-500",
-  done: "bg-zinc-600",
+  done: "bg-zinc-500",
 };
 
 const DAYS = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
@@ -39,32 +39,35 @@ export function MobileCalendar({ events, onDateClick }: Props) {
   }
 
   return (
-    <div className="space-y-3">
+    <div className="flex flex-col gap-3">
+      {/* Навигация по месяцам */}
       <div className="flex items-center justify-between">
         <button
           onClick={() => setMonth((m) => subMonths(m, 1))}
-          className="p-2 rounded-lg hover:bg-zinc-800 text-zinc-400 hover:text-zinc-100 transition-colors"
+          className="p-2 rounded-lg transition-colors text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900"
         >
           <ChevronLeft className="h-5 w-5" />
         </button>
-        <span className="font-semibold text-zinc-100 capitalize">
+        <span className="text-lg font-semibold capitalize text-zinc-900">
           {format(month, "LLLL yyyy", { locale: ru })}
         </span>
         <button
           onClick={() => setMonth((m) => addMonths(m, 1))}
-          className="p-2 rounded-lg hover:bg-zinc-800 text-zinc-400 hover:text-zinc-100 transition-colors"
+          className="p-2 rounded-lg transition-colors text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900"
         >
           <ChevronRight className="h-5 w-5" />
         </button>
       </div>
 
-      <div className="grid grid-cols-7 text-center mb-1">
+      {/* Заголовки дней */}
+      <div className="grid grid-cols-7 text-center">
         {DAYS.map((d) => (
-          <div key={d} className="text-xs font-medium text-zinc-500 py-1">{d}</div>
+          <div key={d} className="text-xs font-medium py-1 text-zinc-400">{d}</div>
         ))}
       </div>
 
-      <div className="grid grid-cols-7 gap-y-1">
+      {/* Сетка дней */}
+      <div className="grid grid-cols-7 md:border-l md:border-t md:border-zinc-200">
         {days.map((day) => {
           const key = format(day, "yyyy-MM-dd");
           const evs = byDate[key] ?? [];
@@ -77,9 +80,15 @@ export function MobileCalendar({ events, onDateClick }: Props) {
               disabled={!inMonth}
               onClick={() => onDateClick(key)}
               className={[
-                "flex flex-col items-center gap-0.5 py-1 rounded-xl transition-colors",
-                inMonth ? "hover:bg-zinc-800 active:bg-zinc-700" : "opacity-20 cursor-default pointer-events-none",
-                today ? "bg-[hsl(38_62%_48%/0.12)]" : "",
+                "flex flex-col transition-colors",
+                // мобилка — компактные ячейки без скролла
+                "items-center gap-0.5 py-1 rounded-xl",
+                // десктоп — высокие ячейки с рамками
+                "md:items-start md:gap-1 md:p-2 md:h-40 md:rounded-none md:border-r md:border-b md:border-zinc-200",
+                inMonth
+                  ? "hover:bg-zinc-100 active:bg-zinc-200 md:hover:bg-zinc-50 md:active:bg-zinc-100"
+                  : "opacity-20 cursor-default pointer-events-none md:bg-zinc-50",
+                today ? "bg-[hsl(38_62%_48%/0.08)]" : "",
               ].join(" ")}
             >
               <span
@@ -87,12 +96,12 @@ export function MobileCalendar({ events, onDateClick }: Props) {
                   "text-sm w-7 h-7 flex items-center justify-center rounded-full font-medium",
                   today
                     ? "bg-[hsl(38,62%,48%)] text-zinc-950 font-bold"
-                    : inMonth ? "text-zinc-100" : "text-zinc-600",
+                    : inMonth ? "text-zinc-900" : "text-zinc-400",
                 ].join(" ")}
               >
                 {format(day, "d")}
               </span>
-              <div className="flex gap-0.5 h-1.5 items-center">
+              <div className="flex gap-0.5 items-center flex-wrap">
                 {evs.slice(0, 3).map((e, i) => (
                   <span key={i} className={`w-1.5 h-1.5 rounded-full ${DOT[e.status] ?? "bg-zinc-500"}`} />
                 ))}

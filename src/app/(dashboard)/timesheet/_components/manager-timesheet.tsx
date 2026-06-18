@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { format, addMonths, subMonths } from "date-fns";
+import { format, addMonths, subMonths, getDaysInMonth } from "date-fns";
 import { ru } from "date-fns/locale";
 import { ChevronLeft, ChevronRight, Pencil, Trash2, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -35,7 +35,7 @@ function calcMins(start: string, end: string): number {
 }
 
 function fmtHours(mins: number): string {
-  if (!mins) return "";
+  if (!mins) return "0ч";
   const h = Math.floor(mins / 60);
   const m = mins % 60;
   return m > 0 ? `${h}ч ${m}м` : `${h}ч`;
@@ -43,7 +43,8 @@ function fmtHours(mins: number): string {
 
 const ROLE_LABELS: Record<string, string> = {
   waiter: "Официант", cook: "Повар", warehouse: "Склад",
-  manager: "Менеджер", owner: "Владелец", admin: "Администратор", sales: "Менеджер по продажам",
+  manager: "Менеджер", owner: "Владелец", admin: "Администратор",
+  sales: "Менеджер по продажам", chef: "Шеф-повар",
 };
 
 export function ManagerTimesheet({ initial, initialMonth }: { initial: TimeEntry[]; initialMonth: string }) {
@@ -59,9 +60,15 @@ export function ManagerTimesheet({ initial, initialMonth }: { initial: TimeEntry
 
   async function loadMonth(m: Date) {
     setLoading(true);
-    const res = await fetch(`/api/time-entries?month=${format(m, "yyyy-MM")}`);
-    if (res.ok) setEntries(await res.json());
-    setLoading(false);
+    try {
+      const res = await fetch(`/api/time-entries?month=${format(m, "yyyy-MM")}`);
+      if (res.ok) setEntries(await res.json());
+      else toast({ title: "Не удалось загрузить табель", variant: "destructive" });
+    } catch {
+      toast({ title: "Ошибка сети", variant: "destructive" });
+    } finally {
+      setLoading(false);
+    }
   }
 
   function prevMonth() { const m = subMonths(month, 1); setMonth(m); loadMonth(m); }
@@ -71,7 +78,7 @@ export function ManagerTimesheet({ initial, initialMonth }: { initial: TimeEntry
     setEditTarget({
       entryId: entry.id,
       employeeName: entry.employee.full_name,
-      day: new Date(entry.work_date).getDate(),
+      day: parseInt(entry.work_date.slice(8, 10), 10),
       start_time: entry.start_time,
       end_time: entry.end_time,
     });
@@ -118,8 +125,7 @@ export function ManagerTimesheet({ initial, initialMonth }: { initial: TimeEntry
     }
   }
 
-  // Build data
-  const activeDays = Array.from(new Set(entries.map((e) => new Date(e.work_date).getDate()))).sort((a, b) => a - b);
+  const activeDays = Array.from({ length: getDaysInMonth(month) }, (_, i) => i + 1);
 
   const employeeMap = new Map<string, EmpRow>();
   for (const entry of entries) {
@@ -127,7 +133,7 @@ export function ManagerTimesheet({ initial, initialMonth }: { initial: TimeEntry
       employeeMap.set(entry.employee_id, { name: entry.employee.full_name, role: entry.employee.role, days: {}, totalMins: 0 });
     }
     const row = employeeMap.get(entry.employee_id)!;
-    const day = new Date(entry.work_date).getDate();
+    const day = parseInt(entry.work_date.slice(8, 10), 10);
     const mins = calcMins(entry.start_time, entry.end_time);
     row.days[day] = { mins, entryId: entry.id, startTime: entry.start_time, endTime: entry.end_time };
     row.totalMins += mins;
@@ -147,16 +153,16 @@ export function ManagerTimesheet({ initial, initialMonth }: { initial: TimeEntry
     <div className="space-y-4">
       {/* Month nav */}
       <div className="flex items-center gap-3">
-        <button onClick={prevMonth} className="p-2 rounded-lg hover:bg-zinc-800 text-zinc-400 hover:text-zinc-100 transition-colors">
+        <button onClick={prevMonth} className="p-2 rounded-lg hover:bg-zinc-100 text-zinc-500 hover:text-zinc-900 transition-colors">
           <ChevronLeft className="h-5 w-5" />
         </button>
-        <span className="text-zinc-100 font-medium capitalize min-w-[160px] text-center">
+        <span className="text-zinc-900 font-medium capitalize min-w-[160px] text-center">
           {format(month, "LLLL yyyy", { locale: ru })}
         </span>
-        <button onClick={nextMonth} className="p-2 rounded-lg hover:bg-zinc-800 text-zinc-400 hover:text-zinc-100 transition-colors">
+        <button onClick={nextMonth} className="p-2 rounded-lg hover:bg-zinc-100 text-zinc-500 hover:text-zinc-900 transition-colors">
           <ChevronRight className="h-5 w-5" />
         </button>
-        {loading && <Loader2 className="h-4 w-4 animate-spin text-zinc-500" />}
+        {loading && <Loader2 className="h-4 w-4 animate-spin text-zinc-400" />}
       </div>
 
       {/* Mobile */}
@@ -166,31 +172,31 @@ export function ManagerTimesheet({ initial, initialMonth }: { initial: TimeEntry
 
       {/* Desktop table */}
       {employees.length === 0 ? (
-        <p className="hidden md:block text-zinc-500 text-sm py-8 text-center">Нет отметок за этот месяц</p>
+        <p className="hidden md:block text-zinc-400 text-sm py-8 text-center">Нет отметок за этот месяц</p>
       ) : (
-        <div className="hidden md:block overflow-x-auto rounded-xl border border-zinc-800">
+        <div className="hidden md:block overflow-x-auto rounded-xl border border-zinc-200">
           <table className="min-w-full text-sm">
             <thead>
-              <tr className="border-b border-zinc-800">
-                <th className="text-left px-4 py-3 text-zinc-400 font-medium whitespace-nowrap sticky left-0 bg-zinc-950 z-10 min-w-[180px]">
+              <tr className="border-b border-zinc-200">
+                <th className="text-left px-4 py-3 text-zinc-500 font-medium whitespace-nowrap sticky left-0 bg-white z-10 min-w-[180px]">
                   Сотрудник
                 </th>
                 {activeDays.map((day) => (
-                  <th key={day} className="px-2 py-3 text-zinc-400 font-medium text-center whitespace-nowrap min-w-[52px]">
+                  <th key={day} className="px-2 py-3 text-zinc-500 font-medium text-center whitespace-nowrap min-w-[52px]">
                     {day}
                   </th>
                 ))}
-                <th className="px-4 py-3 text-zinc-300 font-semibold text-center whitespace-nowrap sticky right-0 bg-zinc-950 z-10 border-l border-zinc-800">
+                <th className="px-4 py-3 text-zinc-700 font-semibold text-center whitespace-nowrap sticky right-0 bg-white z-10 border-l border-zinc-200">
                   Итого
                 </th>
               </tr>
             </thead>
             <tbody>
               {employees.map(([, emp]) => (
-                <tr key={emp.name} className="border-b border-zinc-800/50 last:border-0 hover:bg-zinc-900/40 transition-colors">
-                  <td className="px-4 py-3 sticky left-0 bg-zinc-950 z-10">
-                    <p className="text-zinc-100 whitespace-nowrap">{emp.name}</p>
-                    <p className="text-zinc-500 text-xs">{ROLE_LABELS[emp.role] ?? emp.role}</p>
+                <tr key={emp.name} className="group/row border-b border-zinc-200 last:border-0 hover:bg-zinc-50 transition-colors">
+                  <td className="px-4 py-3 sticky left-0 bg-white group-hover/row:bg-zinc-50 z-10 transition-colors">
+                    <p className="text-zinc-900 whitespace-nowrap">{emp.name}</p>
+                    <p className="text-zinc-400 text-xs">{ROLE_LABELS[emp.role] ?? emp.role}</p>
                   </td>
                   {activeDays.map((day) => {
                     const cell = emp.days[day];
@@ -199,33 +205,33 @@ export function ManagerTimesheet({ initial, initialMonth }: { initial: TimeEntry
                         {cell ? (
                           <button
                             onClick={() => openEditById(cell.entryId)}
-                            className="group inline-flex items-center gap-1 text-[hsl(38,72%,62%)] font-medium hover:text-[hsl(38,72%,75%)] transition-colors"
+                            className="group inline-flex items-center gap-1 text-[hsl(38,72%,42%)] font-medium hover:text-[hsl(38,72%,32%)] transition-colors"
                           >
                             {fmtHours(cell.mins)}
                             <Pencil className="h-3 w-3 opacity-0 group-hover:opacity-60 transition-opacity" />
                           </button>
                         ) : (
-                          <span className="text-zinc-700">—</span>
+                          <span className="text-zinc-300">—</span>
                         )}
                       </td>
                     );
                   })}
-                  <td className="px-4 py-3 text-center sticky right-0 bg-zinc-950 z-10 border-l border-zinc-800">
-                    <span className="font-semibold text-zinc-100">{fmtHours(emp.totalMins) || "—"}</span>
+                  <td className="px-4 py-3 text-center sticky right-0 bg-white group-hover/row:bg-zinc-50 z-10 border-l border-zinc-200 transition-colors">
+                    <span className="font-semibold text-zinc-900">{fmtHours(emp.totalMins) || "—"}</span>
                   </td>
                 </tr>
               ))}
-              <tr className="border-t-2 border-zinc-700 bg-zinc-900/60">
-                <td className="px-4 py-2.5 sticky left-0 bg-zinc-900 z-10">
-                  <p className="text-zinc-400 font-medium text-xs uppercase tracking-wide">Итого часов</p>
+              <tr className="border-t-2 border-zinc-200 bg-zinc-50">
+                <td className="px-4 py-2.5 sticky left-0 bg-zinc-50 z-10">
+                  <p className="text-zinc-500 font-medium text-xs uppercase tracking-wide">Итого часов</p>
                 </td>
                 {activeDays.map((day) => (
                   <td key={day} className="px-2 py-2.5 text-center">
-                    <span className="text-zinc-300 text-xs font-medium">{fmtHours(dayTotals[day]) || "—"}</span>
+                    <span className="text-zinc-600 text-xs font-medium">{fmtHours(dayTotals[day]) || "—"}</span>
                   </td>
                 ))}
-                <td className="px-4 py-2.5 text-center sticky right-0 bg-zinc-900 z-10 border-l border-zinc-800">
-                  <span className="font-bold text-zinc-100">{fmtHours(grandTotal) || "—"}</span>
+                <td className="px-4 py-2.5 text-center sticky right-0 bg-zinc-50 z-10 border-l border-zinc-200">
+                  <span className="font-bold text-zinc-900">{fmtHours(grandTotal) || "—"}</span>
                 </td>
               </tr>
             </tbody>

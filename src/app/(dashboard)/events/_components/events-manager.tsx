@@ -12,17 +12,6 @@ const EventsCalendar = dynamic(() => import("./events-calendar").then((m) => m.E
 
 interface Props { events: EventCardData[] }
 
-function calcUrgency(event: EventCardData): number {
-  const startsAt = new Date(event.starts_at);
-  const hoursUntil = (startsAt.getTime() - Date.now()) / (1000 * 60 * 60);
-  if (hoursUntil < 0) return -1;
-  const totalConfirmed = event.positions.reduce((s, p) => s + p._count.assignments, 0);
-  const totalNeeded = event.positions.reduce((s, p) => s + p.needed_count, 0);
-  const missing = Math.max(0, totalNeeded - totalConfirmed);
-  if (missing === 0) return 0;
-  const days = Math.max(0.1, hoursUntil / 24);
-  return (1 / days) * (totalNeeded > 0 ? missing / totalNeeded : 0);
-}
 
 export function EventsManager({ events }: Props) {
   const [view, setView] = useState<"list" | "calendar">("list");
@@ -40,7 +29,14 @@ export function EventsManager({ events }: Props) {
   }).length;
 
   const displayed = useMemo(() => {
-    const base = [...events].sort((a, b) => calcUrgency(b) - calcUrgency(a));
+    const now = Date.now();
+    const base = [...events].sort((a, b) => {
+      const at = new Date(a.starts_at).getTime() - now;
+      const bt = new Date(b.starts_at).getTime() - now;
+      if (at >= 0 && bt < 0) return -1;
+      if (at < 0 && bt >= 0) return 1;
+      return at - bt;
+    });
     if (!selectedDay) return base;
     return base.filter((e) => format(new Date(e.starts_at), "yyyy-MM-dd") === selectedDay);
   }, [events, selectedDay]);
@@ -51,19 +47,19 @@ export function EventsManager({ events }: Props) {
       <div className="flex items-center justify-between gap-3">
         <h1 className="text-2xl font-semibold">Мероприятия</h1>
         <div className="flex items-center gap-2">
-          <div className="flex rounded-lg border border-zinc-800 overflow-hidden">
+          <div className="flex rounded-lg border overflow-hidden">
             <button
               onClick={() => { setView("list"); setSelectedDay(null); }}
-              className={`px-3 py-1.5 text-sm font-medium transition-colors min-h-0 ${
-                view === "list" ? "bg-zinc-700 text-zinc-100" : "text-zinc-400 hover:bg-zinc-800 hover:text-zinc-100"
+              className={`w-24 py-1.5 text-sm font-medium text-center transition-colors min-h-0 ${
+                view === "list" ? "bg-primary text-primary-foreground" : "hover:bg-muted"
               }`}
             >
               Список
             </button>
             <button
               onClick={() => setView("calendar")}
-              className={`px-3 py-1.5 text-sm font-medium transition-colors min-h-0 ${
-                view === "calendar" ? "bg-zinc-700 text-zinc-100" : "text-zinc-400 hover:bg-zinc-800 hover:text-zinc-100"
+              className={`w-24 py-1.5 text-sm font-medium text-center transition-colors min-h-0 ${
+                view === "calendar" ? "bg-primary text-primary-foreground" : "hover:bg-muted"
               }`}
             >
               Календарь
@@ -79,9 +75,9 @@ export function EventsManager({ events }: Props) {
 
       {/* Alert bar */}
       {needsStaff > 0 && (
-        <div className="flex items-center gap-3 rounded-lg bg-amber-950/40 border border-amber-800 px-4 py-3">
-          <AlertTriangle className="h-5 w-5 text-amber-400 shrink-0" />
-          <span className="text-sm text-amber-300 font-medium">
+        <div className="flex items-center gap-3 rounded-lg bg-amber-50 border border-amber-200 px-4 py-3">
+          <AlertTriangle className="h-5 w-5 text-amber-600 shrink-0" />
+          <span className="text-sm text-amber-800 font-medium">
             {needsStaff} {needsStaff === 1 ? "мероприятие требует" : "мероприятий требуют"} добора персонала
           </span>
         </div>
@@ -121,7 +117,9 @@ export function EventsManager({ events }: Props) {
       )}
 
       {view === "calendar" && (
-        <EventsCalendar events={events} onDateClick={handleDaySelect} />
+        <div className="max-w-6xl mx-auto">
+          <EventsCalendar events={events} onDateClick={handleDaySelect} />
+        </div>
       )}
 
       {/* Mobile FAB */}

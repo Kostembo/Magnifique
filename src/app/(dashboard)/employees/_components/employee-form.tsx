@@ -321,7 +321,7 @@ export function EmployeeForm({ mode, defaultValues }: EmployeeFormProps) {
           <CardHeader>
             <div className="flex items-center justify-between">
               <CardTitle className="text-base">Паспортные данные</CardTitle>
-              <span className="text-xs bg-amber-950/40 text-amber-400 border border-amber-800 rounded px-2 py-0.5">
+              <span className="text-xs text-muted-foreground bg-amber-50 text-amber-700 border border-amber-200 rounded px-2 py-0.5">
                 Зашифровано AES-256
               </span>
             </div>

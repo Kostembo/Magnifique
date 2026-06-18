@@ -71,53 +71,32 @@ function TimeForm({
   }
 
   const selectCls =
-    "bg-zinc-800 border border-zinc-700 text-zinc-100 rounded-lg px-2 py-2.5 text-base focus:outline-none focus:ring-1 focus:ring-[hsl(38,62%,48%)] w-full appearance-none text-center";
+    "bg-white border border-zinc-300 text-zinc-900 rounded-lg px-2 py-2.5 text-base focus:outline-none focus:ring-1 focus:ring-[hsl(38,62%,48%)] w-full appearance-none text-center";
 
   return (
     <div className="mt-4 space-y-3">
       <div className="grid grid-cols-3 gap-2 items-end">
-        {/* С */}
         <div className="space-y-1">
           <p className="text-xs text-zinc-500 text-center">С</p>
-          <select
-            value={startH}
-            onChange={(e) => setStartH(Number(e.target.value))}
-            className={selectCls}
-          >
-            {HOURS.map((h) => (
-              <option key={h} value={h}>{h}:00</option>
-            ))}
+          <select value={startH} onChange={(e) => setStartH(Number(e.target.value))} className={selectCls}>
+            {HOURS.map((h) => <option key={h} value={h}>{h}:00</option>)}
           </select>
         </div>
-
-        {/* До */}
         <div className="space-y-1">
           <p className="text-xs text-zinc-500 text-center">До</p>
-          <select
-            value={endH}
-            onChange={(e) => setEndH(Number(e.target.value))}
-            className={selectCls}
-          >
-            {HOURS.map((h) => (
-              <option key={h} value={h}>{h}:00</option>
-            ))}
+          <select value={endH} onChange={(e) => setEndH(Number(e.target.value))} className={selectCls}>
+            {HOURS.map((h) => <option key={h} value={h}>{h}:00</option>)}
           </select>
         </div>
-
-        {/* Итого */}
         <div className="space-y-1">
           <p className="text-xs text-zinc-500 text-center">Итого</p>
-          <div className="bg-zinc-800 border border-zinc-700 rounded-lg py-2.5 text-base font-semibold text-center text-[hsl(38,72%,62%)]">
+          <div className="bg-zinc-100 border border-zinc-200 rounded-lg py-2.5 text-base font-semibold text-center text-[hsl(38,72%,42%)]">
             {total > 0 ? `${total} ч` : "—"}
           </div>
         </div>
       </div>
 
-      <Button
-        onClick={save}
-        disabled={saving || total <= 0}
-        className="w-full"
-      >
+      <Button onClick={save} disabled={saving || total <= 0} className="w-full">
         {saving ? "Сохранение…" : "Сохранить"}
       </Button>
     </div>
@@ -138,7 +117,7 @@ export function StaffTimesheet({ initial }: { initial: Assignment[] }) {
   return (
     <div className="space-y-3">
       {assignments.length === 0 && (
-        <p className="text-zinc-500 text-sm py-8 text-center">Нет мероприятий</p>
+        <p className="text-zinc-400 text-sm py-8 text-center">Нет мероприятий</p>
       )}
       {assignments.map((a) => {
         const isOpen = expanded === a.event_id;
@@ -148,16 +127,16 @@ export function StaffTimesheet({ initial }: { initial: Assignment[] }) {
         const total = startH !== null && endH !== null ? calcHours(startH, endH) : 0;
 
         return (
-          <div key={a.id} className="bg-zinc-900 border border-zinc-800 rounded-xl p-4">
+          <div key={a.id} className="bg-white border border-zinc-200 rounded-xl p-4">
             <div className="flex items-start justify-between gap-3">
               <div className="flex-1 min-w-0">
-                <p className="font-medium text-zinc-100 truncate">{a.event.title}</p>
-                <p className="text-sm text-zinc-500 mt-0.5">
+                <p className="font-medium text-zinc-900 truncate">{a.event.title}</p>
+                <p className="text-sm text-zinc-400 mt-0.5">
                   {format(new Date(a.event.starts_at), "d MMMM yyyy", { locale: ru })}
                   {a.event.location && ` · ${a.event.location}`}
                 </p>
                 {logged && !isOpen && (
-                  <p className="text-sm text-[hsl(38,72%,62%)] mt-1.5 flex items-center gap-1.5">
+                  <p className="text-sm text-[hsl(38,72%,42%)] mt-1.5 flex items-center gap-1.5">
                     <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />
                     {startH}:00 — {endH}:00 · {total} ч
                   </p>
@@ -165,22 +144,15 @@ export function StaffTimesheet({ initial }: { initial: Assignment[] }) {
               </div>
               <button
                 onClick={() => setExpanded(isOpen ? null : a.event_id)}
-                className="flex items-center gap-1.5 text-sm text-zinc-400 hover:text-zinc-100 transition-colors shrink-0 mt-0.5"
+                className="flex items-center gap-1.5 text-sm text-zinc-500 hover:text-zinc-900 transition-colors shrink-0 mt-0.5"
               >
                 <Clock className="h-4 w-4" />
                 {logged ? "Изменить" : "Отметить"}
-                {isOpen ? (
-                  <ChevronUp className="h-3.5 w-3.5" />
-                ) : (
-                  <ChevronDown className="h-3.5 w-3.5" />
-                )}
+                {isOpen ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
               </button>
             </div>
             {isOpen && (
-              <TimeForm
-                assignment={a}
-                onSaved={(entry) => updateEntry(a.event_id, entry)}
-              />
+              <TimeForm assignment={a} onSaved={(entry) => updateEntry(a.event_id, entry)} />
             )}
           </div>
         );
