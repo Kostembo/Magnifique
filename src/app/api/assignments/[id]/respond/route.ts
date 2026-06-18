@@ -54,7 +54,7 @@ export async function POST(
         where: { id: params.id },
         data: { status: "waitlisted", responded_at: new Date() },
       });
-      await sendPushToManagers({
+      void sendPushToManagers({
         title: `⏳ Хочет подтвердить: ${assignment.employee.full_name}`,
         body: `${assignment.event.title} — мест нет, но сотрудник хочет участвовать`,
         url: `/events/${assignment.event_id}`,
@@ -87,8 +87,7 @@ export async function POST(
       });
     }
 
-    // Уведомляем менеджеров
-    await sendPushToManagers({
+    void sendPushToManagers({
       title: `✅ Подтверждение: ${assignment.employee.full_name}`,
       body: `${assignment.event.title} — ${new Date(assignment.event.starts_at).toLocaleDateString("ru-RU")}`,
       url: `/events/${assignment.event_id}`,
@@ -121,7 +120,7 @@ export async function POST(
       const slotsLeft = pos.needed_count - confirmedCount;
 
       if (slotsLeft > 0) {
-        await sendPushToManagers({
+        void sendPushToManagers({
           title: `Слот освободился: ${assignment.event.title}`,
           body: `Откройте пул для позиции — осталось ${slotsLeft} мест`,
           url: `/events/${assignment.event_id}`,
@@ -130,7 +129,7 @@ export async function POST(
     }
   }
 
-  await sendPushToManagers({
+  void sendPushToManagers({
     title: `❌ Отказ: ${assignment.employee.full_name}`,
     body: `${assignment.event.title} — ${new Date(assignment.event.starts_at).toLocaleDateString("ru-RU")}`,
     url: `/events/${assignment.event_id}`,

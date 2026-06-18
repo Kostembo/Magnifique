@@ -78,7 +78,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     const dateStr = updated.event?.starts_at
       ? new Date(updated.event.starts_at).toLocaleDateString("ru-RU", { day: "numeric", month: "long" })
       : "";
-    await sendPushToWarehouse({
+    void sendPushToWarehouse({
       title: "Новая заявка на сбор",
       body: `${eventTitle}${dateStr ? ` — ${dateStr}` : ""}`,
       url: `/requisitions/${updated.id}`,
