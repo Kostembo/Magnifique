@@ -152,9 +152,13 @@ export async function DELETE(
   const denied = requireManager(session);
   if (denied) return denied;
 
-  await prisma.event.delete({
-    where: { id: params.id },
-  });
+  try {
+    await prisma.event.delete({ where: { id: params.id } });
+  } catch (err) {
+    const code = (err as { code?: string })?.code;
+    if (code === "P2025") return NextResponse.json({ error: "Не найдено" }, { status: 404 });
+    return NextResponse.json({ error: "Ошибка удаления" }, { status: 500 });
+  }
 
   return NextResponse.json({ ok: true });
 }

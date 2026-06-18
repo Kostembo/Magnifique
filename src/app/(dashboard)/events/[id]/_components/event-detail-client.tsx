@@ -13,15 +13,16 @@ import { useToast } from "@/hooks/use-toast";
 import {
   ArrowLeft, Pencil, Users, Package, MessageSquare,
   User, Clock, MapPin, UserCheck, UserX, Loader2,
-  Bell, BellRing, Plus, ExternalLink, Check, X, FileDown, Trash2, ChefHat,
+  Bell, BellRing, Plus, ExternalLink, Check, X, FileDown, Trash2, ChefHat, UserPlus,
 } from "lucide-react";
 import { ROLE_LABELS } from "@/lib/utils";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { EventMenuTab } from "./event-menu-tab";
+import { AddEmployeeDialog } from "./add-employee-dialog";
 
-type AssignmentStatus = "invited" | "confirmed" | "declined" | "expired";
+type AssignmentStatus = "invited" | "confirmed" | "declined" | "expired" | "waitlisted";
 
 type Assignment = {
   id: string;
@@ -73,13 +74,15 @@ const STATUS_LABELS: Record<AssignmentStatus, string> = {
   confirmed: "Подтвердил",
   declined: "Отказался",
   expired: "Истекло",
+  waitlisted: "Хочет",
 };
 
-const STATUS_BADGE: Record<AssignmentStatus, "warning" | "success" | "danger" | "secondary"> = {
+const STATUS_BADGE: Record<AssignmentStatus, "warning" | "success" | "danger" | "secondary" | "info"> = {
   invited: "warning",
   confirmed: "success",
   declined: "danger",
   expired: "secondary",
+  waitlisted: "info",
 };
 
 interface Props {
@@ -107,6 +110,7 @@ export function EventDetailClient({ event, isManager, role, currentUserId }: Pro
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [positions, setPositions] = useState(event.positions);
+  const [invitePosition, setInvitePosition] = useState<{ id: number; role: string; event_id: string } | null>(null);
 
   const totalConfirmed = positions.reduce(
     (s, p) => s + p.assignments.filter((a) => a.status === "confirmed").length, 0
@@ -122,10 +126,18 @@ export function EventDetailClient({ event, isManager, role, currentUserId }: Pro
     const data = await res.json();
     if (res.ok) {
       const n = data.invited ?? data.reminded ?? 0;
-      toast({
-        title: mode === "remind" ? `Напоминание отправлено ${n} чел.` : `Приглашено ${n} чел.`,
-        variant: "success",
-      });
+      if (n === 0 && mode !== "remind") {
+        toast({
+          title: "Никто не приглашён",
+          description: "Нет подходящих сотрудников: проверьте что у события есть позиции и в системе есть активные сотрудники нужной роли и уровня (regular/trainee для пула, core для костяка).",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: mode === "remind" ? `Напоминание отправлено ${n} чел.` : `Приглашено ${n} чел.`,
+          variant: "success",
+        });
+      }
       startTransition(() => router.refresh());
     } else {
       toast({ title: "Ошибка", description: data.error, variant: "destructive" });
@@ -165,10 +177,10 @@ export function EventDetailClient({ event, isManager, role, currentUserId }: Pro
   async function deleteEvent() {
     setDeleting(true);
     const res = await fetch(`/api/events/${event.id}`, { method: "DELETE" });
-    setDeleting(false);
     if (res.ok) {
-      router.push("/events");
+      window.location.href = "/events";
     } else {
+      setDeleting(false);
       toast({ title: "Ошибка удаления", variant: "destructive" });
       setConfirmDelete(false);
     }
@@ -362,6 +374,10 @@ export function EventDetailClient({ event, isManager, role, currentUserId }: Pro
           {positions.map((pos) => {
             const confirmed = pos.assignments.filter((a) => a.status === "confirmed").length;
             const invited = pos.assignments.filter((a) => a.status === "invited").length;
+            const isStaffed = confirmed >= pos.needed_count;
+            const displayedAssignments = isStaffed
+              ? pos.assignments.filter((a) => a.status === "confirmed" || a.status === "waitlisted")
+              : pos.assignments;
 
             return (
               <div key={pos.id} className="rounded-lg border bg-card p-4 space-y-3">
@@ -375,18 +391,30 @@ export function EventDetailClient({ event, isManager, role, currentUserId }: Pro
                       </p>
                     )}
                   </div>
-                  <div className="text-right text-sm">
-                    <span className="text-green-700 font-medium">{confirmed}</span>
-                    <span className="text-muted-foreground">/{pos.needed_count}</span>
-                    {invited > 0 && <span className="text-muted-foreground text-xs ml-1">({invited} ждут)</span>}
+                  <div className="flex items-center gap-2">
+                    <div className="text-right text-sm">
+                      <span className="text-green-700 font-medium">{confirmed}</span>
+                      <span className="text-muted-foreground">/{pos.needed_count}</span>
+                      {invited > 0 && <span className="text-muted-foreground text-xs ml-1">({invited} ждут)</span>}
+                    </div>
+                    {isManager && (
+                      <button
+                        onClick={() => setInvitePosition({ id: pos.id, role: pos.role, event_id: event.id })}
+                        className="text-muted-foreground hover:text-foreground transition-colors p-0.5"
+                        aria-label="Добавить сотрудника"
+                        title="Добавить сотрудника"
+                      >
+                        <UserPlus className="h-4 w-4" />
+                      </button>
+                    )}
                   </div>
                 </div>
 
                 <StaffingBar confirmed={confirmed} needed={pos.needed_count} />
 
-                {pos.assignments.length > 0 && (
+                {displayedAssignments.length > 0 && (
                   <div className="space-y-1.5 pt-1">
-                    {pos.assignments.map((a) => (
+                    {displayedAssignments.map((a) => (
                       <div key={a.id} className="flex items-center gap-2 text-sm">
                         {a.status === "confirmed" ? (
                           <UserCheck className="h-4 w-4 text-green-600 shrink-0" />
@@ -548,6 +576,37 @@ export function EventDetailClient({ event, isManager, role, currentUserId }: Pro
           </form>
         </TabsContent>
       </Tabs>
+
+      <AddEmployeeDialog
+        position={invitePosition}
+        onClose={() => setInvitePosition(null)}
+        onAdded={(params) => {
+          if (invitePosition) {
+            setPositions((prev) => prev.map((p) => {
+              if (p.id !== invitePosition.id) return p;
+              return {
+                ...p,
+                assignments: [...p.assignments, {
+                  id: params.assignmentId,
+                  status: "confirmed" as const,
+                  is_priority: false,
+                  invited_at: new Date().toISOString(),
+                  responded_at: new Date().toISOString(),
+                  employee: {
+                    id: params.employeeId,
+                    full_name: params.employeeName,
+                    phone: "",
+                    role: invitePosition.role,
+                    tier: params.employeeTier,
+                  },
+                }],
+              };
+            }));
+          }
+          setInvitePosition(null);
+          startTransition(() => router.refresh());
+        }}
+      />
     </div>
   );
 }

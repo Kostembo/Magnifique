@@ -15,31 +15,49 @@ interface Assignment {
   timeEntry: TimeEntry | null;
 }
 
-function calcHours(start: string, end: string): string {
-  const [sh, sm] = start.split(":").map(Number);
-  const [eh, em] = end.split(":").map(Number);
-  const mins = (eh * 60 + em) - (sh * 60 + sm);
-  if (mins <= 0) return "—";
-  const h = Math.floor(mins / 60);
-  const m = mins % 60;
-  return m > 0 ? `${h}ч ${m}м` : `${h}ч`;
+const HOURS = Array.from({ length: 24 }, (_, i) => i);
+const pad = (h: number) => `${String(h).padStart(2, "0")}:00`;
+const parseHour = (t: string) => parseInt(t.split(":")[0], 10);
+
+function calcHours(startH: number, endH: number): number {
+  return endH > startH ? endH - startH : endH + 24 - startH;
 }
 
-function TimeForm({ assignment, onSaved }: { assignment: Assignment; onSaved: (entry: TimeEntry) => void }) {
+function TimeForm({
+  assignment,
+  onSaved,
+}: {
+  assignment: Assignment;
+  onSaved: (entry: TimeEntry) => void;
+}) {
   const eventDate = format(new Date(assignment.event.starts_at), "yyyy-MM-dd");
-  const [start, setStart] = useState(assignment.timeEntry?.start_time ?? "00:00");
-  const [end, setEnd] = useState(assignment.timeEntry?.end_time ?? "00:00");
+  const [startH, setStartH] = useState(() =>
+    assignment.timeEntry ? parseHour(assignment.timeEntry.start_time) : 9
+  );
+  const [endH, setEndH] = useState(() =>
+    assignment.timeEntry ? parseHour(assignment.timeEntry.end_time) : 18
+  );
   const [saving, setSaving] = useState(false);
   const { toast } = useToast();
 
+  const total = calcHours(startH, endH);
+
   async function save() {
-    if (!start || !end) return;
+    if (total <= 0) {
+      toast({ title: "Конец должен быть позже начала", variant: "destructive" });
+      return;
+    }
     setSaving(true);
     try {
       const res = await fetch("/api/time-entries", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ event_id: assignment.event_id, work_date: eventDate, start_time: start, end_time: end }),
+        body: JSON.stringify({
+          event_id: assignment.event_id,
+          work_date: eventDate,
+          start_time: pad(startH),
+          end_time: pad(endH),
+        }),
       });
       if (!res.ok) throw new Error();
       const entry = await res.json();
@@ -52,31 +70,55 @@ function TimeForm({ assignment, onSaved }: { assignment: Assignment; onSaved: (e
     }
   }
 
+  const selectCls =
+    "bg-zinc-800 border border-zinc-700 text-zinc-100 rounded-lg px-2 py-2.5 text-base focus:outline-none focus:ring-1 focus:ring-[hsl(38,62%,48%)] w-full appearance-none text-center";
+
   return (
-    <div className="mt-3 flex items-end gap-3 flex-wrap">
-      <div className="flex flex-col gap-1">
-        <span className="text-xs text-zinc-500">Начало</span>
-        <input
-          type="time"
-          value={start}
-          onChange={(e) => setStart(e.target.value)}
-          className="bg-zinc-800 border border-zinc-700 text-zinc-100 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[hsl(38,62%,48%)]"
-        />
+    <div className="mt-4 space-y-3">
+      <div className="grid grid-cols-3 gap-2 items-end">
+        {/* С */}
+        <div className="space-y-1">
+          <p className="text-xs text-zinc-500 text-center">С</p>
+          <select
+            value={startH}
+            onChange={(e) => setStartH(Number(e.target.value))}
+            className={selectCls}
+          >
+            {HOURS.map((h) => (
+              <option key={h} value={h}>{h}:00</option>
+            ))}
+          </select>
+        </div>
+
+        {/* До */}
+        <div className="space-y-1">
+          <p className="text-xs text-zinc-500 text-center">До</p>
+          <select
+            value={endH}
+            onChange={(e) => setEndH(Number(e.target.value))}
+            className={selectCls}
+          >
+            {HOURS.map((h) => (
+              <option key={h} value={h}>{h}:00</option>
+            ))}
+          </select>
+        </div>
+
+        {/* Итого */}
+        <div className="space-y-1">
+          <p className="text-xs text-zinc-500 text-center">Итого</p>
+          <div className="bg-zinc-800 border border-zinc-700 rounded-lg py-2.5 text-base font-semibold text-center text-[hsl(38,72%,62%)]">
+            {total > 0 ? `${total} ч` : "—"}
+          </div>
+        </div>
       </div>
-      <div className="flex flex-col gap-1">
-        <span className="text-xs text-zinc-500">Конец</span>
-        <input
-          type="time"
-          value={end}
-          onChange={(e) => setEnd(e.target.value)}
-          className="bg-zinc-800 border border-zinc-700 text-zinc-100 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[hsl(38,62%,48%)]"
-        />
-      </div>
-      {start && end && (
-        <span className="text-sm text-zinc-400 pb-2">{calcHours(start, end)}</span>
-      )}
-      <Button onClick={save} disabled={saving || !start || !end} size="sm" className="mb-0.5">
-        {saving ? "Сохранение..." : "Сохранить"}
+
+      <Button
+        onClick={save}
+        disabled={saving || total <= 0}
+        className="w-full"
+      >
+        {saving ? "Сохранение…" : "Сохранить"}
       </Button>
     </div>
   );
@@ -87,18 +129,24 @@ export function StaffTimesheet({ initial }: { initial: Assignment[] }) {
   const [expanded, setExpanded] = useState<string | null>(null);
 
   function updateEntry(eventId: string, entry: TimeEntry) {
-    setAssignments((prev) => prev.map((a) => a.event_id === eventId ? { ...a, timeEntry: entry } : a));
+    setAssignments((prev) =>
+      prev.map((a) => (a.event_id === eventId ? { ...a, timeEntry: entry } : a))
+    );
     setExpanded(null);
   }
 
   return (
     <div className="space-y-3">
       {assignments.length === 0 && (
-        <p className="text-zinc-500 text-sm py-8 text-center">Нет подтверждённых мероприятий</p>
+        <p className="text-zinc-500 text-sm py-8 text-center">Нет мероприятий</p>
       )}
       {assignments.map((a) => {
         const isOpen = expanded === a.event_id;
         const logged = !!a.timeEntry;
+        const startH = logged ? parseHour(a.timeEntry!.start_time) : null;
+        const endH = logged ? parseHour(a.timeEntry!.end_time) : null;
+        const total = startH !== null && endH !== null ? calcHours(startH, endH) : 0;
+
         return (
           <div key={a.id} className="bg-zinc-900 border border-zinc-800 rounded-xl p-4">
             <div className="flex items-start justify-between gap-3">
@@ -109,9 +157,9 @@ export function StaffTimesheet({ initial }: { initial: Assignment[] }) {
                   {a.event.location && ` · ${a.event.location}`}
                 </p>
                 {logged && !isOpen && (
-                  <p className="text-sm text-[hsl(38,72%,62%)] mt-1 flex items-center gap-1">
-                    <CheckCircle2 className="h-3.5 w-3.5" />
-                    {a.timeEntry!.start_time} — {a.timeEntry!.end_time} · {calcHours(a.timeEntry!.start_time, a.timeEntry!.end_time)}
+                  <p className="text-sm text-[hsl(38,72%,62%)] mt-1.5 flex items-center gap-1.5">
+                    <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />
+                    {startH}:00 — {endH}:00 · {total} ч
                   </p>
                 )}
               </div>
@@ -121,11 +169,18 @@ export function StaffTimesheet({ initial }: { initial: Assignment[] }) {
               >
                 <Clock className="h-4 w-4" />
                 {logged ? "Изменить" : "Отметить"}
-                {isOpen ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+                {isOpen ? (
+                  <ChevronUp className="h-3.5 w-3.5" />
+                ) : (
+                  <ChevronDown className="h-3.5 w-3.5" />
+                )}
               </button>
             </div>
             {isOpen && (
-              <TimeForm assignment={a} onSaved={(entry) => updateEntry(a.event_id, entry)} />
+              <TimeForm
+                assignment={a}
+                onSaved={(entry) => updateEntry(a.event_id, entry)}
+              />
             )}
           </div>
         );

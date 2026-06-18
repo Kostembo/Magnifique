@@ -25,6 +25,7 @@ export async function GET(_req: Request, { params }: { params: { id: string } })
 
   const ROLE_LABELS: Record<string, string> = {
     waiter: "Официант", cook: "Повар", warehouse: "Склад", manager: "Менеджер",
+    chef: "Шеф-повар", sales: "Менеджер по продажам", owner: "Владелец", admin: "Администратор",
   };
   const TIER_LABELS: Record<string, string> = {
     core: "Костяк", regular: "Основной", trainee: "Стажёр",

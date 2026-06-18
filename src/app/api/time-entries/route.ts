@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { canCreateEvents } from "@/lib/roles";
 
 // Staff: GET their own assignments + time entries
 // Manager: GET all entries for a month
@@ -11,7 +12,7 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const month = searchParams.get("month"); // YYYY-MM
 
-  if (session.user.role === "manager") {
+  if (canCreateEvents(session.user.role ?? "")) {
     if (!month) return NextResponse.json({ error: "month required" }, { status: 400 });
     const [year, mon] = month.split("-").map(Number);
     const from = new Date(year, mon - 1, 1);
@@ -48,7 +49,7 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   const session = await auth();
   if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  if (session.user.role === "manager") return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  if (canCreateEvents(session.user.role ?? "")) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
   const { event_id, work_date, start_time, end_time } = await request.json();
   if (!event_id || !work_date || !start_time || !end_time) {
