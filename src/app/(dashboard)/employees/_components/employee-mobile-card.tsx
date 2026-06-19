@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { MoreHorizontal, Pencil, UserX, UserCheck, KeyRound, User, CalendarPlus } from "lucide-react";
 import { ROLE_LABELS, TIER_LABELS, formatPhone } from "@/lib/utils";
+import { fadeUp } from "@/lib/motion";
 
 const TIER_BADGE: Record<string, "success" | "info" | "warning"> = {
   core: "success",
@@ -38,28 +39,27 @@ interface Props {
 export function EmployeeMobileCard({ emp, index, onEdit, onResetPassword, onToggleActive, onInvite }: Props) {
   return (
     <motion.div
-      key={emp.id}
-      initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ type: "spring", stiffness: 300, damping: 24, delay: Math.min(index * 0.05, 0.3) }}
-      className={`rounded-xl border p-4 space-y-2 ${!emp.is_active ? "opacity-60" : ""}`}
+      variants={fadeUp}
+      custom={index}
+      className={`rounded-3xl mq-hair p-4 space-y-3 ${!emp.is_active ? "opacity-50" : ""}`}
+      style={{ background: "hsl(var(--card))" }}
     >
-      <div className="flex items-start justify-between gap-2">
+      <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-zinc-800 border border-zinc-700 overflow-hidden flex-shrink-0 flex items-center justify-center">
+          <div className="w-11 h-11 rounded-2xl bg-muted border border-border overflow-hidden flex-shrink-0 flex items-center justify-center">
             {emp.photo_url
               // eslint-disable-next-line @next/next/no-img-element
               ? <img src={emp.photo_url} alt="" className="w-full h-full object-cover" />
-              : <User className="h-5 w-5 text-zinc-500" />}
+              : <User className="h-5 w-5 text-muted-foreground" />}
           </div>
           <div>
-            <p className="font-medium">{emp.full_name}</p>
-            <p className="text-sm text-muted-foreground">{formatPhone(emp.phone)}</p>
+            <p className="font-display font-bold text-[15px] leading-tight">{emp.full_name}</p>
+            <p className="text-[13px] text-muted-foreground mt-0.5 tabular-nums">{formatPhone(emp.phone)}</p>
           </div>
         </div>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" aria-label="Действия">
+            <Button variant="ghost" size="icon" aria-label="Действия" className="rounded-xl">
               <MoreHorizontal className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
@@ -84,11 +84,10 @@ export function EmployeeMobileCard({ emp, index, onEdit, onResetPassword, onTogg
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
+
       <div className="flex flex-wrap gap-1.5">
         <Badge variant="outline">{ROLE_LABELS[emp.role] ?? emp.role}</Badge>
-        <Badge variant={TIER_BADGE[emp.tier] ?? "outline"}>
-          {TIER_LABELS[emp.tier] ?? emp.tier}
-        </Badge>
+        <Badge variant={TIER_BADGE[emp.tier] ?? "outline"}>{TIER_LABELS[emp.tier] ?? emp.tier}</Badge>
         {emp.is_active
           ? <Badge variant="success">Активен</Badge>
           : <Badge variant="secondary">Неактивен</Badge>}

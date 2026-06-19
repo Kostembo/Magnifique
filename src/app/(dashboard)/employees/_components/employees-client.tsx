@@ -7,25 +7,17 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
-import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from "@/components/ui/select";
-import {
-  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
-} from "@/components/ui/table";
-import {
-  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
-} from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import {
-  Plus, Search, MoreHorizontal, Pencil, UserX, UserCheck, KeyRound, Loader2, User, CalendarPlus,
-} from "lucide-react";
+import { Plus, Search, MoreHorizontal, Pencil, UserX, UserCheck, KeyRound, Loader2, User, CalendarPlus } from "lucide-react";
 import { ROLE_LABELS, TIER_LABELS, formatPhone } from "@/lib/utils";
 import { EmployeeMobileCard } from "./employee-mobile-card";
 import { InviteToEventDialog } from "./invite-to-event-dialog";
+import { motion } from "framer-motion";
+import { stagger } from "@/lib/motion";
 
 type Employee = {
   id: string;
@@ -44,9 +36,7 @@ const TIER_BADGE: Record<string, "success" | "info" | "warning"> = {
   trainee: "warning",
 };
 
-interface Props {
-  initialEmployees: Employee[];
-}
+interface Props { initialEmployees: Employee[] }
 
 export function EmployeesClient({ initialEmployees }: Props) {
   const router = useRouter();
@@ -87,10 +77,7 @@ export function EmployeesClient({ initialEmployees }: Props) {
       });
       if (res.ok) {
         setEmployees((prev) => prev.map((e) => (e.id === id ? { ...e, is_active: !current } : e)));
-        toast({
-          title: current ? "Сотрудник деактивирован" : "Сотрудник активирован",
-          variant: current ? "default" : "success",
-        });
+        toast({ title: current ? "Сотрудник деактивирован" : "Сотрудник активирован", variant: current ? "default" : "success" });
       } else {
         toast({ title: "Ошибка", description: "Не удалось обновить статус", variant: "destructive" });
       }
@@ -119,36 +106,36 @@ export function EmployeesClient({ initialEmployees }: Props) {
   }
 
   return (
-    <div className="p-4 md:p-6 space-y-5">
+    <div className="px-4 pb-28 pt-4 md:px-6 md:pb-6 space-y-5 max-w-6xl mx-auto">
+
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-semibold">Сотрудники</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">
-            {employees.filter((e) => e.is_active).length} активных &middot; {employees.length} всего
+          <h1 className="font-display text-[28px] font-extrabold tracking-[-0.03em]">Сотрудники</h1>
+          <p className="text-[13px] text-muted-foreground mt-0.5">
+            {employees.filter((e) => e.is_active).length} активных · {employees.length} всего
           </p>
         </div>
-        <Button asChild>
+        <Button asChild className="rounded-xl gap-2">
           <Link href="/employees/new">
-            <Plus className="h-4 w-4 mr-2" />
-            Добавить
+            <Plus className="h-4 w-4" />Добавить
           </Link>
-          </Button>
+        </Button>
       </div>
 
       {/* Filters */}
-      <div className="flex flex-wrap gap-3">
+      <div className="flex flex-wrap gap-2.5">
         <div className="relative flex-1 min-w-[200px]">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Поиск по имени или телефону..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="pl-9"
+            className="pl-9 rounded-2xl"
           />
         </div>
         <Select value={roleFilter} onValueChange={setRoleFilter}>
-          <SelectTrigger className="w-[140px]">
+          <SelectTrigger className="w-[140px] rounded-2xl">
             <SelectValue placeholder="Роль" />
           </SelectTrigger>
           <SelectContent>
@@ -159,7 +146,7 @@ export function EmployeesClient({ initialEmployees }: Props) {
           </SelectContent>
         </Select>
         <Select value={tierFilter} onValueChange={setTierFilter}>
-          <SelectTrigger className="w-[140px]">
+          <SelectTrigger className="w-[140px] rounded-2xl">
             <SelectValue placeholder="Уровень" />
           </SelectTrigger>
           <SelectContent>
@@ -170,7 +157,7 @@ export function EmployeesClient({ initialEmployees }: Props) {
           </SelectContent>
         </Select>
         <Select value={activeFilter} onValueChange={setActiveFilter}>
-          <SelectTrigger className="w-[130px]">
+          <SelectTrigger className="w-[130px] rounded-2xl">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -182,10 +169,10 @@ export function EmployeesClient({ initialEmployees }: Props) {
       </div>
 
       {/* Desktop table */}
-      <div className="hidden md:block rounded-lg border">
+      <div className="hidden md:block rounded-3xl overflow-hidden mq-hair">
         <Table>
           <TableHeader>
-            <TableRow>
+            <TableRow style={{ background: "hsl(var(--card))" }}>
               <TableHead>ФИО</TableHead>
               <TableHead>Телефон</TableHead>
               <TableHead>Роль</TableHead>
@@ -205,61 +192,55 @@ export function EmployeesClient({ initialEmployees }: Props) {
             {filtered.map((emp) => (
               <TableRow key={emp.id} className={!emp.is_active ? "opacity-50" : ""}>
                 <TableCell className="font-medium">
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-10 h-10 rounded-full bg-zinc-800 border border-zinc-700 overflow-hidden flex-shrink-0 flex items-center justify-center">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-2xl bg-muted border border-border overflow-hidden flex-shrink-0 flex items-center justify-center">
                       {emp.photo_url
                         // eslint-disable-next-line @next/next/no-img-element
                         ? <img src={emp.photo_url} alt="" className="w-full h-full object-cover" />
-                        : <User className="h-5 w-5 text-zinc-500" />}
+                        : <User className="h-5 w-5 text-muted-foreground" />}
                     </div>
-                    {emp.full_name}
+                    <span className="font-display font-semibold">{emp.full_name}</span>
                   </div>
                 </TableCell>
-                <TableCell className="text-muted-foreground">{formatPhone(emp.phone)}</TableCell>
+                <TableCell className="text-muted-foreground tabular-nums">{formatPhone(emp.phone)}</TableCell>
+                <TableCell><Badge variant="outline">{ROLE_LABELS[emp.role] ?? emp.role}</Badge></TableCell>
                 <TableCell>
-                  <Badge variant="outline">{ROLE_LABELS[emp.role] ?? emp.role}</Badge>
+                  <Badge variant={TIER_BADGE[emp.tier] ?? "outline"}>{TIER_LABELS[emp.tier] ?? emp.tier}</Badge>
                 </TableCell>
                 <TableCell>
-                  <Badge variant={TIER_BADGE[emp.tier] ?? "outline"}>
-                    {TIER_LABELS[emp.tier] ?? emp.tier}
-                  </Badge>
-                </TableCell>
-                <TableCell>
-                  {emp.is_active
-                    ? <Badge variant="success">Активен</Badge>
-                    : <Badge variant="secondary">Неактивен</Badge>}
+                  {emp.is_active ? <Badge variant="success">Активен</Badge> : <Badge variant="secondary">Неактивен</Badge>}
                 </TableCell>
                 <TableCell>
                   {loadingIds.has(emp.id)
                     ? <Loader2 className="h-4 w-4 animate-spin text-muted-foreground mx-auto" />
                     : (
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" aria-label="Действия">
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => router.push(`/employees/${emp.id}/edit`)}>
-                          <Pencil className="h-4 w-4 mr-2" /> Редактировать
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => { setResetTarget(emp); setNewPassword(""); }}>
-                          <KeyRound className="h-4 w-4 mr-2" /> Сбросить пароль
-                        </DropdownMenuItem>
-                        {emp.is_active && (
-                          <DropdownMenuItem onClick={() => setInviteTarget(emp)}>
-                            <CalendarPlus className="h-4 w-4 mr-2" /> Пригласить на мероприятие
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon" className="rounded-xl" aria-label="Действия">
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => router.push(`/employees/${emp.id}/edit`)}>
+                            <Pencil className="h-4 w-4 mr-2" /> Редактировать
                           </DropdownMenuItem>
-                        )}
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem onClick={() => toggleActive(emp.id, emp.is_active)}>
-                          {emp.is_active
-                            ? <><UserX className="h-4 w-4 mr-2" /> Деактивировать</>
-                            : <><UserCheck className="h-4 w-4 mr-2" /> Активировать</>}
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  )}
+                          <DropdownMenuItem onClick={() => { setResetTarget(emp); setNewPassword(""); }}>
+                            <KeyRound className="h-4 w-4 mr-2" /> Сбросить пароль
+                          </DropdownMenuItem>
+                          {emp.is_active && (
+                            <DropdownMenuItem onClick={() => setInviteTarget(emp)}>
+                              <CalendarPlus className="h-4 w-4 mr-2" /> Пригласить на мероприятие
+                            </DropdownMenuItem>
+                          )}
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem onClick={() => toggleActive(emp.id, emp.is_active)}>
+                            {emp.is_active
+                              ? <><UserX className="h-4 w-4 mr-2" /> Деактивировать</>
+                              : <><UserCheck className="h-4 w-4 mr-2" /> Активировать</>}
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    )}
                 </TableCell>
               </TableRow>
             ))}
@@ -268,11 +249,9 @@ export function EmployeesClient({ initialEmployees }: Props) {
       </div>
 
       {/* Mobile cards */}
-      <div className="md:hidden space-y-3">
+      <motion.div variants={stagger} initial="hidden" animate="show" className="md:hidden space-y-2.5">
         {filtered.length === 0 && (
-          <p className="text-center text-muted-foreground py-12">
-            Нет сотрудников по заданным фильтрам
-          </p>
+          <p className="text-center text-muted-foreground py-12">Нет сотрудников по заданным фильтрам</p>
         )}
         {filtered.map((emp, i) => (
           <EmployeeMobileCard
@@ -285,7 +264,7 @@ export function EmployeesClient({ initialEmployees }: Props) {
             onInvite={(e) => setInviteTarget(e)}
           />
         ))}
-      </div>
+      </motion.div>
 
       <InviteToEventDialog employee={inviteTarget} onClose={() => setInviteTarget(null)} />
 
@@ -293,7 +272,7 @@ export function EmployeesClient({ initialEmployees }: Props) {
       <Dialog open={!!resetTarget} onOpenChange={(open) => { if (!open) { setResetTarget(null); setNewPassword(""); } }}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Сброс пароля</DialogTitle>
+            <DialogTitle className="font-display font-bold">Сброс пароля</DialogTitle>
           </DialogHeader>
           <p className="text-sm text-muted-foreground">
             Сотрудник: <span className="font-medium text-foreground">{resetTarget?.full_name}</span>
@@ -306,11 +285,12 @@ export function EmployeesClient({ initialEmployees }: Props) {
               placeholder="Минимум 6 символов"
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
+              className="rounded-2xl"
             />
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setResetTarget(null)}>Отмена</Button>
-            <Button onClick={resetPassword} disabled={resetting || newPassword.length < 6}>
+            <Button variant="outline" className="rounded-xl" onClick={() => setResetTarget(null)}>Отмена</Button>
+            <Button className="rounded-xl" onClick={resetPassword} disabled={resetting || newPassword.length < 6}>
               {resetting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
               Сохранить
             </Button>
