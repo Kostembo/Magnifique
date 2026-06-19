@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { ChangePasswordForm } from "./_components/change-password-form";
 import { PushSection } from "./_components/push-section";
 import { LogoutButton } from "./_components/logout-button";
+import { ThemeToggle } from "@/components/settings/theme-toggle";
 
 export default async function SettingsPage() {
   const session = await auth();
@@ -14,6 +15,7 @@ export default async function SettingsPage() {
         <h1 className="text-2xl font-semibold">Настройки</h1>
         <p className="text-sm text-muted-foreground mt-0.5">Управление аккаунтом</p>
       </div>
+      <ThemeToggle />
       <PushSection />
       <ChangePasswordForm />
       <LogoutButton />
