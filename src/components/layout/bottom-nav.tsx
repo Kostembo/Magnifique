@@ -1,5 +1,7 @@
 "use client";
 
+import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -20,10 +22,15 @@ const NAV_ITEMS: NavItem[] = [
 export function BottomNav({ role }: { role: string }) {
   const pathname = usePathname();
   const items = NAV_ITEMS.filter((i) => i.roles.includes(role));
+  const [mounted, setMounted] = useState(false);
 
-  if (items.length === 0) return null;
+  useEffect(() => { setMounted(true); }, []);
 
-  return (
+  if (items.length === 0 || !mounted) return null;
+
+  // Rendered via portal directly into document.body so that position:fixed
+  // is relative to the viewport, not to any overflow:hidden ancestor (iOS Safari bug).
+  return createPortal(
     <nav
       className="md:hidden fixed bottom-0 inset-x-0 z-40"
       style={{
@@ -62,6 +69,7 @@ export function BottomNav({ role }: { role: string }) {
           })}
         </div>
       </LayoutGroup>
-    </nav>
+    </nav>,
+    document.body
   );
 }
