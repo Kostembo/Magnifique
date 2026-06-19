@@ -1,7 +1,6 @@
 "use client";
 
 import { NavLinks } from "./nav-links";
-import { BottomNav } from "./bottom-nav";
 import { MagnifiqueLogo } from "./logo";
 import { NotificationsButton } from "./notifications-button";
 import { ROLE_LABELS } from "@/lib/utils";
@@ -34,8 +33,6 @@ export function Sidebar({ userName, userRole }: SidebarProps) {
         <NavLinks role={userRole} />
       </aside>
 
-      {/* Mobile bottom nav */}
-      <BottomNav role={userRole} />
     </>
   );
 }
