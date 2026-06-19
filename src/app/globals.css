@@ -81,6 +81,11 @@
 
 
 @layer components {
+  /* Тонкая граница карточки, адаптивная к теме */
+  .mq-hair {
+    border: 1px solid hsl(var(--border));
+  }
+
   /* Бронзовое свечение на primary-кнопках */
   .btn-primary-glow {
     transition: box-shadow 0.25s ease, transform 0.15s ease;
