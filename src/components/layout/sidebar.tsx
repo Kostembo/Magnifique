@@ -17,7 +17,7 @@ export function Sidebar({ userName, userRole }: SidebarProps) {
       {/* Desktop sidebar */}
       <aside
         className="hidden md:flex flex-col w-64 min-h-screen px-4 py-6 gap-6"
-        style={{ background: "hsl(var(--card))", borderRight: "1px solid hsl(var(--border))" }}
+        style={{ background: "hsl(240 5% 9%)", borderRight: "1px solid hsl(var(--border))" }}
       >
         <div className="px-2">
           <MagnifiqueLogo size="lg" light />

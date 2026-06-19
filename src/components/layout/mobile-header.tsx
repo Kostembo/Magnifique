@@ -27,7 +27,7 @@ export function MobileHeader({ userName, photoUrl }: MobileHeaderProps) {
 
   return (
     <header
-      className="md:hidden sticky top-0 z-30 flex items-start justify-between px-4 pt-4 pb-3 flex-shrink-0"
+      className="md:hidden flex items-start justify-between px-4 pt-4 pb-3 flex-shrink-0"
       style={{ background: "hsl(var(--card))", borderBottom: "1px solid hsl(var(--border))" }}
     >
       <div>
