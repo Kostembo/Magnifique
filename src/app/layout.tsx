@@ -1,11 +1,24 @@
 import type { Metadata, Viewport } from "next";
-import { Inter, Sorts_Mill_Goudy } from "next/font/google";
+import { Sora, Hanken_Grotesk, Sorts_Mill_Goudy } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
 import { ServiceWorkerRegistrar } from "@/components/sw-register";
 import { ThemeProvider } from "@/lib/theme";
 
-const inter = Inter({ subsets: ["latin", "cyrillic"] });
+const sora = Sora({
+  subsets: ["latin", "latin-ext"],
+  weight: ["500", "600", "700", "800"],
+  variable: "--font-sora",
+  display: "swap",
+});
+
+const hanken = Hanken_Grotesk({
+  subsets: ["latin", "latin-ext", "cyrillic-ext"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-hanken",
+  display: "swap",
+});
+
 const ebGaramond = Sorts_Mill_Goudy({
   subsets: ["latin"],
   variable: "--font-garamond",
@@ -38,12 +51,16 @@ const FOUC_SCRIPT = `(function(){try{var t=localStorage.getItem('mq-theme')||'sy
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="ru" suppressHydrationWarning className={ebGaramond.variable}>
+    <html
+      lang="ru"
+      suppressHydrationWarning
+      className={`${sora.variable} ${hanken.variable} ${ebGaramond.variable}`}
+    >
       <head>
         {/* eslint-disable-next-line @next/next/no-sync-scripts */}
         <script dangerouslySetInnerHTML={{ __html: FOUC_SCRIPT }} />
       </head>
-      <body className={inter.className}>
+      <body>
         <ThemeProvider>
           {children}
           <Toaster />

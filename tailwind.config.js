@@ -14,6 +14,8 @@ module.exports = {
     },
     extend: {
       fontFamily: {
+        sans: ["var(--font-hanken)", "ui-sans-serif", "system-ui", "sans-serif"],
+        display: ["var(--font-sora)", "ui-sans-serif", "sans-serif"],
         serif: ["var(--font-garamond)", "Georgia", "serif"],
       },
       colors: {
