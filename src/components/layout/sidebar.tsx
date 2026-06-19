@@ -15,15 +15,18 @@ export function Sidebar({ userName, userRole }: SidebarProps) {
   return (
     <>
       {/* Desktop sidebar */}
-      <aside className="hidden md:flex flex-col w-64 min-h-screen bg-zinc-950 border-r border-zinc-800 px-4 py-6 gap-6">
+      <aside
+        className="hidden md:flex flex-col w-64 min-h-screen px-4 py-6 gap-6"
+        style={{ background: "hsl(var(--card))", borderRight: "1px solid hsl(var(--border))" }}
+      >
         <div className="px-2">
           <MagnifiqueLogo size="lg" light />
         </div>
 
-        <div className="px-2 pb-4 border-b border-zinc-800 flex items-center justify-between gap-2">
+        <div className="px-2 pb-4 flex items-center justify-between gap-2" style={{ borderBottom: "1px solid hsl(var(--border))" }}>
           <div className="min-w-0">
-            <p className="text-sm font-medium text-zinc-100 truncate">{userName}</p>
-            <p className="text-xs text-zinc-500 mt-0.5">{ROLE_LABELS[userRole] ?? userRole}</p>
+            <p className="text-sm font-display font-semibold truncate">{userName}</p>
+            <p className="text-xs text-muted-foreground mt-0.5">{ROLE_LABELS[userRole] ?? userRole}</p>
           </div>
           <NotificationsButton />
         </div>

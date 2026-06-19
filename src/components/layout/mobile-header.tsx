@@ -26,24 +26,28 @@ export function MobileHeader({ userName, photoUrl }: MobileHeaderProps) {
   const initials = parts.slice(0, 2).map((p) => p[0]).join("").toUpperCase();
 
   return (
-    <header className="md:hidden flex items-start justify-between px-4 pt-4 pb-3 bg-zinc-950 flex-shrink-0">
+    <header
+      className="md:hidden flex items-start justify-between px-4 pt-4 pb-3 flex-shrink-0"
+      style={{ background: "hsl(var(--card))", borderBottom: "1px solid hsl(var(--border))" }}
+    >
       <div>
-        <p className="text-xs text-zinc-500">{dateStr}</p>
-        <h1 className="text-2xl font-bold text-zinc-100 mt-0.5">
+        <p className="text-xs text-muted-foreground">{dateStr}</p>
+        <h1 className="font-display text-[22px] font-extrabold tracking-[-0.02em] mt-0.5">
           Привет, {firstName}
         </h1>
       </div>
 
       <div className="flex items-center gap-2 mt-1">
-        {/* Bell */}
         <NotificationsButton />
-
-        {/* Avatar */}
-        <Link href="/settings" className="w-9 h-9 rounded-full bg-[hsl(38,62%,40%)] flex items-center justify-center overflow-hidden flex-shrink-0">
+        <Link
+          href="/settings"
+          className="w-9 h-9 rounded-2xl flex items-center justify-center overflow-hidden flex-shrink-0 min-h-0 min-w-0"
+          style={{ background: "hsl(var(--primary))" }}
+        >
           {photoUrl
             // eslint-disable-next-line @next/next/no-img-element
             ? <img src={photoUrl} alt="" className="w-full h-full object-cover" />
-            : <span className="text-sm font-semibold text-white">{initials}</span>}
+            : <span className="text-sm font-semibold" style={{ color: "hsl(var(--primary-foreground))" }}>{initials}</span>}
         </Link>
       </div>
     </header>

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { RefreshCw } from "lucide-react";
 
 const THRESHOLD = 72;
+const MIN_PULL = 10; // minimum px before we intercept — prevents blocking taps
 
 export function PullToRefresh({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -22,15 +23,18 @@ export function PullToRefresh({ children }: { children: React.ReactNode }) {
     function onTouchStart(e: TouchEvent) {
       if (el!.scrollTop > 0) return;
       startYRef.current = e.touches[0].clientY;
+      pullDistRef.current = 0;
       pullingRef.current = true;
     }
 
     function onTouchMove(e: TouchEvent) {
       if (!pullingRef.current) return;
+      if (el!.scrollTop > 0) { pullingRef.current = false; return; }
       const dist = Math.max(0, e.touches[0].clientY - startYRef.current);
-      if (dist > 0 && el!.scrollTop === 0) {
+      // Only intercept after MIN_PULL pixels — avoids blocking taps on iOS
+      if (dist > MIN_PULL) {
         e.preventDefault();
-        const clamped = Math.min(dist * 0.5, THRESHOLD + 20);
+        const clamped = Math.min((dist - MIN_PULL) * 0.55, THRESHOLD + 20);
         pullDistRef.current = clamped;
         setPullDist(clamped);
       }
@@ -41,7 +45,7 @@ export function PullToRefresh({ children }: { children: React.ReactNode }) {
       pullingRef.current = false;
       const dist = pullDistRef.current;
       pullDistRef.current = 0;
-      setPullDist(0);
+      if (dist > 0) setPullDist(0);
       if (dist >= THRESHOLD) {
         startTransition(() => { router.refresh(); });
       }
@@ -49,7 +53,7 @@ export function PullToRefresh({ children }: { children: React.ReactNode }) {
 
     el.addEventListener("touchstart", onTouchStart, { passive: true });
     el.addEventListener("touchmove", onTouchMove, { passive: false });
-    el.addEventListener("touchend", onTouchEnd);
+    el.addEventListener("touchend", onTouchEnd, { passive: true });
     return () => {
       el.removeEventListener("touchstart", onTouchStart);
       el.removeEventListener("touchmove", onTouchMove);
@@ -63,11 +67,11 @@ export function PullToRefresh({ children }: { children: React.ReactNode }) {
     <div ref={containerRef} className="flex-1 overflow-y-auto overflow-x-hidden min-w-0">
       {/* Pull indicator */}
       <div
-        className="flex items-center justify-center overflow-hidden transition-all duration-200"
+        className="flex items-center justify-center overflow-hidden transition-[height] duration-200"
         style={{ height: isPending ? THRESHOLD : pullDist > 0 ? pullDist : 0 }}
       >
         <RefreshCw
-          className="text-[hsl(38,62%,48%)]"
+          className="text-primary"
           style={{
             width: 22, height: 22,
             transform: `rotate(${isPending ? 0 : progress * 360}deg)`,
@@ -76,7 +80,8 @@ export function PullToRefresh({ children }: { children: React.ReactNode }) {
           }}
         />
       </div>
-      <div className="pb-16 md:pb-0">
+      {/* Bottom padding accounts for nav bar + safe-area on iPhone */}
+      <div className="pb-[calc(3.5rem+env(safe-area-inset-bottom,0px))] md:pb-0">
         {children}
       </div>
     </div>
