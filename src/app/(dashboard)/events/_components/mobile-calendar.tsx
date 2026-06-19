@@ -48,7 +48,7 @@ export function MobileCalendar({ events, onDateClick }: Props) {
         >
           <ChevronLeft className="h-5 w-5" />
         </button>
-        <span className="text-lg font-semibold capitalize text-zinc-900">
+        <span className="text-lg md:text-2xl font-semibold capitalize text-zinc-900">
           {format(month, "LLLL yyyy", { locale: ru })}
         </span>
         <button
@@ -93,7 +93,7 @@ export function MobileCalendar({ events, onDateClick }: Props) {
             >
               <span
                 className={[
-                  "text-sm w-7 h-7 flex items-center justify-center rounded-full font-medium",
+                  "text-sm w-7 h-7 md:text-base md:w-9 md:h-9 flex items-center justify-center rounded-full font-medium",
                   today
                     ? "bg-[hsl(38,62%,48%)] text-zinc-950 font-bold"
                     : inMonth ? "text-zinc-900" : "text-zinc-400",

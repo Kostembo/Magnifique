@@ -6,33 +6,54 @@
   :root {
     --background: 40 20% 98%;
     --foreground: 30 10% 8%;
-
     --card: 0 0% 100%;
     --card-foreground: 30 10% 8%;
-
     --popover: 0 0% 100%;
     --popover-foreground: 30 10% 8%;
-
-    /* Bronze */
     --primary: 38 62% 48%;
     --primary-foreground: 0 0% 100%;
-
     --secondary: 40 15% 94%;
     --secondary-foreground: 30 10% 15%;
-
     --muted: 40 15% 94%;
     --muted-foreground: 30 8% 46%;
-
     --accent: 40 15% 93%;
     --accent-foreground: 38 62% 38%;
-
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
-
     --border: 40 15% 88%;
     --input: 40 15% 88%;
     --ring: 38 62% 48%;
     --radius: 0.75rem;
+    --ok: 142 71% 36%;
+    --warn: 41 96% 40%;
+    --bad: 0 72% 51%;
+    --info: 214 80% 46%;
+  }
+
+  .dark {
+    --background: 240 6% 4%;
+    --foreground: 0 0% 98%;
+    --card: 240 5% 9%;
+    --card-foreground: 0 0% 98%;
+    --popover: 240 5% 8%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 38 91% 60%;
+    --primary-foreground: 240 6% 4%;
+    --secondary: 240 4% 12%;
+    --secondary-foreground: 0 0% 92%;
+    --muted: 240 4% 13%;
+    --muted-foreground: 240 5% 60%;
+    --accent: 38 40% 16%;
+    --accent-foreground: 38 91% 66%;
+    --destructive: 0 64% 67%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 240 5% 14%;
+    --input: 240 5% 16%;
+    --ring: 38 91% 60%;
+    --ok: 152 40% 56%;
+    --warn: 37 72% 56%;
+    --bad: 0 64% 67%;
+    --info: 210 67% 70%;
   }
 }
 

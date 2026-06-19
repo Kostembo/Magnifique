@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { format, addMonths, subMonths, getDaysInMonth } from "date-fns";
 import { ru } from "date-fns/locale";
-import { ChevronLeft, ChevronRight, Pencil, Trash2, Loader2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, Trash2, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -53,8 +53,7 @@ export function ManagerTimesheet({ initial, initialMonth }: { initial: TimeEntry
   const [entries, setEntries] = useState<TimeEntry[]>(initial);
   const [loading, setLoading] = useState(false);
   const [editTarget, setEditTarget] = useState<EditTarget | null>(null);
-  const [editStart, setEditStart] = useState("");
-  const [editEnd, setEditEnd] = useState("");
+  const [editHours, setEditHours] = useState("");
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
@@ -78,12 +77,11 @@ export function ManagerTimesheet({ initial, initialMonth }: { initial: TimeEntry
     setEditTarget({
       entryId: entry.id,
       employeeName: entry.employee.full_name,
-      day: parseInt(entry.work_date.slice(8, 10), 10),
+      day: parseInt(new Date(entry.work_date).toISOString().slice(8, 10), 10),
       start_time: entry.start_time,
       end_time: entry.end_time,
     });
-    setEditStart(entry.start_time);
-    setEditEnd(entry.end_time);
+    setEditHours(String(calcMins(entry.start_time, entry.end_time) / 60));
   }
 
   function openEditById(entryId: string) {
@@ -93,18 +91,25 @@ export function ManagerTimesheet({ initial, initialMonth }: { initial: TimeEntry
 
   async function saveEdit() {
     if (!editTarget) return;
+    const hours = parseFloat(editHours);
+    if (isNaN(hours) || hours <= 0) {
+      toast({ title: "Укажите корректное количество часов", variant: "destructive" });
+      return;
+    }
+    const [sh, sm] = editTarget.start_time.split(":").map(Number);
+    const endTotal = sh * 60 + sm + Math.round(hours * 60);
+    const newEnd = `${String(Math.floor(endTotal / 60) % 24).padStart(2, "0")}:${String(endTotal % 60).padStart(2, "0")}`;
     setSaving(true);
     const res = await fetch(`/api/time-entries/${editTarget.entryId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ start_time: editStart, end_time: editEnd }),
+      body: JSON.stringify({ start_time: editTarget.start_time, end_time: newEnd }),
     });
     setSaving(false);
     if (res.ok) {
-      const updated: TimeEntry = await res.json();
-      setEntries((prev) => prev.map((e) => e.id === updated.id ? updated : e));
       toast({ title: "Время обновлено", variant: "success" });
       setEditTarget(null);
+      await loadMonth(month);
     } else {
       const err = await res.json().catch(() => ({}));
       toast({ title: "Ошибка", description: err.error, variant: "destructive" });
@@ -133,7 +138,7 @@ export function ManagerTimesheet({ initial, initialMonth }: { initial: TimeEntry
       employeeMap.set(entry.employee_id, { name: entry.employee.full_name, role: entry.employee.role, days: {}, totalMins: 0 });
     }
     const row = employeeMap.get(entry.employee_id)!;
-    const day = parseInt(entry.work_date.slice(8, 10), 10);
+    const day = parseInt(new Date(entry.work_date).toISOString().slice(8, 10), 10);
     const mins = calcMins(entry.start_time, entry.end_time);
     row.days[day] = { mins, entryId: entry.id, startTime: entry.start_time, endTime: entry.end_time };
     row.totalMins += mins;
@@ -205,10 +210,9 @@ export function ManagerTimesheet({ initial, initialMonth }: { initial: TimeEntry
                         {cell ? (
                           <button
                             onClick={() => openEditById(cell.entryId)}
-                            className="group inline-flex items-center gap-1 text-[hsl(38,72%,42%)] font-medium hover:text-[hsl(38,72%,32%)] transition-colors"
+                            className="text-[hsl(38,72%,42%)] font-medium hover:underline transition-colors"
                           >
                             {fmtHours(cell.mins)}
-                            <Pencil className="h-3 w-3 opacity-0 group-hover:opacity-60 transition-opacity" />
                           </button>
                         ) : (
                           <span className="text-zinc-300">—</span>
@@ -250,15 +254,17 @@ export function ManagerTimesheet({ initial, initialMonth }: { initial: TimeEntry
               <p className="text-sm text-muted-foreground">
                 {editTarget.employeeName} · {editTarget.day} {format(month, "LLLL", { locale: ru })}
               </p>
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1.5">
-                  <Label htmlFor="edit-start">Начало</Label>
-                  <Input id="edit-start" type="time" value={editStart} onChange={(e) => setEditStart(e.target.value)} />
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="edit-end">Конец</Label>
-                  <Input id="edit-end" type="time" value={editEnd} onChange={(e) => setEditEnd(e.target.value)} />
-                </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="edit-hours">Часов отработано</Label>
+                <Input
+                  id="edit-hours"
+                  type="number"
+                  min="0.5"
+                  max="24"
+                  step="0.5"
+                  value={editHours}
+                  onChange={(e) => setEditHours(e.target.value)}
+                />
               </div>
             </div>
           )}

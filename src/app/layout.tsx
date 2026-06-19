@@ -3,6 +3,7 @@ import { Inter, Sorts_Mill_Goudy } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
 import { ServiceWorkerRegistrar } from "@/components/sw-register";
+import { ThemeProvider } from "@/lib/theme";
 
 const inter = Inter({ subsets: ["latin", "cyrillic"] });
 const ebGaramond = Sorts_Mill_Goudy({
@@ -33,13 +34,21 @@ export const viewport: Viewport = {
   maximumScale: 1,
 };
 
+const FOUC_SCRIPT = `(function(){try{var t=localStorage.getItem('mq-theme')||'system';var d=t==='dark'||(t==='system'&&matchMedia('(prefers-color-scheme: dark)').matches);if(d)document.documentElement.classList.add('dark');}catch(e){}})();`;
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="ru" style={{ background: "#0D0D0D" }}>
-      <body className={`${inter.className} ${ebGaramond.variable}`}>
-        {children}
-        <Toaster />
-        <ServiceWorkerRegistrar />
+    <html lang="ru" suppressHydrationWarning className={ebGaramond.variable}>
+      <head>
+        {/* eslint-disable-next-line @next/next/no-sync-scripts */}
+        <script dangerouslySetInnerHTML={{ __html: FOUC_SCRIPT }} />
+      </head>
+      <body className={inter.className}>
+        <ThemeProvider>
+          {children}
+          <Toaster />
+          <ServiceWorkerRegistrar />
+        </ThemeProvider>
       </body>
     </html>
   );
