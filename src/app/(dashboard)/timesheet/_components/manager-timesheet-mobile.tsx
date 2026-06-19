@@ -28,49 +28,52 @@ interface Props {
 
 export function MobileTimesheetView({ employees, month, onEdit }: Props) {
   if (employees.length === 0) {
-    return <p className="text-zinc-400 text-sm py-8 text-center">Нет отметок за этот месяц</p>;
+    return <p className="text-muted-foreground text-sm py-10 text-center">Нет отметок за этот месяц</p>;
   }
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-2.5">
       {employees.map(([empId, emp]) => {
         const sortedDays = Object.entries(emp.days)
           .map(([day, entry]) => ({ day: Number(day), ...entry }))
           .sort((a, b) => a.day - b.day);
 
         return (
-          <div key={empId} className="rounded-xl border border-zinc-200 bg-white overflow-hidden">
-            <div className="flex items-center justify-between px-4 py-3 border-b border-zinc-200">
+          <div key={empId} className="rounded-3xl mq-hair overflow-hidden" style={{ background: "hsl(var(--card))" }}>
+            <div className="flex items-center justify-between px-4 py-3.5" style={{ borderBottom: "1px solid hsl(var(--border))" }}>
               <div>
-                <p className="font-medium text-zinc-900">{emp.name}</p>
-                <p className="text-xs text-zinc-400 mt-0.5">{ROLE_LABELS[emp.role] ?? emp.role}</p>
+                <p className="font-display font-bold text-[15px]">{emp.name}</p>
+                <p className="text-[12px] text-muted-foreground mt-0.5">{ROLE_LABELS[emp.role] ?? emp.role}</p>
               </div>
               <div className="text-right">
-                <p className="text-sm font-semibold text-[hsl(38,72%,42%)]">{fmtH(emp.totalMins)}</p>
-                <p className="text-xs text-zinc-400">за месяц</p>
+                <p className="text-[14px] font-display font-bold" style={{ color: "hsl(var(--primary))" }}>{fmtH(emp.totalMins)}</p>
+                <p className="text-[11px] text-muted-foreground">за месяц</p>
               </div>
             </div>
 
             {sortedDays.length === 0 ? (
-              <p className="px-4 py-3 text-sm text-zinc-400">Нет записей</p>
+              <p className="px-4 py-3 text-[13px] text-muted-foreground">Нет записей</p>
             ) : (
-              <div className="divide-y divide-zinc-200">
+              <div>
                 {sortedDays.map(({ day, entryId, startTime, endTime, mins }) => (
-                  <div key={day} className="flex items-center justify-between px-4 py-2.5">
-                    <div className="flex items-center gap-2 min-w-0">
-                      <span className="text-zinc-900 text-sm font-medium w-5 shrink-0">{day}</span>
-                      <span className="text-zinc-400 text-xs shrink-0">
+                  <div key={day} className="flex items-center justify-between px-4 py-3"
+                    style={{ borderBottom: "1px solid hsl(var(--border))" }}>
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <span className="text-foreground text-[13px] font-display font-bold w-5 shrink-0">{day}</span>
+                      <span className="text-muted-foreground text-[12px] shrink-0">
                         {format(month, "LLL", { locale: ru })}
                       </span>
-                      <span className="text-zinc-600 text-sm">
+                      <span className="text-foreground text-[13px]">
                         {startTime.slice(0, 5)} — {endTime.slice(0, 5)}
                       </span>
                     </div>
                     <div className="flex items-center gap-3 shrink-0">
-                      <span className="text-sm font-medium text-[hsl(38,72%,42%)]">{fmtH(mins)}</span>
+                      <span className="text-[13px] font-display font-bold tabular-nums" style={{ color: "hsl(var(--primary))" }}>
+                        {fmtH(mins)}
+                      </span>
                       <button
                         onClick={() => onEdit(entryId)}
-                        className="text-zinc-400 hover:text-zinc-700 transition-colors p-1"
+                        className="text-muted-foreground hover:text-foreground transition-colors p-1 min-h-0 min-w-0 h-auto w-auto"
                         aria-label="Редактировать"
                       >
                         <Pencil className="h-3.5 w-3.5" />

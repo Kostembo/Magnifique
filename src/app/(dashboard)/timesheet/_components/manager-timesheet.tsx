@@ -157,17 +157,19 @@ export function ManagerTimesheet({ initial, initialMonth }: { initial: TimeEntry
   return (
     <div className="space-y-4">
       {/* Month nav */}
-      <div className="flex items-center gap-3">
-        <button onClick={prevMonth} className="p-2 rounded-lg hover:bg-zinc-100 text-zinc-500 hover:text-zinc-900 transition-colors">
+      <div className="flex items-center gap-2">
+        <button onClick={prevMonth}
+          className="p-2 rounded-xl hover:bg-muted text-muted-foreground hover:text-foreground transition-colors min-h-0 min-w-0 h-auto w-auto">
           <ChevronLeft className="h-5 w-5" />
         </button>
-        <span className="text-zinc-900 font-medium capitalize min-w-[160px] text-center">
+        <span className="font-display font-bold capitalize min-w-[160px] text-center">
           {format(month, "LLLL yyyy", { locale: ru })}
         </span>
-        <button onClick={nextMonth} className="p-2 rounded-lg hover:bg-zinc-100 text-zinc-500 hover:text-zinc-900 transition-colors">
+        <button onClick={nextMonth}
+          className="p-2 rounded-xl hover:bg-muted text-muted-foreground hover:text-foreground transition-colors min-h-0 min-w-0 h-auto w-auto">
           <ChevronRight className="h-5 w-5" />
         </button>
-        {loading && <Loader2 className="h-4 w-4 animate-spin text-zinc-400" />}
+        {loading && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
       </div>
 
       {/* Mobile */}
@@ -177,31 +179,35 @@ export function ManagerTimesheet({ initial, initialMonth }: { initial: TimeEntry
 
       {/* Desktop table */}
       {employees.length === 0 ? (
-        <p className="hidden md:block text-zinc-400 text-sm py-8 text-center">Нет отметок за этот месяц</p>
+        <p className="hidden md:block text-muted-foreground text-sm py-10 text-center">Нет отметок за этот месяц</p>
       ) : (
-        <div className="hidden md:block overflow-x-auto rounded-xl border border-zinc-200">
+        <div className="hidden md:block overflow-x-auto rounded-3xl mq-hair">
           <table className="min-w-full text-sm">
             <thead>
-              <tr className="border-b border-zinc-200">
-                <th className="text-left px-4 py-3 text-zinc-500 font-medium whitespace-nowrap sticky left-0 bg-white z-10 min-w-[180px]">
+              <tr style={{ borderBottom: "1px solid hsl(var(--border))" }}>
+                <th className="text-left px-4 py-3 text-muted-foreground font-medium whitespace-nowrap sticky left-0 z-10 min-w-[180px]"
+                  style={{ background: "hsl(var(--card))" }}>
                   Сотрудник
                 </th>
                 {activeDays.map((day) => (
-                  <th key={day} className="px-2 py-3 text-zinc-500 font-medium text-center whitespace-nowrap min-w-[52px]">
+                  <th key={day} className="px-2 py-3 text-muted-foreground font-medium text-center whitespace-nowrap min-w-[52px]">
                     {day}
                   </th>
                 ))}
-                <th className="px-4 py-3 text-zinc-700 font-semibold text-center whitespace-nowrap sticky right-0 bg-white z-10 border-l border-zinc-200">
+                <th className="px-4 py-3 font-semibold text-center whitespace-nowrap sticky right-0 z-10"
+                  style={{ background: "hsl(var(--card))", borderLeft: "1px solid hsl(var(--border))" }}>
                   Итого
                 </th>
               </tr>
             </thead>
             <tbody>
               {employees.map(([, emp]) => (
-                <tr key={emp.name} className="group/row border-b border-zinc-200 last:border-0 hover:bg-zinc-50 transition-colors">
-                  <td className="px-4 py-3 sticky left-0 bg-white group-hover/row:bg-zinc-50 z-10 transition-colors">
-                    <p className="text-zinc-900 whitespace-nowrap">{emp.name}</p>
-                    <p className="text-zinc-400 text-xs">{ROLE_LABELS[emp.role] ?? emp.role}</p>
+                <tr key={emp.name} className="group/row transition-colors"
+                  style={{ borderBottom: "1px solid hsl(var(--border))" }}>
+                  <td className="px-4 py-3 sticky left-0 z-10 transition-colors"
+                    style={{ background: "hsl(var(--card))" }}>
+                    <p className="font-display font-semibold whitespace-nowrap">{emp.name}</p>
+                    <p className="text-muted-foreground text-xs">{ROLE_LABELS[emp.role] ?? emp.role}</p>
                   </td>
                   {activeDays.map((day) => {
                     const cell = emp.days[day];
@@ -210,32 +216,35 @@ export function ManagerTimesheet({ initial, initialMonth }: { initial: TimeEntry
                         {cell ? (
                           <button
                             onClick={() => openEditById(cell.entryId)}
-                            className="text-[hsl(38,72%,42%)] font-medium hover:underline transition-colors"
+                            className="font-display font-bold hover:underline transition-colors min-h-0 min-w-0 h-auto w-auto tabular-nums"
+                            style={{ color: "hsl(var(--primary))" }}
                           >
                             {fmtHours(cell.mins)}
                           </button>
                         ) : (
-                          <span className="text-zinc-300">—</span>
+                          <span className="text-muted-foreground opacity-30">—</span>
                         )}
                       </td>
                     );
                   })}
-                  <td className="px-4 py-3 text-center sticky right-0 bg-white group-hover/row:bg-zinc-50 z-10 border-l border-zinc-200 transition-colors">
-                    <span className="font-semibold text-zinc-900">{fmtHours(emp.totalMins) || "—"}</span>
+                  <td className="px-4 py-3 text-center sticky right-0 z-10 transition-colors"
+                    style={{ background: "hsl(var(--card))", borderLeft: "1px solid hsl(var(--border))" }}>
+                    <span className="font-display font-bold">{fmtHours(emp.totalMins) || "—"}</span>
                   </td>
                 </tr>
               ))}
-              <tr className="border-t-2 border-zinc-200 bg-zinc-50">
-                <td className="px-4 py-2.5 sticky left-0 bg-zinc-50 z-10">
-                  <p className="text-zinc-500 font-medium text-xs uppercase tracking-wide">Итого часов</p>
+              <tr style={{ borderTop: "2px solid hsl(var(--border))", background: "hsl(var(--muted))" }}>
+                <td className="px-4 py-2.5 sticky left-0 z-10" style={{ background: "hsl(var(--muted))" }}>
+                  <p className="text-muted-foreground font-medium text-xs uppercase tracking-wider">Итого часов</p>
                 </td>
                 {activeDays.map((day) => (
                   <td key={day} className="px-2 py-2.5 text-center">
-                    <span className="text-zinc-600 text-xs font-medium">{fmtHours(dayTotals[day]) || "—"}</span>
+                    <span className="text-muted-foreground text-xs font-medium tabular-nums">{fmtHours(dayTotals[day]) || "—"}</span>
                   </td>
                 ))}
-                <td className="px-4 py-2.5 text-center sticky right-0 bg-zinc-50 z-10 border-l border-zinc-200">
-                  <span className="font-bold text-zinc-900">{fmtHours(grandTotal) || "—"}</span>
+                <td className="px-4 py-2.5 text-center sticky right-0 z-10"
+                  style={{ background: "hsl(var(--muted))", borderLeft: "1px solid hsl(var(--border))" }}>
+                  <span className="font-display font-bold">{fmtHours(grandTotal) || "—"}</span>
                 </td>
               </tr>
             </tbody>
@@ -247,7 +256,7 @@ export function ManagerTimesheet({ initial, initialMonth }: { initial: TimeEntry
       <Dialog open={!!editTarget} onOpenChange={(open) => { if (!open) setEditTarget(null); }}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Редактировать запись</DialogTitle>
+            <DialogTitle className="font-display font-bold">Редактировать запись</DialogTitle>
           </DialogHeader>
           {editTarget && (
             <div className="space-y-3">
@@ -257,23 +266,20 @@ export function ManagerTimesheet({ initial, initialMonth }: { initial: TimeEntry
               <div className="space-y-1.5">
                 <Label htmlFor="edit-hours">Часов отработано</Label>
                 <Input
-                  id="edit-hours"
-                  type="number"
-                  min="0.5"
-                  max="24"
-                  step="0.5"
-                  value={editHours}
-                  onChange={(e) => setEditHours(e.target.value)}
+                  id="edit-hours" type="number" min="0.5" max="24" step="0.5"
+                  value={editHours} onChange={(e) => setEditHours(e.target.value)}
+                  className="rounded-2xl"
                 />
               </div>
             </div>
           )}
           <DialogFooter className="gap-2">
-            <Button variant="ghost" size="sm" onClick={deleteEntry} disabled={deleting || saving} className="text-destructive hover:text-destructive mr-auto">
+            <Button variant="ghost" size="sm" onClick={deleteEntry} disabled={deleting || saving}
+              className="text-destructive hover:text-destructive mr-auto rounded-xl">
               {deleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
             </Button>
-            <Button variant="outline" onClick={() => setEditTarget(null)}>Отмена</Button>
-            <Button onClick={saveEdit} disabled={saving || deleting}>
+            <Button variant="outline" className="rounded-xl" onClick={() => setEditTarget(null)}>Отмена</Button>
+            <Button className="rounded-xl" onClick={saveEdit} disabled={saving || deleting}>
               {saving && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
               Сохранить
             </Button>
