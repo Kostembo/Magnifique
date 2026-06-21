@@ -32,7 +32,7 @@ export function MobileHeader({ userName, photoUrl }: MobileHeaderProps) {
     >
       <div>
         <p className="text-xs text-muted-foreground">{dateStr}</p>
-        <h1 className="font-display text-[22px] font-extrabold tracking-[-0.02em] mt-0.5">
+        <h1 className="font-display text-[22px] font-extrabold tracking-[-0.02em] mt-0.5 text-white">
           Привет, {firstName}
         </h1>
       </div>

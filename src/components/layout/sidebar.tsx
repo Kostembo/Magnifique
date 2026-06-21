@@ -25,7 +25,7 @@ export function Sidebar({ userName, userRole }: SidebarProps) {
 
         <div className="px-2 pb-4 flex items-center justify-between gap-2" style={{ borderBottom: "1px solid hsl(var(--border))" }}>
           <div className="min-w-0">
-            <p className="text-sm font-display font-semibold truncate">{userName}</p>
+            <p className="text-sm font-display font-semibold truncate text-white">{userName}</p>
             <p className="text-xs text-muted-foreground mt-0.5">{ROLE_LABELS[userRole] ?? userRole}</p>
           </div>
           <NotificationsButton />
