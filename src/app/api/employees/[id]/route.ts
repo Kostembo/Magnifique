@@ -102,6 +102,13 @@ export async function DELETE(
   const denied = requireManager(session);
   if (denied) return denied;
 
+  const target = await prisma.employee.findUnique({
+    where: { id: params.id },
+    select: { role: true },
+  });
+  if (!target) return NextResponse.json({ error: "Не найден" }, { status: 404 });
+  if (target.role === "admin") return NextResponse.json({ error: "Нельзя удалить администратора" }, { status: 403 });
+
   await prisma.employee.delete({ where: { id: params.id } });
 
   return NextResponse.json({ ok: true });

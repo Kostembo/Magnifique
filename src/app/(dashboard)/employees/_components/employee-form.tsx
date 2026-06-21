@@ -13,9 +13,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, ArrowLeft, Eye, EyeOff, Camera, User, Trash2 } from "lucide-react";
+import { Loader2, ArrowLeft, Eye, EyeOff, Camera, User, UserX } from "lucide-react";
 import Link from "next/link";
 import { ImageCropModal } from "./image-crop-modal";
 
@@ -28,7 +27,6 @@ const baseSchema = z.object({
   tier: z.enum(["core", "regular", "trainee"]),
   passport_data: z.string().optional(),
   photo_url: z.string().optional(),
-  is_active: z.boolean().optional(),
 });
 
 const createSchema = baseSchema.extend({
@@ -67,12 +65,10 @@ export function EmployeeForm({ mode, defaultValues }: EmployeeFormProps) {
       role: defaultValues?.role,
       tier: defaultValues?.tier ?? "regular",
       passport_data: "",
-      is_active: defaultValues?.is_active ?? true,
       password: "000000",
     },
   });
 
-  const isActive = watch("is_active");
   const selectedRole = watch("role");
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -132,7 +128,6 @@ export function EmployeeForm({ mode, defaultValues }: EmployeeFormProps) {
       phone: data.phone,
       role: data.role,
       tier: data.tier,
-      is_active: data.is_active,
     };
 
     if (showPassport) payload.passport_data = data.passport_data ?? "";
@@ -355,53 +350,42 @@ export function EmployeeForm({ mode, defaultValues }: EmployeeFormProps) {
           </CardContent>
         </Card>
 
-        {mode === "edit" && (
-          <Card>
-            <CardContent className="pt-4">
-              <div className="flex items-center gap-3">
-                <Checkbox
-                  id="is_active"
-                  checked={isActive ?? true}
-                  onCheckedChange={(v) => setValue("is_active", Boolean(v))}
-                />
-                <Label htmlFor="is_active">Сотрудник активен</Label>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
         <div className="flex gap-3 justify-end">
-          {mode === "edit" && !confirmDelete && (
+          {mode === "edit" && !confirmDelete && defaultValues?.role !== "admin" && (
             <Button
               type="button"
               variant="ghost"
               className="mr-auto text-destructive hover:text-destructive hover:bg-destructive/10"
               onClick={() => setConfirmDelete(true)}
             >
-              <Trash2 className="h-4 w-4 mr-2" />
-              Удалить
+              <UserX className="h-4 w-4 mr-2" />
+              Уволить
             </Button>
           )}
           {mode === "edit" && confirmDelete && (
-            <div className="mr-auto flex items-center gap-2">
-              <span className="text-sm text-muted-foreground">Удалить сотрудника навсегда?</span>
-              <Button
-                type="button"
-                size="sm"
-                variant="destructive"
-                disabled={deleting}
-                onClick={deleteEmployee}
-              >
-                {deleting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Да, удалить"}
-              </Button>
-              <Button
-                type="button"
-                size="sm"
-                variant="outline"
-                onClick={() => setConfirmDelete(false)}
-              >
-                Отмена
-              </Button>
+            <div className="mr-auto flex flex-col gap-2 max-w-xs">
+              <p className="text-sm text-amber-500">
+                Убедитесь, что сотрудник получил расчёт за все отработанные смены. Действие необратимо.
+              </p>
+              <div className="flex items-center gap-2">
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="destructive"
+                  disabled={deleting}
+                  onClick={deleteEmployee}
+                >
+                  {deleting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Уволить"}
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setConfirmDelete(false)}
+                >
+                  Отмена
+                </Button>
+              </div>
             </div>
           )}
           <Button variant="outline" asChild>
