@@ -12,16 +12,15 @@ export async function GET() {
 
   const employees = await prisma.employee.findMany({
     orderBy: [{ role: "asc" }, { full_name: "asc" }],
-    select: { id: true, full_name: true, phone: true, role: true, tier: true, is_active: true, created_at: true },
+    select: { id: true, full_name: true, phone: true, role: true, tier: true, created_at: true },
   });
 
-  const headers = ["ФИО", "Телефон", "Роль", "Уровень", "Статус", "Добавлен"];
+  const headers = ["ФИО", "Телефон", "Роль", "Уровень", "Добавлен"];
   const rows = employees.map((e) => [
     e.full_name,
     formatPhone(e.phone),
     ROLE_LABELS[e.role] ?? e.role,
     TIER_LABELS[e.tier] ?? e.tier,
-    e.is_active ? "Активен" : "Деактивирован",
     new Date(e.created_at).toLocaleDateString("ru-RU"),
   ]);
 

@@ -55,7 +55,6 @@ export async function POST(
         where: {
           role: pos.role,
           tier: "core",
-          is_active: true,
           assignments: { none: { position_id: pos.id } },
         },
         select: { id: true },
@@ -109,7 +108,6 @@ export async function POST(
         where: {
           role: pos.role,
           tier: { in: ["regular", "trainee"] },
-          is_active: true,
           assignments: { none: { position_id: pos.id } },
         },
         select: { id: true },

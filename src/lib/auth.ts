@@ -29,7 +29,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
               { phone: "7" + normalizedPhone.slice(-10) },
               { phone: normalizedPhone.slice(-10) },
             ],
-            is_active: true,
           },
         });
 

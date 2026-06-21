@@ -1,7 +1,6 @@
 "use client";
 
 import { NavLinks } from "./nav-links";
-import { BottomNav } from "./bottom-nav";
 import { MagnifiqueLogo } from "./logo";
 import { NotificationsButton } from "./notifications-button";
 import { ROLE_LABELS } from "@/lib/utils";
@@ -13,9 +12,7 @@ interface SidebarProps {
 
 export function Sidebar({ userName, userRole }: SidebarProps) {
   return (
-    <>
-      {/* Desktop sidebar */}
-      <aside
+    <aside
         className="hidden md:flex flex-col w-64 min-h-screen px-4 py-6 gap-6"
         style={{ background: "hsl(240 5% 9%)", borderRight: "1px solid hsl(var(--border))" }}
       >
@@ -33,9 +30,5 @@ export function Sidebar({ userName, userRole }: SidebarProps) {
 
         <NavLinks role={userRole} />
       </aside>
-
-      {/* Mobile bottom nav */}
-      <BottomNav role={userRole} />
-    </>
   );
 }

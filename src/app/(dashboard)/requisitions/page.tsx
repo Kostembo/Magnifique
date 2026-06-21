@@ -28,7 +28,7 @@ export default async function RequisitionsPage() {
   const session = await auth();
   if (!session?.user) redirect("/login");
   const { role } = session.user;
-  if (!["manager", "warehouse"].includes(role)) redirect("/events");
+  if (!["manager", "warehouse", "owner", "admin"].includes(role)) redirect("/events");
 
   const requisitions = await prisma.requisition.findMany({
     where: role === "warehouse"

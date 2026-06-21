@@ -26,7 +26,7 @@ export async function GET(
     where: { id: params.id },
     select: {
       id: true, full_name: true, phone: true, role: true, tier: true,
-      is_active: true, created_at: true, passport_data_enc: true, photo_url: true,
+      created_at: true, passport_data_enc: true, photo_url: true,
     },
   });
 
@@ -45,7 +45,6 @@ const updateSchema = z.object({
   role: z.enum(["waiter", "cook", "warehouse", "manager", "sales", "chef", "owner", "admin"]).optional(),
   tier: z.enum(["core", "regular", "trainee"]).optional(),
   passport_data: z.string().optional().nullable(),
-  is_active: z.boolean().optional(),
 });
 
 export async function PATCH(
@@ -88,7 +87,7 @@ export async function PATCH(
   const employee = await prisma.employee.update({
     where: { id: params.id },
     data: updateData,
-    select: { id: true, full_name: true, phone: true, role: true, tier: true, is_active: true, created_at: true },
+    select: { id: true, full_name: true, phone: true, role: true, tier: true, created_at: true },
   });
 
   return NextResponse.json(employee);

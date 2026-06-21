@@ -56,7 +56,6 @@ model Employee {
   tier              Tier      @default(regular)
   passport_data_enc String?
   photo_url         String?
-  is_active         Boolean   @default(true)
   push_subscription Json?
   created_at        DateTime  @default(now())
 

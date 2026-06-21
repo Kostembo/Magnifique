@@ -74,7 +74,7 @@ export async function sendPushToMany(
 
 export async function sendPushToManagers(payload: PushPayload): Promise<void> {
   const managers = await prisma.employee.findMany({
-    where: { role: { in: ["manager", "owner", "admin"] }, is_active: true },
+    where: { role: { in: ["manager", "owner", "admin"] } },
     select: { id: true, push_subscription: true },
   });
   const withSub = managers.filter((m) => m.push_subscription !== null);
@@ -83,7 +83,7 @@ export async function sendPushToManagers(payload: PushPayload): Promise<void> {
 
 export async function sendPushToWarehouse(payload: PushPayload): Promise<void> {
   const staff = await prisma.employee.findMany({
-    where: { role: "warehouse", is_active: true },
+    where: { role: "warehouse" },
     select: { id: true, push_subscription: true },
   });
   const withSub = staff.filter((e) => e.push_subscription !== null);

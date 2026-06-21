@@ -32,14 +32,12 @@ export async function GET(req: NextRequest) {
   const { searchParams } = req.nextUrl;
   const role = searchParams.get("role") ?? undefined;
   const tier = searchParams.get("tier") ?? undefined;
-  const active = searchParams.get("active");
   const search = searchParams.get("search") ?? "";
 
   const employees = await prisma.employee.findMany({
     where: {
       ...(role ? { role: role as Role } : {}),
       ...(tier ? { tier: tier as "core" | "regular" | "trainee" } : {}),
-      ...(active !== null ? { is_active: active === "true" } : {}),
       ...(search
         ? {
             OR: [
@@ -55,7 +53,6 @@ export async function GET(req: NextRequest) {
       phone: true,
       role: true,
       tier: true,
-      is_active: true,
       created_at: true,
     },
     orderBy: { full_name: "asc" },
@@ -88,7 +85,7 @@ export async function POST(req: NextRequest) {
 
   const employee = await prisma.employee.create({
     data: { full_name, phone: normalizedPhone, password_hash, role, tier, passport_data_enc },
-    select: { id: true, full_name: true, phone: true, role: true, tier: true, is_active: true, created_at: true, photo_url: true },
+    select: { id: true, full_name: true, phone: true, role: true, tier: true, created_at: true, photo_url: true },
   });
 
   return NextResponse.json(employee, { status: 201 });

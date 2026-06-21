@@ -1,0 +1,65 @@
+/* ============================================================
+   theme-tokens.css — СВЕТЛАЯ (твой бренд) + ТЁМНАЯ темы.
+   Замени блок :root в src/app/globals.css на оба блока ниже.
+   Переключение — классом .dark на <html> (у тебя darkMode:["class"]).
+   ============================================================ */
+
+/* ——— СВЕТЛАЯ (по умолчанию) — твой текущий бронзовый бренд ——— */
+:root {
+  --background: 40 20% 98%;
+  --foreground: 30 10% 8%;
+  --card: 0 0% 100%;
+  --card-foreground: 30 10% 8%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 30 10% 8%;
+  --primary: 38 62% 48%;            /* бронза */
+  --primary-foreground: 0 0% 100%;
+  --secondary: 40 15% 94%;
+  --secondary-foreground: 30 10% 15%;
+  --muted: 40 15% 94%;
+  --muted-foreground: 30 8% 46%;
+  --accent: 40 15% 93%;
+  --accent-foreground: 38 62% 38%;
+  --destructive: 0 84.2% 60.2%;
+  --destructive-foreground: 0 0% 98%;
+  --border: 40 15% 88%;
+  --input: 40 15% 88%;
+  --ring: 38 62% 48%;
+  --radius: 0.75rem;
+
+  --ok: 142 71% 36%;
+  --warn: 41 96% 40%;
+  --bad: 0 72% 51%;
+  --info: 214 80% 46%;
+}
+
+/* ——— ТЁМНАЯ — эстетика PWA-прототипа (шафран на чёрном) ——— */
+.dark {
+  --background: 240 6% 4%;          /* #09090b */
+  --foreground: 0 0% 98%;
+  --card: 240 5% 9%;                /* #141417 */
+  --card-foreground: 0 0% 98%;
+  --popover: 240 5% 8%;
+  --popover-foreground: 0 0% 98%;
+  --primary: 38 91% 60%;            /* шафран #F6B73C */
+  --primary-foreground: 240 6% 4%;
+  --secondary: 240 4% 12%;
+  --secondary-foreground: 0 0% 92%;
+  --muted: 240 4% 13%;
+  --muted-foreground: 240 5% 60%;
+  --accent: 38 40% 16%;
+  --accent-foreground: 38 91% 66%;
+  --destructive: 0 64% 67%;
+  --destructive-foreground: 0 0% 98%;
+  --border: 240 5% 14%;
+  --input: 240 5% 16%;
+  --ring: 38 91% 60%;
+
+  --ok: 152 40% 56%;
+  --warn: 37 72% 56%;
+  --bad: 0 64% 67%;
+  --info: 210 67% 70%;
+}
+
+/* Радиус крупнее можно сделать общим, если нравится «мягкость» прототипа:
+   :root { --radius: 1rem; } — но это повлияет и на светлую. По желанию. */

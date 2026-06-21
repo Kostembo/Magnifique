@@ -26,7 +26,6 @@ export async function GET(
   const employees = await prisma.employee.findMany({
     where: {
       role: position.role,
-      is_active: true,
       id: assignedIds.length ? { notIn: assignedIds } : undefined,
     },
     select: { id: true, full_name: true, tier: true, photo_url: true },

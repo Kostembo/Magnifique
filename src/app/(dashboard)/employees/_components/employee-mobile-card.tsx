@@ -5,9 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
-  DropdownMenuSeparator, DropdownMenuTrigger,
+  DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { MoreHorizontal, Pencil, UserX, UserCheck, KeyRound, User, CalendarPlus } from "lucide-react";
+import { MoreHorizontal, Pencil, KeyRound, User, CalendarPlus } from "lucide-react";
 import { ROLE_LABELS, TIER_LABELS, formatPhone } from "@/lib/utils";
 import { fadeUp } from "@/lib/motion";
 
@@ -23,7 +23,6 @@ type Employee = {
   phone: string;
   role: string;
   tier: string;
-  is_active: boolean;
   photo_url?: string | null;
 };
 
@@ -32,16 +31,15 @@ interface Props {
   index: number;
   onEdit: (id: string) => void;
   onResetPassword: (emp: Employee) => void;
-  onToggleActive: (id: string, current: boolean) => void;
   onInvite: (emp: Employee) => void;
 }
 
-export function EmployeeMobileCard({ emp, index, onEdit, onResetPassword, onToggleActive, onInvite }: Props) {
+export function EmployeeMobileCard({ emp, index, onEdit, onResetPassword, onInvite }: Props) {
   return (
     <motion.div
       variants={fadeUp}
       custom={index}
-      className={`rounded-3xl mq-hair p-4 space-y-3 ${!emp.is_active ? "opacity-50" : ""}`}
+      className="rounded-3xl mq-hair p-4 space-y-3"
       style={{ background: "hsl(var(--card))" }}
     >
       <div className="flex items-center justify-between gap-2">
@@ -70,16 +68,8 @@ export function EmployeeMobileCard({ emp, index, onEdit, onResetPassword, onTogg
             <DropdownMenuItem onClick={() => onResetPassword(emp)}>
               <KeyRound className="h-4 w-4 mr-2" /> Сбросить пароль
             </DropdownMenuItem>
-            {emp.is_active && (
-              <DropdownMenuItem onClick={() => onInvite(emp)}>
-                <CalendarPlus className="h-4 w-4 mr-2" /> Пригласить на мероприятие
-              </DropdownMenuItem>
-            )}
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => onToggleActive(emp.id, emp.is_active)}>
-              {emp.is_active
-                ? <><UserX className="h-4 w-4 mr-2" /> Деактивировать</>
-                : <><UserCheck className="h-4 w-4 mr-2" /> Активировать</>}
+            <DropdownMenuItem onClick={() => onInvite(emp)}>
+              <CalendarPlus className="h-4 w-4 mr-2" /> Пригласить на мероприятие
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -88,9 +78,6 @@ export function EmployeeMobileCard({ emp, index, onEdit, onResetPassword, onTogg
       <div className="flex flex-wrap gap-1.5">
         <Badge variant="outline">{ROLE_LABELS[emp.role] ?? emp.role}</Badge>
         <Badge variant={TIER_BADGE[emp.tier] ?? "outline"}>{TIER_LABELS[emp.tier] ?? emp.tier}</Badge>
-        {emp.is_active
-          ? <Badge variant="success">Активен</Badge>
-          : <Badge variant="secondary">Неактивен</Badge>}
       </div>
     </motion.div>
   );

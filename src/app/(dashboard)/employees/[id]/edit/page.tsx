@@ -13,7 +13,7 @@ export default async function EditEmployeePage({ params }: { params: { id: strin
     where: { id: params.id },
     select: {
       id: true, full_name: true, phone: true, role: true,
-      tier: true, is_active: true, passport_data_enc: true, photo_url: true,
+      tier: true, passport_data_enc: true, photo_url: true,
     },
   });
 
