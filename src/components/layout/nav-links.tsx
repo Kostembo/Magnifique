@@ -36,7 +36,7 @@ export function NavLinks({ role, onNavigate }: NavLinksProps) {
               onClick={onNavigate}
               className={cn(
                 "relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors min-h-[44px]",
-                active ? "text-primary" : "text-muted-foreground hover:text-foreground"
+                active ? "text-primary" : "text-muted-foreground hover:text-white"
               )}
             >
               {active && (
@@ -60,7 +60,7 @@ export function NavLinks({ role, onNavigate }: NavLinksProps) {
         <motion.button
           onClick={() => signOut({ callbackUrl: "/login" })}
           whileTap={{ scale: 0.97, transition: { type: "spring", stiffness: 400, damping: 30 } }}
-          className="flex items-center gap-3 w-full rounded-xl px-3 py-2.5 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-colors min-h-[44px]"
+          className="flex items-center gap-3 w-full rounded-xl px-3 py-2.5 text-sm font-medium text-muted-foreground hover:bg-white/10 hover:text-white transition-colors min-h-[44px]"
         >
           <LogOut className="h-5 w-5" />
           Выйти
