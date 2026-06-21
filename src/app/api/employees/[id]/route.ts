@@ -63,6 +63,12 @@ export async function PATCH(
 
   const { phone, password, passport_data, ...rest } = parsed.data;
 
+  const callerRole = session!.user.role ?? "";
+  const SUPER_ROLES = ["owner", "admin"];
+  if (rest.role && SUPER_ROLES.includes(rest.role) && !SUPER_ROLES.includes(callerRole)) {
+    return NextResponse.json({ error: "Недостаточно прав для назначения этой роли" }, { status: 403 });
+  }
+
   const updateData: Record<string, unknown> = { ...rest };
 
   if (phone) {
@@ -101,12 +107,18 @@ export async function DELETE(
   const denied = requireManager(session);
   if (denied) return denied;
 
+  if (session!.user.id === params.id) {
+    return NextResponse.json({ error: "Нельзя удалить себя" }, { status: 403 });
+  }
+
   const target = await prisma.employee.findUnique({
     where: { id: params.id },
     select: { role: true },
   });
   if (!target) return NextResponse.json({ error: "Не найден" }, { status: 404 });
-  if (target.role === "admin") return NextResponse.json({ error: "Нельзя удалить администратора" }, { status: 403 });
+  if (["admin", "owner"].includes(target.role)) {
+    return NextResponse.json({ error: "Нельзя удалить администратора или владельца" }, { status: 403 });
+  }
 
   await prisma.employee.delete({ where: { id: params.id } });
 
