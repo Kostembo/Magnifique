@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { encryptPassportData, decryptPassportData } from "@/lib/crypto";
-import { isPrivileged } from "@/lib/roles";
+import { isPrivileged, isSuper } from "@/lib/roles";
 import { z } from "zod";
 import bcrypt from "bcryptjs";
 import { normalizePhone } from "@/lib/utils";
@@ -65,8 +65,7 @@ export async function PATCH(
   const { phone, password, passport_data, ...rest } = parsed.data;
 
   const callerRole = session!.user.role ?? "";
-  const SUPER_ROLES = ["owner", "admin"];
-  if (rest.role && SUPER_ROLES.includes(rest.role) && !SUPER_ROLES.includes(callerRole)) {
+  if (rest.role && isSuper(rest.role) && !isSuper(callerRole)) {
     return NextResponse.json({ error: "Недостаточно прав для назначения этой роли" }, { status: 403 });
   }
 
