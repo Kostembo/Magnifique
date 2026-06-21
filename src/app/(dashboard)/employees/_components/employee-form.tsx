@@ -76,15 +76,22 @@ export function EmployeeForm({ mode, defaultValues }: EmployeeFormProps) {
   async function deleteEmployee() {
     if (!defaultValues?.id) return;
     setDeleting(true);
-    const res = await fetch(`/api/employees/${defaultValues.id}`, { method: "DELETE" });
-    setDeleting(false);
-    if (res.ok) {
-      toast({ title: "Сотрудник удалён", variant: "success" });
-      router.push("/employees");
-      router.refresh();
-    } else {
-      toast({ title: "Ошибка удаления", variant: "destructive" });
+    try {
+      const res = await fetch(`/api/employees/${defaultValues.id}`, { method: "DELETE" });
+      if (res.ok) {
+        toast({ title: "Сотрудник уволен", variant: "success" });
+        router.push("/employees");
+        router.refresh();
+      } else {
+        const data = await res.json().catch(() => ({}));
+        toast({ title: "Ошибка", description: data.error ?? "Не удалось уволить сотрудника", variant: "destructive" });
+        setConfirmDelete(false);
+      }
+    } catch {
+      toast({ title: "Ошибка", description: "Нет соединения с сервером", variant: "destructive" });
       setConfirmDelete(false);
+    } finally {
+      setDeleting(false);
     }
   }
 
@@ -136,24 +143,32 @@ export function EmployeeForm({ mode, defaultValues }: EmployeeFormProps) {
     const url = mode === "create" ? "/api/employees" : `/api/employees/${defaultValues?.id}`;
     const method = mode === "create" ? "POST" : "PATCH";
 
-    const res = await fetch(url, {
-      method,
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
-
-    if (res.ok) {
-      toast({
-        title: mode === "create" ? "Сотрудник добавлен" : "Изменения сохранены",
-        variant: "success",
+    try {
+      const res = await fetch(url, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
       });
-      router.push("/employees");
-      router.refresh();
-    } else {
-      const err = await res.json().catch(() => ({}));
+
+      if (res.ok) {
+        toast({
+          title: mode === "create" ? "Сотрудник добавлен" : "Изменения сохранены",
+          variant: "success",
+        });
+        router.push("/employees");
+        router.refresh();
+      } else {
+        const err = await res.json().catch(() => ({}));
+        toast({
+          title: "Ошибка",
+          description: err.error ?? "Что-то пошло не так",
+          variant: "destructive",
+        });
+      }
+    } catch {
       toast({
         title: "Ошибка",
-        description: err.error ?? "Что-то пошло не так",
+        description: "Нет соединения с сервером",
         variant: "destructive",
       });
     }

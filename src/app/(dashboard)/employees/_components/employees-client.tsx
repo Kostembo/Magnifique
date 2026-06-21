@@ -65,19 +65,24 @@ export function EmployeesClient({ initialEmployees }: Props) {
   async function resetPassword() {
     if (!resetTarget || newPassword.length < 6) return;
     setResetting(true);
-    const res = await fetch(`/api/employees/${resetTarget.id}/password`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ new_password: newPassword }),
-    });
-    setResetting(false);
-    if (res.ok) {
-      toast({ title: "Пароль сброшен", variant: "success" });
-      setResetTarget(null);
-      setNewPassword("");
-    } else {
-      const data = await res.json();
-      toast({ title: "Ошибка", description: data.error, variant: "destructive" });
+    try {
+      const res = await fetch(`/api/employees/${resetTarget.id}/password`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ new_password: newPassword }),
+      });
+      if (res.ok) {
+        toast({ title: "Пароль сброшен", variant: "success" });
+        setResetTarget(null);
+        setNewPassword("");
+      } else {
+        const data = await res.json().catch(() => ({}));
+        toast({ title: "Ошибка", description: data.error ?? "Не удалось сбросить пароль", variant: "destructive" });
+      }
+    } catch {
+      toast({ title: "Ошибка", description: "Нет соединения с сервером", variant: "destructive" });
+    } finally {
+      setResetting(false);
     }
   }
 

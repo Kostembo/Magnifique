@@ -6,6 +6,7 @@ import { isPrivileged } from "@/lib/roles";
 import { z } from "zod";
 import bcrypt from "bcryptjs";
 import { normalizePhone } from "@/lib/utils";
+import { Prisma } from "@prisma/client";
 
 function requireManager(session: { user?: { role?: string } } | null) {
   if (!session?.user || !isPrivileged(session.user.role ?? "")) {
@@ -120,7 +121,17 @@ export async function DELETE(
     return NextResponse.json({ error: "Нельзя удалить администратора или владельца" }, { status: 403 });
   }
 
-  await prisma.employee.delete({ where: { id: params.id } });
+  try {
+    await prisma.employee.delete({ where: { id: params.id } });
+  } catch (e) {
+    if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2003") {
+      return NextResponse.json(
+        { error: "Нельзя уволить сотрудника: у него есть история смен или мероприятий. Обратитесь к администратору." },
+        { status: 409 }
+      );
+    }
+    throw e;
+  }
 
   return NextResponse.json({ ok: true });
 }

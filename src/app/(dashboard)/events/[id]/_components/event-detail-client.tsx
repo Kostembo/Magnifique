@@ -91,57 +91,78 @@ export function EventDetailClient({ event, isManager, role, currentUserId }: Pro
   const isLive = event.status === "live";
 
   async function inviteAction(mode: "core" | "pool" | "remind", positionId?: number) {
-    const res = await fetch(`/api/events/${event.id}/invite`, {
-      method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ mode, ...(positionId ? { position_id: positionId } : {}) }),
-    });
-    const data = await res.json();
-    if (res.ok) {
-      const n = data.invited ?? data.reminded ?? 0;
-      if (n === 0 && mode !== "remind") {
-        toast({ title: "Никто не приглашён", description: "Нет подходящих сотрудников: проверьте позиции и наличие активных сотрудников нужной роли.", variant: "destructive" });
+    try {
+      const res = await fetch(`/api/events/${event.id}/invite`, {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ mode, ...(positionId ? { position_id: positionId } : {}) }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok) {
+        const n = data.invited ?? data.reminded ?? 0;
+        if (n === 0 && mode !== "remind") {
+          toast({ title: "Никто не приглашён", description: "Нет подходящих сотрудников: проверьте позиции и наличие активных сотрудников нужной роли.", variant: "destructive" });
+        } else {
+          toast({ title: mode === "remind" ? `Напоминание отправлено ${n} чел.` : `Приглашено ${n} чел.`, variant: "success" });
+        }
+        startTransition(() => router.refresh());
       } else {
-        toast({ title: mode === "remind" ? `Напоминание отправлено ${n} чел.` : `Приглашено ${n} чел.`, variant: "success" });
+        toast({ title: "Ошибка", description: data.error ?? "Не удалось отправить приглашения", variant: "destructive" });
       }
-      startTransition(() => router.refresh());
-    } else {
-      toast({ title: "Ошибка", description: data.error, variant: "destructive" });
+    } catch {
+      toast({ title: "Ошибка", description: "Нет соединения с сервером", variant: "destructive" });
     }
   }
 
   async function removeAssignment(assignmentId: string) {
     setRemovingId(assignmentId);
-    const res = await fetch(`/api/events/${event.id}/assignments/${assignmentId}`, { method: "DELETE" });
-    setRemovingId(null);
-    if (res.ok) {
-      setPositions((prev) => prev.map((p) => ({ ...p, assignments: p.assignments.filter((a) => a.id !== assignmentId) })));
-      toast({ title: "Сотрудник удалён из мероприятия", variant: "success" });
-    } else {
-      toast({ title: "Ошибка удаления", variant: "destructive" });
+    try {
+      const res = await fetch(`/api/events/${event.id}/assignments/${assignmentId}`, { method: "DELETE" });
+      if (res.ok) {
+        setPositions((prev) => prev.map((p) => ({ ...p, assignments: p.assignments.filter((a) => a.id !== assignmentId) })));
+        toast({ title: "Сотрудник удалён из мероприятия", variant: "success" });
+      } else {
+        toast({ title: "Ошибка удаления", variant: "destructive" });
+      }
+    } catch {
+      toast({ title: "Ошибка", description: "Нет соединения с сервером", variant: "destructive" });
+    } finally {
+      setRemovingId(null);
     }
   }
 
   async function createRequisition() {
     setCreatingReq(true);
-    const res = await fetch(`/api/events/${event.id}/requisitions`, { method: "POST" });
-    setCreatingReq(false);
-    if (res.ok) {
-      const data = await res.json();
-      setRequisition(data);
-      toast({ title: "Заявка создана", variant: "success" });
-    } else {
-      toast({ title: "Ошибка создания заявки", variant: "destructive" });
+    try {
+      const res = await fetch(`/api/events/${event.id}/requisitions`, { method: "POST" });
+      if (res.ok) {
+        const data = await res.json();
+        setRequisition(data);
+        toast({ title: "Заявка создана", variant: "success" });
+      } else {
+        toast({ title: "Ошибка создания заявки", variant: "destructive" });
+      }
+    } catch {
+      toast({ title: "Ошибка", description: "Нет соединения с сервером", variant: "destructive" });
+    } finally {
+      setCreatingReq(false);
     }
   }
 
   async function deleteEvent() {
     setDeleting(true);
-    const res = await fetch(`/api/events/${event.id}`, { method: "DELETE" });
-    if (res.ok) { window.location.href = "/events"; }
-    else {
-      setDeleting(false);
+    try {
+      const res = await fetch(`/api/events/${event.id}`, { method: "DELETE" });
+      if (res.ok) {
+        window.location.href = "/events";
+        return;
+      }
       toast({ title: "Ошибка удаления", variant: "destructive" });
       setConfirmDelete(false);
+      setDeleting(false);
+    } catch {
+      toast({ title: "Ошибка", description: "Нет соединения с сервером", variant: "destructive" });
+      setConfirmDelete(false);
+      setDeleting(false);
     }
   }
 
@@ -149,17 +170,22 @@ export function EventDetailClient({ event, isManager, role, currentUserId }: Pro
     e.preventDefault();
     if (!commentText.trim()) return;
     setSendingComment(true);
-    const res = await fetch(`/api/events/${event.id}/comments`, {
-      method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ body: commentText.trim() }),
-    });
-    setSendingComment(false);
-    if (res.ok) {
-      const comment = await res.json();
-      setComments((prev) => [...prev, comment]);
-      setCommentText("");
-    } else {
-      toast({ title: "Ошибка отправки", variant: "destructive" });
+    try {
+      const res = await fetch(`/api/events/${event.id}/comments`, {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ body: commentText.trim() }),
+      });
+      if (res.ok) {
+        const comment = await res.json();
+        setComments((prev) => [...prev, comment]);
+        setCommentText("");
+      } else {
+        toast({ title: "Ошибка отправки", variant: "destructive" });
+      }
+    } catch {
+      toast({ title: "Ошибка", description: "Нет соединения с сервером", variant: "destructive" });
+    } finally {
+      setSendingComment(false);
     }
   }
 
