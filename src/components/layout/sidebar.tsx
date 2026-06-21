@@ -1,5 +1,3 @@
-"use client";
-
 import { NavLinks } from "./nav-links";
 import { MagnifiqueLogo } from "./logo";
 import { NotificationsButton } from "./notifications-button";

@@ -3,17 +3,18 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { encryptPassportData } from "@/lib/crypto";
 import { isPrivileged } from "@/lib/roles";
-import type { Role } from "@prisma/client";
+import { Role, Tier } from "@prisma/client";
 import { z } from "zod";
 import bcrypt from "bcryptjs";
 import { normalizePhone } from "@/lib/utils";
+import { employeeListSelect } from "@/lib/selects";
 
 const createSchema = z.object({
   full_name: z.string().min(2, "Укажите ФИО"),
   phone: z.string().min(10, "Укажите телефон"),
   password: z.string().min(6, "Пароль минимум 6 символов"),
-  role: z.enum(["waiter", "cook", "warehouse", "manager", "sales", "chef", "owner", "admin"]),
-  tier: z.enum(["core", "regular", "trainee"]).default("regular"),
+  role: z.nativeEnum(Role),
+  tier: z.nativeEnum(Tier).default(Tier.regular),
   passport_data: z.string().optional(),
 });
 
@@ -37,7 +38,7 @@ export async function GET(req: NextRequest) {
   const employees = await prisma.employee.findMany({
     where: {
       ...(role ? { role: role as Role } : {}),
-      ...(tier ? { tier: tier as "core" | "regular" | "trainee" } : {}),
+      ...(tier ? { tier: tier as Tier } : {}),
       ...(search
         ? {
             OR: [
@@ -47,14 +48,7 @@ export async function GET(req: NextRequest) {
           }
         : {}),
     },
-    select: {
-      id: true,
-      full_name: true,
-      phone: true,
-      role: true,
-      tier: true,
-      created_at: true,
-    },
+    select: employeeListSelect,
     orderBy: { full_name: "asc" },
   });
 
@@ -85,7 +79,7 @@ export async function POST(req: NextRequest) {
 
   const employee = await prisma.employee.create({
     data: { full_name, phone: normalizedPhone, password_hash, role, tier, passport_data_enc },
-    select: { id: true, full_name: true, phone: true, role: true, tier: true, created_at: true, photo_url: true },
+    select: employeeListSelect,
   });
 
   return NextResponse.json(employee, { status: 201 });

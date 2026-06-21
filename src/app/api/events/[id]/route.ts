@@ -97,12 +97,33 @@ export async function PATCH(
     return NextResponse.json({ error: "Ошибка валидации", details: parsed.error.flatten() }, { status: 400 });
   }
 
-  const { starts_at, positions, ...rest } = parsed.data;
+  const { starts_at, positions, status, ...rest } = parsed.data;
+
+  if (status !== undefined) {
+    const ALLOWED: Record<string, string[]> = {
+      draft:      ["recruiting"],
+      recruiting: ["staffed", "draft"],
+      staffed:    ["recruiting", "done"],
+      done:       [],
+    };
+    const current = await prisma.event.findUnique({
+      where: { id: params.id },
+      select: { status: true },
+    });
+    if (!current) return NextResponse.json({ error: "Не найдено" }, { status: 404 });
+    if (!(ALLOWED[current.status] ?? []).includes(status)) {
+      return NextResponse.json(
+        { error: `Переход «${current.status}» → «${status}» недопустим` },
+        { status: 422 }
+      );
+    }
+  }
 
   const event = await prisma.event.update({
     where: { id: params.id },
     data: {
       ...rest,
+      ...(status !== undefined ? { status } : {}),
       ...(starts_at ? { starts_at: new Date(starts_at) } : {}),
     },
     include: { positions: true },

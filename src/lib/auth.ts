@@ -3,6 +3,7 @@ import Credentials from "next-auth/providers/credentials";
 import { z } from "zod";
 import bcrypt from "bcryptjs";
 import { prisma } from "./db";
+import type { Role, Tier } from "@prisma/client";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: [
@@ -50,8 +51,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   callbacks: {
     jwt({ token, user }) {
       if (user) {
-        token.role = (user as { role: string }).role;
-        token.tier = (user as { tier: string }).tier;
+        token.role = (user as { role: Role }).role;
+        token.tier = (user as { tier: Tier }).tier;
         token.phone = user.email ?? undefined;
       }
       return token;
@@ -59,8 +60,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     session({ session, token }) {
       if (token) {
         session.user.id = token.sub ?? "";
-        session.user.role = token.role as string;
-        session.user.tier = token.tier as string;
+        session.user.role = token.role as Role;
+        session.user.tier = token.tier as Tier;
         session.user.phone = token.phone as string;
       }
       return session;

@@ -6,7 +6,8 @@ import { isPrivileged, isSuper } from "@/lib/roles";
 import { z } from "zod";
 import bcrypt from "bcryptjs";
 import { normalizePhone } from "@/lib/utils";
-import { Prisma } from "@prisma/client";
+import { Prisma, Role, Tier } from "@prisma/client";
+import { employeeListSelect } from "@/lib/selects";
 
 function requireManager(session: { user?: { role?: string } } | null) {
   if (!session?.user || !isPrivileged(session.user.role ?? "")) {
@@ -43,8 +44,8 @@ const updateSchema = z.object({
   full_name: z.string().min(2).optional(),
   phone: z.string().min(10).optional(),
   password: z.string().min(6).optional(),
-  role: z.enum(["waiter", "cook", "warehouse", "manager", "sales", "chef", "owner", "admin"]).optional(),
-  tier: z.enum(["core", "regular", "trainee"]).optional(),
+  role: z.nativeEnum(Role).optional(),
+  tier: z.nativeEnum(Tier).optional(),
   passport_data: z.string().optional().nullable(),
 });
 
@@ -93,7 +94,7 @@ export async function PATCH(
   const employee = await prisma.employee.update({
     where: { id: params.id },
     data: updateData,
-    select: { id: true, full_name: true, phone: true, role: true, tier: true, created_at: true },
+    select: employeeListSelect,
   });
 
   return NextResponse.json(employee);
