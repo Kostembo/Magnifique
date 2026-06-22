@@ -9,8 +9,11 @@ echo "=== Установка зависимостей ==="
 cd $APP_DIR
 npm ci --production=false
 
+echo "=== Бэкап БД перед миграцией ==="
+pg_dump "$DATABASE_URL" > "/var/backups/magnifique_$(date +%Y%m%d_%H%M%S).sql" 2>/dev/null && echo "Бэкап создан" || echo "⚠️  Бэкап не удался — продолжаем"
+
 echo "=== Применение миграций БД ==="
-npm run db:push
+npx prisma migrate deploy
 
 echo "=== Сборка приложения ==="
 npm run build
