@@ -1,7 +1,8 @@
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
-import { EventsCalendar } from "../events/_components/events-calendar";
+import { isPrivileged } from "@/lib/roles";
+import { ManagerCalendar } from "./_components/manager-calendar";
 import { StaffCalendar } from "../events/_components/staff-calendar";
 
 export const metadata = { title: "Календарь — Magnifique" };
@@ -12,36 +13,24 @@ export default async function CalendarPage() {
 
   const { role, id: userId } = session.user;
 
-  const isPrivilegedRole = ["manager", "owner", "admin", "sales", "chef"].includes(role);
-
-  if (isPrivilegedRole) {
+  if (isPrivileged(role) || role === "sales" || role === "chef") {
     const events = await prisma.event.findMany({
       where: { status: { not: "done" } },
-      select: {
-        id: true, title: true, starts_at: true, status: true,
-        client: true, location: true, guests_count: true,
-        positions: {
-          select: {
-            role: true,
-            needed_count: true,
-            _count: { select: { assignments: { where: { status: "confirmed" } } } },
-          },
-        },
-      },
+      select: { id: true, title: true, starts_at: true, status: true },
       orderBy: { starts_at: "asc" },
     });
 
-    const mapped = events;
-
     return (
-      <div className="p-4 md:p-6">
-        <h1 className="text-xl font-semibold text-zinc-900 mb-6">Календарь мероприятий</h1>
-        <EventsCalendar events={mapped} />
+      <div className="px-4 pb-28 pt-4 md:px-6 md:pb-6 max-w-5xl mx-auto space-y-5">
+        <div>
+          <h1 className="font-display text-[28px] font-extrabold tracking-[-0.03em]">Календарь</h1>
+          <p className="text-[13px] text-muted-foreground mt-0.5">Мероприятия по датам</p>
+        </div>
+        <ManagerCalendar events={events} />
       </div>
     );
   }
 
-  // waiter / cook — личный календарь смен
   const shifts = await prisma.assignment.findMany({
     where: { employee_id: userId, status: "confirmed" },
     include: { event: { select: { id: true, title: true, starts_at: true } } },
@@ -49,8 +38,11 @@ export default async function CalendarPage() {
   });
 
   return (
-    <div className="p-4 md:p-6">
-      <h1 className="text-xl font-semibold text-zinc-900 mb-6">Мои смены</h1>
+    <div className="px-4 pb-28 pt-4 md:px-6 md:pb-6 max-w-5xl mx-auto space-y-5">
+      <div>
+        <h1 className="font-display text-[28px] font-extrabold tracking-[-0.03em]">Мои смены</h1>
+        <p className="text-[13px] text-muted-foreground mt-0.5">{shifts.length} подтверждённых смен</p>
+      </div>
       <StaffCalendar shifts={shifts} />
     </div>
   );
