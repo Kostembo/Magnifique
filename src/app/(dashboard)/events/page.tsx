@@ -1,6 +1,7 @@
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
+import { canCreateEvents } from "@/lib/roles";
 import { EventsManager } from "./_components/events-manager";
 import { EventsStaff } from "./_components/events-staff";
 
@@ -29,7 +30,7 @@ export default async function EventsPage() {
       orderBy: { starts_at: "asc" },
     });
 
-    return <EventsManager events={events} />;
+    return <EventsManager events={events} canCreate={canCreateEvents(role)} />;
   }
 
   // Сотрудник: только подтверждённые смены

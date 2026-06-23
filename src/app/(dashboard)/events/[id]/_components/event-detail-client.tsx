@@ -301,28 +301,8 @@ export function EventDetailClient({ event, isManager, role, currentUserId }: Pro
         )}
       </motion.div>
 
-      {/* Staffing summary */}
-      {totalNeeded > 0 && (
-        <div className="rounded-3xl p-4 mq-hair flex items-center gap-4" style={{ background: "hsl(var(--card))" }}>
-          <Ring value={pct} size={64} stroke={6}>
-            <p className="font-display font-extrabold text-[15px]">
-              {Math.round(pct * 100)}<span className="text-[9px]">%</span>
-            </p>
-          </Ring>
-          <div className="flex-1 min-w-0">
-            <p className="text-[15px]">
-              <span className="font-display font-extrabold text-[18px]">{totalConfirmed}</span>
-              <span className="text-muted-foreground"> из {totalNeeded} подтвердили</span>
-            </p>
-            <div className="mt-2">
-              <StaffBar value={pct} />
-            </div>
-          </div>
-        </div>
-      )}
-
       <Tabs defaultValue="recruiting">
-        <TabsList className="w-full justify-start flex-wrap h-auto gap-1 bg-transparent p-0">
+        <TabsList className="w-full h-auto gap-1 bg-transparent p-0 flex overflow-x-auto flex-nowrap scrollbar-none pb-0.5">
           {[
             { value: "recruiting", icon: <Users className="h-4 w-4" />, label: "Набор" },
             { value: "requisition", icon: <Package className="h-4 w-4" />, label: "Сбор" },
@@ -330,31 +310,51 @@ export function EventDetailClient({ event, isManager, role, currentUserId }: Pro
             { value: "discussion", icon: <MessageSquare className="h-4 w-4" />, label: "Обсуждение", badge: comments.length },
           ].map(({ value, icon, label, badge }) => (
             <TabsTrigger key={value} value={value}
-              className="flex-1 sm:flex-none gap-1.5 rounded-2xl data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=inactive]:bg-card data-[state=inactive]:border data-[state=inactive]:border-border"
+              className="flex-shrink-0 flex-1 min-w-0 gap-1.5 rounded-2xl text-[13px] px-3 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=inactive]:bg-card data-[state=inactive]:border data-[state=inactive]:border-border"
             >
               {icon}{label}
-              {badge && badge > 0 && (
+              {badge > 0 && (
                 <Badge variant="secondary" className="ml-1 text-xs h-4 px-1">{badge}</Badge>
               )}
             </TabsTrigger>
           ))}
         </TabsList>
 
+        {/* Staffing summary */}
+        {totalNeeded > 0 && (
+          <div className="rounded-3xl p-4 mq-hair flex items-center gap-4 mt-3" style={{ background: "hsl(var(--card))" }}>
+            <Ring value={pct} size={64} stroke={6} color={pct >= 1 ? "hsl(var(--ok))" : undefined}>
+              <span className="font-display font-extrabold text-[15px] leading-none flex items-baseline gap-[1px]">
+                {Math.round(pct * 100)}<span className="text-[9px]">%</span>
+              </span>
+            </Ring>
+            <div className="flex-1 min-w-0">
+              <p className="text-[15px]">
+                <span className="font-display font-extrabold text-[18px]">{totalConfirmed}</span>
+                <span className="text-muted-foreground"> из {totalNeeded} подтвердили</span>
+              </p>
+              <div className="mt-2">
+                <StaffBar value={pct} />
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* ===== НАБОР ===== */}
         <TabsContent value="recruiting" className="space-y-4 mt-4">
           {isManager && (
-            <div className="flex flex-wrap gap-2">
-              <Button variant="outline" size="sm" className="rounded-xl" onClick={() => inviteAction("core")} disabled={isPending}>
-                <Bell className="h-4 w-4 mr-1.5" />Позвать костяк
+            <div className="grid grid-cols-4 gap-2">
+              <Button variant="outline" size="sm" className="rounded-xl justify-start" onClick={() => inviteAction("core")} disabled={isPending}>
+                <Bell className="h-4 w-4 mr-1.5 flex-shrink-0" />Позвать костяк
               </Button>
-              <Button variant="outline" size="sm" className="rounded-xl" onClick={() => inviteAction("pool")} disabled={isPending}>
-                <BellRing className="h-4 w-4 mr-1.5" />Открыть пул
+              <Button variant="outline" size="sm" className="rounded-xl justify-start" onClick={() => inviteAction("pool")} disabled={isPending}>
+                <BellRing className="h-4 w-4 mr-1.5 flex-shrink-0" />Открыть пул
               </Button>
-              <Button variant="outline" size="sm" className="rounded-xl" onClick={() => inviteAction("remind")} disabled={isPending}>
-                <span style={{ filter: "grayscale(1)", marginRight: 6, fontSize: "1rem" }}>🤫</span>Напомнить
+              <Button variant="outline" size="sm" className="rounded-xl justify-start" onClick={() => inviteAction("remind")} disabled={isPending}>
+                <span style={{ filter: "grayscale(1)", marginRight: 6, fontSize: "1rem", flexShrink: 0 }}>🤫</span>Напомнить
               </Button>
-              <Button variant="outline" size="sm" className="rounded-xl" onClick={exportPdf}>
-                <FileDown className="h-4 w-4 mr-1.5" />PDF
+              <Button variant="outline" size="sm" className="rounded-xl justify-start" onClick={exportPdf}>
+                <FileDown className="h-4 w-4 mr-1.5 flex-shrink-0" />PDF
               </Button>
             </div>
           )}

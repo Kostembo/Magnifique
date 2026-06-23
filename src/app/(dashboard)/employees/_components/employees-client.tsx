@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
+import type { CSSProperties } from "react";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -29,10 +29,10 @@ type Employee = {
   photo_url?: string | null;
 };
 
-const TIER_BADGE: Record<string, "success" | "info" | "warning"> = {
-  core: "success",
-  regular: "info",
-  trainee: "warning",
+const TIER_CHIP: Record<string, CSSProperties> = {
+  core:    { background: "hsl(143 55% 18%)", color: "hsl(143 60% 68%)" },
+  regular: { background: "hsl(var(--muted))", color: "hsl(var(--muted-foreground))" },
+  trainee: { background: "hsl(38 55% 18%)",  color: "hsl(38 70% 65%)" },
 };
 
 interface Props { initialEmployees: Employee[] }
@@ -171,9 +171,16 @@ export function EmployeesClient({ initialEmployees }: Props) {
                   </div>
                 </TableCell>
                 <TableCell className="text-muted-foreground tabular-nums">{formatPhone(emp.phone)}</TableCell>
-                <TableCell><Badge variant="outline">{ROLE_LABELS[emp.role] ?? emp.role}</Badge></TableCell>
                 <TableCell>
-                  <Badge variant={TIER_BADGE[emp.tier] ?? "outline"}>{TIER_LABELS[emp.tier] ?? emp.tier}</Badge>
+                  <span className="inline-flex items-center px-3 py-1 rounded-xl bg-muted text-[13px] font-medium text-foreground">
+                    {ROLE_LABELS[emp.role] ?? emp.role}
+                  </span>
+                </TableCell>
+                <TableCell>
+                  <span className="inline-flex items-center px-3 py-1 rounded-xl text-[13px] font-medium"
+                    style={TIER_CHIP[emp.tier] ?? TIER_CHIP.regular}>
+                    {TIER_LABELS[emp.tier] ?? emp.tier}
+                  </span>
                 </TableCell>
                 <TableCell>
                   <DropdownMenu>

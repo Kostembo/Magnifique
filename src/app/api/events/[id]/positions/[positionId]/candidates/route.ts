@@ -29,7 +29,7 @@ export async function GET(
       id: assignedIds.length ? { notIn: assignedIds } : undefined,
     },
     select: { id: true, full_name: true, tier: true, photo_url: true },
-    orderBy: [{ tier: "asc" }, { full_name: "asc" }],
+    orderBy: { full_name: "asc" },
   });
 
   return NextResponse.json(employees);

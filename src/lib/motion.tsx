@@ -78,7 +78,7 @@ export function Ring({
           transition={{ ...spring, delay: 0.15 }}
         />
       </svg>
-      <div className="absolute inset-0 grid place-items-center">{children}</div>
+      <div className="absolute inset-0 flex items-center justify-center">{children}</div>
     </div>
   );
 }

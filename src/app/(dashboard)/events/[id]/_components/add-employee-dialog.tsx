@@ -1,14 +1,14 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Loader2, Search, UserPlus, CheckCircle2, User } from "lucide-react";
+import { useState, useEffect, useMemo } from "react";
+import { Loader2, Search, UserPlus, CheckCircle2, User, ChevronLeft, ChevronRight } from "lucide-react";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { ROLE_LABELS, TIER_LABELS } from "@/lib/utils";
+import type { CSSProperties } from "react";
 
 type Candidate = {
   id: string;
@@ -29,15 +29,20 @@ interface Props {
   onAdded: (params: { assignmentId: string; employeeId: string; employeeName: string; employeeTier: string }) => void;
 }
 
-const TIER_BADGE: Record<string, "success" | "info" | "warning"> = {
-  core: "success", regular: "info", trainee: "warning",
+const TIER_CHIP: Record<string, CSSProperties> = {
+  core:    { background: "hsl(143 55% 18%)", color: "hsl(143 60% 68%)" },
+  regular: { background: "hsl(var(--muted))", color: "hsl(var(--muted-foreground))" },
+  trainee: { background: "hsl(38 55% 18%)",  color: "hsl(38 70% 65%)" },
 };
+
+const PAGE_SIZE = 5;
 
 export function AddEmployeeDialog({ position, onClose, onAdded }: Props) {
   const { toast } = useToast();
   const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState("");
+  const [page, setPage] = useState(0);
   const [inviting, setInviting] = useState<string | null>(null);
   const [done, setDone] = useState<Set<string>>(new Set());
 
@@ -47,6 +52,7 @@ export function AddEmployeeDialog({ position, onClose, onAdded }: Props) {
     setCandidates([]);
     setDone(new Set());
     setSearch("");
+    setPage(0);
     fetch(`/api/events/${position.event_id}/positions/${position.id}/candidates`)
       .then((r) => r.json())
       .then(setCandidates)
@@ -54,9 +60,18 @@ export function AddEmployeeDialog({ position, onClose, onAdded }: Props) {
       .finally(() => setLoading(false));
   }, [position]);
 
-  const filtered = candidates.filter((c) =>
-    c.full_name.toLowerCase().includes(search.toLowerCase())
+  const filtered = useMemo(() =>
+    candidates.filter((c) =>
+      c.full_name.toLowerCase().includes(search.toLowerCase())
+    ),
+    [candidates, search]
   );
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const safePage = Math.min(page, totalPages - 1);
+  const paged = filtered.slice(safePage * PAGE_SIZE, (safePage + 1) * PAGE_SIZE);
+
+  useEffect(() => { setPage(0); }, [search]);
 
   async function invite(candidate: Candidate) {
     if (!position) return;
@@ -76,10 +91,10 @@ export function AddEmployeeDialog({ position, onClose, onAdded }: Props) {
         const data = await res.json();
         setDone((prev) => new Set([...prev, candidate.id]));
         onAdded({ assignmentId: data.id, employeeId: candidate.id, employeeName: candidate.full_name, employeeTier: candidate.tier });
-        toast({ title: `${candidate.full_name} добавлен в пул`, variant: "success" });
+        toast({ title: `${candidate.full_name} добавлен`, variant: "success" });
       } else {
-        const data = await res.json();
-        toast({ title: data.error ?? "Ошибка", variant: "destructive" });
+        const data = await res.json().catch(() => ({}));
+        toast({ title: (data as { error?: string }).error ?? "Ошибка сервера", variant: "destructive" });
       }
     } finally {
       setInviting(null);
@@ -88,8 +103,8 @@ export function AddEmployeeDialog({ position, onClose, onAdded }: Props) {
 
   return (
     <Dialog open={!!position} onOpenChange={(open) => { if (!open) onClose(); }}>
-      <DialogContent className="max-w-sm max-h-[80vh] flex flex-col gap-0 p-0">
-        <DialogHeader className="px-5 pt-5 pb-3 shrink-0">
+      <DialogContent className="max-w-sm !flex flex-col gap-0 p-0 [&>button]:top-2 [&>button]:right-2 [&>button]:flex [&>button]:items-center [&>button]:justify-center [&>button]:w-9 [&>button]:h-9 [&>button]:rounded-xl">
+        <DialogHeader className="px-5 pt-5 pb-3 pr-12 shrink-0">
           <DialogTitle>
             Добавить сотрудника
             {position && (
@@ -112,42 +127,44 @@ export function AddEmployeeDialog({ position, onClose, onAdded }: Props) {
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto px-5 pb-5 space-y-1.5">
+        {/* Список */}
+        <div className="px-5 shrink-0" style={{ minHeight: `${PAGE_SIZE * 52}px` }}>
           {loading && (
             <div className="flex items-center justify-center py-8">
               <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
             </div>
           )}
           {!loading && filtered.length === 0 && (
-            <p className="text-sm text-muted-foreground py-6 text-center">
-              Нет доступных сотрудников
+            <p className="text-sm text-muted-foreground py-8 text-center">
+              Нет сотрудников
             </p>
           )}
-          {filtered.map((c) => {
+          {!loading && paged.map((c) => {
             const isDone = done.has(c.id);
             const isLoading = inviting === c.id;
             return (
-              <div key={c.id} className="flex items-center gap-3 rounded-lg px-2 py-2 hover:bg-muted/50 transition-colors">
-                <div className="w-8 h-8 rounded-full bg-zinc-800 border border-zinc-700 overflow-hidden flex-shrink-0 flex items-center justify-center">
+              <div key={c.id} className="flex items-center gap-3 rounded-xl px-2 py-2.5 hover:bg-muted/40 transition-colors">
+                <div className="w-8 h-8 rounded-xl bg-muted border border-border overflow-hidden flex-shrink-0 flex items-center justify-center">
                   {c.photo_url
                     // eslint-disable-next-line @next/next/no-img-element
                     ? <img src={c.photo_url} alt="" className="w-full h-full object-cover" />
-                    : <User className="h-4 w-4 text-zinc-500" />}
+                    : <User className="h-4 w-4 text-muted-foreground" />}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium truncate">{c.full_name}</p>
+                  <p className="text-[13px] font-medium truncate">{c.full_name}</p>
                 </div>
-                <Badge variant={TIER_BADGE[c.tier] ?? "outline"} className="text-xs shrink-0">
+                <span className="inline-flex items-center px-2 py-0.5 rounded-lg text-[11px] font-medium shrink-0"
+                  style={TIER_CHIP[c.tier] ?? TIER_CHIP.regular}>
                   {TIER_LABELS[c.tier] ?? c.tier}
-                </Badge>
+                </span>
                 {isDone ? (
-                  <CheckCircle2 className="h-4 w-4 text-green-600 shrink-0" />
+                  <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0" />
                 ) : (
                   <button
                     onClick={() => invite(c)}
                     disabled={isLoading}
-                    className="text-[hsl(38,62%,48%)] hover:text-[hsl(38,62%,38%)] disabled:opacity-40 shrink-0 transition-colors"
-                    aria-label="Пригласить"
+                    className="text-primary hover:text-primary/70 disabled:opacity-40 shrink-0 transition-colors"
+                    aria-label="Добавить"
                   >
                     {isLoading
                       ? <Loader2 className="h-4 w-4 animate-spin" />
@@ -158,6 +175,40 @@ export function AddEmployeeDialog({ position, onClose, onAdded }: Props) {
             );
           })}
         </div>
+
+        {/* Пагинация */}
+        {!loading && filtered.length > PAGE_SIZE && (
+          <div className="flex items-center justify-between px-5 py-3 border-t border-border shrink-0">
+            <button
+              onClick={() => setPage((p) => Math.max(0, p - 1))}
+              disabled={safePage === 0}
+              className="flex items-center justify-center w-8 h-8 rounded-xl border border-border bg-card hover:bg-muted disabled:opacity-30 transition-colors"
+              aria-label="Предыдущая страница"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </button>
+            <span className="text-[13px] text-muted-foreground tabular-nums">
+              {safePage + 1} / {totalPages}
+            </span>
+            <button
+              onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
+              disabled={safePage === totalPages - 1}
+              className="flex items-center justify-center w-8 h-8 rounded-xl border border-border bg-card hover:bg-muted disabled:opacity-30 transition-colors"
+              aria-label="Следующая страница"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </button>
+          </div>
+        )}
+
+        {/* Итог */}
+        {!loading && filtered.length > 0 && (
+          <div className="px-5 pb-4 shrink-0">
+            <p className="text-[11px] text-muted-foreground text-center">
+              {filtered.length} {filtered.length === 1 ? "сотрудник" : filtered.length < 5 ? "сотрудника" : "сотрудников"}
+            </p>
+          </div>
+        )}
       </DialogContent>
     </Dialog>
   );

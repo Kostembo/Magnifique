@@ -13,9 +13,9 @@ const STATUS_FILTERS = [
   ["done",       "Завершены"],
 ] as const;
 
-interface Props { events: EventCardData[] }
+interface Props { events: EventCardData[]; canCreate?: boolean }
 
-export function EventsManager({ events }: Props) {
+export function EventsManager({ events, canCreate = false }: Props) {
   const [statusFilter, setStatusFilter] = useState<string>("all");
 
   const needsStaff = events.filter((e) => {
@@ -42,13 +42,15 @@ export function EventsManager({ events }: Props) {
 
       <div className="flex items-center justify-between gap-3">
         <h1 className="font-display text-[28px] font-extrabold tracking-[-0.03em]">Мероприятия</h1>
-        <Link
-          href="/events/new"
-          aria-label="Создать мероприятие"
-          className="hidden md:flex items-center justify-center w-9 h-9 rounded-xl bg-primary text-primary-foreground hover:opacity-90 transition-opacity min-h-0"
-        >
-          <Plus className="h-4 w-4" />
-        </Link>
+        {canCreate && (
+          <Link
+            href="/events/new"
+            aria-label="Создать мероприятие"
+            className="hidden md:flex items-center justify-center w-9 h-9 rounded-xl bg-primary text-primary-foreground hover:opacity-90 transition-opacity min-h-0"
+          >
+            <Plus className="h-4 w-4" />
+          </Link>
+        )}
       </div>
 
       {needsStaff > 0 && (
@@ -68,9 +70,9 @@ export function EventsManager({ events }: Props) {
             <button
               key={val}
               onClick={() => setStatusFilter(val)}
-              className="shrink-0 px-4 h-9 rounded-full text-[13px] font-semibold transition-colors min-h-0"
+              className="shrink-0 px-4 h-9 rounded-xl text-[13px] font-semibold transition-colors min-h-0"
               style={active
-                ? { background: "linear-gradient(180deg,#FFD27A,hsl(var(--primary)))", color: "hsl(var(--primary-foreground))" }
+                ? { background: "hsl(var(--primary))", color: "hsl(var(--primary-foreground))" }
                 : { background: "hsl(var(--muted))", color: "hsl(var(--muted-foreground))" }
               }
             >
@@ -83,7 +85,7 @@ export function EventsManager({ events }: Props) {
       {displayed.length === 0 && (
         <div className="text-center text-muted-foreground py-16">
           <p className="text-lg font-medium mb-2">Нет мероприятий</p>
-          {statusFilter === "all" && (
+          {statusFilter === "all" && canCreate && (
             <Link href="/events/new" className="text-sm text-primary hover:underline">
               Создать первое
             </Link>
@@ -95,14 +97,16 @@ export function EventsManager({ events }: Props) {
         {displayed.map((event) => <EventCard key={event.id} event={event} />)}
       </div>
 
-      <Link
-        href="/events/new"
-        className="md:hidden fixed right-5 z-50 flex items-center justify-center w-14 h-14 rounded-full bg-primary text-primary-foreground shadow-lg active:scale-95 transition-transform"
-        aria-label="Создать мероприятие"
-        style={{ bottom: "calc(56px + 1.25rem + env(safe-area-inset-bottom, 0px))" }}
-      >
-        <Plus className="h-6 w-6" />
-      </Link>
+      {canCreate && (
+        <Link
+          href="/events/new"
+          className="md:hidden fixed right-5 z-50 flex items-center justify-center w-14 h-14 rounded-full bg-primary text-primary-foreground shadow-lg active:scale-95 transition-transform"
+          aria-label="Создать мероприятие"
+          style={{ bottom: "calc(56px + 1.25rem + env(safe-area-inset-bottom, 0px))" }}
+        >
+          <Plus className="h-6 w-6" />
+        </Link>
+      )}
     </div>
   );
 }

@@ -13,6 +13,7 @@ const schema = z.object({
 });
 
 export async function POST(req: NextRequest) {
+  try {
   const session = await auth();
   if (!session?.user || !isPrivileged(session.user.role ?? "")) {
     return NextResponse.json({ error: "Нет доступа" }, { status: 403 });
@@ -29,7 +30,7 @@ export async function POST(req: NextRequest) {
   const [employee, event, position] = await Promise.all([
     prisma.employee.findUnique({
       where: { id: employee_id },
-      select: { id: true, full_name: true, is_active: true },
+      select: { id: true, full_name: true },
     }),
     prisma.event.findUnique({
       where: { id: event_id },
@@ -41,8 +42,8 @@ export async function POST(req: NextRequest) {
     }),
   ]);
 
-  if (!employee?.is_active)
-    return NextResponse.json({ error: "Сотрудник не найден или неактивен" }, { status: 404 });
+  if (!employee)
+    return NextResponse.json({ error: "Сотрудник не найден" }, { status: 404 });
   if (!event)
     return NextResponse.json({ error: "Мероприятие не найдено" }, { status: 404 });
   if (!position)
@@ -54,11 +55,13 @@ export async function POST(req: NextRequest) {
   if (existing)
     return NextResponse.json({ error: "Сотрудник уже приглашён на эту позицию" }, { status: 409 });
 
-  const confirmedCount = await prisma.assignment.count({
-    where: { position_id, status: "confirmed" },
-  });
-  if (confirmedCount >= position.needed_count)
-    return NextResponse.json({ error: "Все слоты заняты" }, { status: 409 });
+  if (!direct) {
+    const confirmedCount = await prisma.assignment.count({
+      where: { position_id, status: "confirmed" },
+    });
+    if (confirmedCount >= position.needed_count)
+      return NextResponse.json({ error: "Все слоты заняты" }, { status: 409 });
+  }
 
   const status = direct ? "confirmed" : "invited";
   const assignment = await prisma.assignment.create({
@@ -72,21 +75,30 @@ export async function POST(req: NextRequest) {
     },
   });
 
-  if (direct) {
-    await sendPushToEmployee(employee_id, {
-      title: "Вы добавлены на мероприятие",
-      body: `${event.title} — ${new Date(event.starts_at).toLocaleDateString("ru-RU")}`,
-      url: `/events`,
-      tag: `added-${event_id}`,
-    });
-  } else {
-    await sendPushToEmployee(employee_id, {
-      title: "Приглашение на мероприятие",
-      body: `${event.title} — ${new Date(event.starts_at).toLocaleDateString("ru-RU")}`,
-      url: `/invite/${event_id}`,
-      tag: `invite-${event_id}`,
-    });
+  // Push уведомление — некритично, не ломаем ответ при сбое
+  try {
+    if (direct) {
+      await sendPushToEmployee(employee_id, {
+        title: "Вы добавлены на мероприятие",
+        body: `${event.title} — ${new Date(event.starts_at).toLocaleDateString("ru-RU")}`,
+        url: `/events`,
+        tag: `added-${event_id}`,
+      });
+    } else {
+      await sendPushToEmployee(employee_id, {
+        title: "Приглашение на мероприятие",
+        body: `${event.title} — ${new Date(event.starts_at).toLocaleDateString("ru-RU")}`,
+        url: `/invite/${event_id}`,
+        tag: `invite-${event_id}`,
+      });
+    }
+  } catch {
+    // push не настроен или недоступен — assignment уже создан, продолжаем
   }
 
   return NextResponse.json(assignment);
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    return NextResponse.json({ error: msg }, { status: 500 });
+  }
 }

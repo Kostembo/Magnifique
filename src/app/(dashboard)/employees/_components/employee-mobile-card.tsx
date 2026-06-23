@@ -2,7 +2,6 @@
 
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
   DropdownMenuTrigger,
@@ -10,11 +9,12 @@ import {
 import { MoreHorizontal, Pencil, KeyRound, User, CalendarPlus } from "lucide-react";
 import { ROLE_LABELS, TIER_LABELS, formatPhone } from "@/lib/utils";
 import { fadeUp } from "@/lib/motion";
+import type { CSSProperties } from "react";
 
-const TIER_BADGE: Record<string, "success" | "info" | "warning"> = {
-  core: "success",
-  regular: "info",
-  trainee: "warning",
+const TIER_CHIP: Record<string, CSSProperties> = {
+  core:    { background: "hsl(143 55% 18%)", color: "hsl(143 60% 68%)" },
+  regular: { background: "hsl(var(--muted))", color: "hsl(var(--muted-foreground))" },
+  trainee: { background: "hsl(38 55% 18%)",  color: "hsl(38 70% 65%)" },
 };
 
 type Employee = {
@@ -76,8 +76,13 @@ export function EmployeeMobileCard({ emp, index, onEdit, onResetPassword, onInvi
       </div>
 
       <div className="flex flex-wrap gap-1.5">
-        <Badge variant="outline">{ROLE_LABELS[emp.role] ?? emp.role}</Badge>
-        <Badge variant={TIER_BADGE[emp.tier] ?? "outline"}>{TIER_LABELS[emp.tier] ?? emp.tier}</Badge>
+        <span className="inline-flex items-center px-3 py-1 rounded-xl bg-muted text-[13px] font-medium text-foreground">
+          {ROLE_LABELS[emp.role] ?? emp.role}
+        </span>
+        <span className="inline-flex items-center px-3 py-1 rounded-xl text-[13px] font-medium"
+          style={TIER_CHIP[emp.tier] ?? TIER_CHIP.regular}>
+          {TIER_LABELS[emp.tier] ?? emp.tier}
+        </span>
       </div>
     </motion.div>
   );
