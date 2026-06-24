@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { Users, CalendarDays, ClipboardList, Clock, Settings } from "lucide-react";
+import { Users, CalendarDays, ClipboardList, Clock, Settings, Banknote } from "lucide-react";
 import { motion, LayoutGroup } from "framer-motion";
 
 type NavItem = { href: string; label: string; icon: React.ReactNode; roles: string[] };
@@ -14,6 +14,7 @@ const NAV_ITEMS: NavItem[] = [
   { href: "/employees",    label: "Команда",   icon: <Users className="h-5 w-5" />,        roles: ["manager", "owner", "admin"] },
   { href: "/requisitions", label: "Заявки",    icon: <ClipboardList className="h-5 w-5" />, roles: ["manager", "warehouse", "owner", "admin"] },
   { href: "/timesheet",    label: "Табель",    icon: <Clock className="h-5 w-5" />,        roles: ["manager", "waiter", "cook", "owner", "admin"] },
+  { href: "/payroll",     label: "Зарплаты",  icon: <Banknote className="h-5 w-5" />,     roles: ["manager", "owner", "admin", "accountant"] },
   { href: "/settings",     label: "Настройки", icon: <Settings className="h-5 w-5" />,     roles: ["manager", "waiter", "cook", "warehouse", "owner", "admin", "sales", "chef"] },
 ];
 

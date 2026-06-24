@@ -1,7 +1,7 @@
 import { auth } from "@/lib/auth";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { isSuper, isPrivileged, canViewEvents, canViewRequisitions } from "@/lib/roles";
+import { isSuper, isPrivileged, canViewEvents, canViewRequisitions, canViewPayroll } from "@/lib/roles";
 
 const PUBLIC_PATHS = ["/login"];
 
@@ -34,6 +34,10 @@ export default auth(function middleware(req: NextRequest & { auth: { user?: { ro
   }
 
   if (pathname.startsWith("/requisitions") && !canViewRequisitions(role)) {
+    return NextResponse.redirect(new URL("/", req.url));
+  }
+
+  if (pathname.startsWith("/payroll") && !canViewPayroll(role)) {
     return NextResponse.redirect(new URL("/", req.url));
   }
 

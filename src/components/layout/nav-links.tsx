@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { Users, CalendarDays, ClipboardList, LogOut, Settings, Clock, Calendar } from "lucide-react";
+import { Users, CalendarDays, ClipboardList, LogOut, Settings, Clock, Calendar, Banknote } from "lucide-react";
 import { signOut } from "next-auth/react";
 import { motion, LayoutGroup } from "framer-motion";
 
@@ -15,6 +15,7 @@ const navLinks: NavLink[] = [
   { href: "/requisitions", label: "Заявки",      icon: <ClipboardList className="h-5 w-5" />, roles: ["manager", "warehouse", "owner", "admin"] },
   { href: "/calendar",     label: "Календарь",   icon: <Calendar className="h-5 w-5" />,     roles: ["manager", "waiter", "cook", "owner", "admin", "sales", "chef"] },
   { href: "/timesheet",    label: "Табель",      icon: <Clock className="h-5 w-5" />,        roles: ["manager", "waiter", "cook", "owner", "admin"] },
+  { href: "/payroll",     label: "Зарплаты",   icon: <Banknote className="h-5 w-5" />,     roles: ["manager", "owner", "admin", "accountant"] },
   { href: "/settings",     label: "Настройки",   icon: <Settings className="h-5 w-5" />,     roles: ["manager", "waiter", "cook", "warehouse", "owner", "admin", "sales", "chef"] },
 ];
 
