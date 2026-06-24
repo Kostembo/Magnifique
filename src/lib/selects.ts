@@ -8,4 +8,7 @@ export const employeeListSelect = {
   tier: true,
   created_at: true,
   photo_url: true,
+  hourly_rate: true,
+  min_pay_amount: true,
+  min_pay_hours: true,
 } as const;

@@ -25,6 +25,8 @@ const createSchema = z.object({
   location: z.string().optional(),
   guests_count: z.number().int().min(1).optional(),
   starts_at: z.string().datetime(),
+  warehouse_time: z.string().datetime().optional().nullable(),
+  venue_time: z.string().datetime().optional().nullable(),
   positions: z.array(positionSchema).min(1, "Добавьте хотя бы одну позицию"),
 });
 
@@ -89,12 +91,14 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Ошибка валидации", details: parsed.error.flatten() }, { status: 400 });
   }
 
-  const { positions, ...eventData } = parsed.data;
+  const { positions, warehouse_time, venue_time, ...eventData } = parsed.data;
 
   const event = await prisma.event.create({
     data: {
       ...eventData,
       starts_at: new Date(eventData.starts_at),
+      warehouse_time: warehouse_time ? new Date(warehouse_time) : null,
+      venue_time: venue_time ? new Date(venue_time) : null,
       status: "recruiting",
       created_by: session!.user!.id,
       positions: {

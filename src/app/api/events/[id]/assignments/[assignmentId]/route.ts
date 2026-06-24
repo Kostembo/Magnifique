@@ -1,8 +1,47 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { sendPushToEmployee } from "@/lib/push";
 import { isPrivileged } from "@/lib/roles";
+import { z } from "zod";
+
+const patchSchema = z.object({
+  goes_to_warehouse: z.boolean().optional(),
+  scheduled_time: z.string().datetime().optional().nullable(),
+});
+
+export async function PATCH(
+  req: NextRequest,
+  { params }: { params: { id: string; assignmentId: string } }
+) {
+  const session = await auth();
+  if (!session?.user || !isPrivileged(session.user.role ?? "")) {
+    return NextResponse.json({ error: "Нет доступа" }, { status: 403 });
+  }
+
+  const body = await req.json().catch(() => ({}));
+  const parsed = patchSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json({ error: "Ошибка валидации" }, { status: 400 });
+  }
+
+  const assignment = await prisma.assignment.findUnique({ where: { id: params.assignmentId } });
+  if (!assignment || assignment.event_id !== params.id) {
+    return NextResponse.json({ error: "Не найдено" }, { status: 404 });
+  }
+
+  const updated = await prisma.assignment.update({
+    where: { id: params.assignmentId },
+    data: {
+      ...(parsed.data.goes_to_warehouse !== undefined && { goes_to_warehouse: parsed.data.goes_to_warehouse }),
+      ...(parsed.data.scheduled_time !== undefined && {
+        scheduled_time: parsed.data.scheduled_time ? new Date(parsed.data.scheduled_time) : null,
+      }),
+    },
+  });
+
+  return NextResponse.json(updated);
+}
 
 export async function DELETE(
   _req: Request,

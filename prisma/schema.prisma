@@ -17,6 +17,7 @@ enum Role {
   chef
   owner
   admin
+  accountant
 }
 
 enum Tier {
@@ -47,6 +48,12 @@ enum RequisitionStatus {
   done
 }
 
+enum PayStatus {
+  draft
+  confirmed
+  paid
+}
+
 model Employee {
   id                String    @id @default(cuid())
   full_name         String
@@ -59,6 +66,11 @@ model Employee {
   push_subscription Json?
   created_at        DateTime  @default(now())
 
+  // Зарплата
+  hourly_rate       Decimal?  @db.Decimal(10, 2)
+  min_pay_amount    Decimal?  @db.Decimal(10, 2)
+  min_pay_hours     Int?
+
   created_events    Event[]        @relation("CreatedEvents")
   assignments       Assignment[]
   requisitions      Requisition[]  @relation("AssignedRequisitions")
@@ -69,23 +81,27 @@ model Employee {
 }
 
 model Event {
-  id         String      @id @default(cuid())
+  id           String      @id @default(cuid())
   title        String
   client       String?
   location     String?
   guests_count Int?
   starts_at    DateTime
-  status     EventStatus @default(draft)
-  created_by String
-  created_at DateTime    @default(now())
+  status       EventStatus @default(draft)
+  created_by   String
+  created_at   DateTime    @default(now())
 
-  creator    Employee    @relation("CreatedEvents", fields: [created_by], references: [id])
-  positions  EventPosition[]
-  assignments Assignment[]
+  // Времена прибытия
+  warehouse_time DateTime?
+  venue_time     DateTime?
+
+  creator      Employee        @relation("CreatedEvents", fields: [created_by], references: [id])
+  positions    EventPosition[]
+  assignments  Assignment[]
   requisitions Requisition[]
-  comments   Comment[]
+  comments     Comment[]
   time_entries TimeEntry[]
-  event_menu EventMenuItem[]
+  event_menu   EventMenuItem[]
 
   @@map("events")
 }
@@ -105,14 +121,18 @@ model EventPosition {
 }
 
 model Assignment {
-  id          String           @id @default(cuid())
-  event_id    String
-  position_id Int
-  employee_id String
-  status      AssignmentStatus @default(invited)
-  is_priority Boolean          @default(false)
-  invited_at  DateTime         @default(now())
+  id           String           @id @default(cuid())
+  event_id     String
+  position_id  Int
+  employee_id  String
+  status       AssignmentStatus @default(invited)
+  is_priority  Boolean          @default(false)
+  invited_at   DateTime         @default(now())
   responded_at DateTime?
+
+  // Логистика смены
+  goes_to_warehouse Boolean   @default(false)
+  scheduled_time    DateTime?
 
   event    Event         @relation(fields: [event_id], references: [id], onDelete: Cascade)
   position EventPosition @relation(fields: [position_id], references: [id], onDelete: Cascade)
@@ -151,13 +171,27 @@ model RequisitionItem {
 }
 
 model TimeEntry {
-  id          String   @id @default(cuid())
+  id          String    @id @default(cuid())
   employee_id String
   event_id    String
-  work_date   DateTime @db.Date
-  start_time  String
-  end_time    String
-  created_at  DateTime @default(now())
+  work_date   DateTime  @db.Date
+
+  // Ручные/скорректированные значения (HH:mm)
+  start_time  String?
+  end_time    String?
+
+  // Авто-фиксация (raw timestamps)
+  checked_in_at  DateTime?
+  checked_out_at DateTime?
+  is_offline     Boolean   @default(false)
+
+  // Расчёт зарплаты
+  calculated_hours Decimal?  @db.Decimal(10, 2)
+  calculated_pay   Decimal?  @db.Decimal(10, 2)
+  pay_status       PayStatus @default(draft)
+  pay_comment      String?
+
+  created_at DateTime @default(now())
 
   employee Employee @relation(fields: [employee_id], references: [id])
   event    Event    @relation(fields: [event_id], references: [id], onDelete: Cascade)

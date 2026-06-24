@@ -29,6 +29,8 @@ const formSchema = z.object({
   location: z.string().optional(),
   guests_count: z.coerce.number().int().min(1).optional(),
   starts_at: z.string().min(1, "Укажите дату и время"),
+  warehouse_time: z.string().optional(),
+  venue_time: z.string().optional(),
   positions: z.array(positionSchema).min(1, "Добавьте хотя бы одну позицию"),
 });
 
@@ -56,6 +58,8 @@ export function EventForm() {
     const payload = {
       ...data,
       starts_at: new Date(data.starts_at).toISOString(),
+      warehouse_time: data.warehouse_time ? new Date(data.warehouse_time).toISOString() : null,
+      venue_time: data.venue_time ? new Date(data.venue_time).toISOString() : null,
       positions: data.positions.map((p) => ({
         ...p,
         priority_deadline: p.priority_deadline
@@ -122,6 +126,26 @@ export function EventForm() {
                 <Input id="guests_count" type="number" min={1} placeholder="100" {...register("guests_count")} />
               </div>
             </div>
+          </CardContent>
+        </Card>
+
+        {/* Время прибытия */}
+        <Card>
+          <CardHeader><CardTitle className="text-base">Время прибытия персонала</CardTitle></CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="warehouse_time">Склад (сбор инвентаря)</Label>
+                <Input id="warehouse_time" type="datetime-local" {...register("warehouse_time")} />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="venue_time">Площадка (начало смены)</Label>
+                <Input id="venue_time" type="datetime-local" {...register("venue_time")} />
+              </div>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Используется для автоматического расчёта рабочих часов при чек-ине
+            </p>
           </CardContent>
         </Card>
 

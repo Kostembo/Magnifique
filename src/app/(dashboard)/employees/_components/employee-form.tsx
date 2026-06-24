@@ -21,12 +21,15 @@ import { ImageCropModal } from "./image-crop-modal";
 const baseSchema = z.object({
   full_name: z.string().min(2, "Укажите ФИО"),
   phone: z.string().min(10, "Укажите телефон"),
-  role: z.enum(["waiter", "cook", "warehouse", "manager", "sales", "chef", "owner", "admin"], {
+  role: z.enum(["waiter", "cook", "warehouse", "manager", "sales", "chef", "owner", "admin", "accountant"], {
     required_error: "Выберите роль",
   }),
   tier: z.enum(["core", "regular", "trainee"]),
   passport_data: z.string().optional(),
   photo_url: z.string().optional(),
+  hourly_rate:    z.coerce.number().positive().optional().or(z.literal("")),
+  min_pay_amount: z.coerce.number().positive().optional().or(z.literal("")),
+  min_pay_hours:  z.coerce.number().int().positive().optional().or(z.literal("")),
 });
 
 const createSchema = baseSchema.extend({
@@ -66,10 +69,14 @@ export function EmployeeForm({ mode, defaultValues }: EmployeeFormProps) {
       tier: defaultValues?.tier ?? "regular",
       passport_data: "",
       password: "000000",
+      hourly_rate: defaultValues?.hourly_rate ?? "",
+      min_pay_amount: defaultValues?.min_pay_amount ?? "",
+      min_pay_hours: defaultValues?.min_pay_hours ?? "",
     },
   });
 
   const selectedRole = watch("role");
+  const showPayroll = selectedRole === "waiter" || selectedRole === "cook";
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
@@ -139,6 +146,11 @@ export function EmployeeForm({ mode, defaultValues }: EmployeeFormProps) {
 
     if (showPassport) payload.passport_data = data.passport_data ?? "";
     if (data.password) payload.password = data.password;
+    if (showPayroll) {
+      payload.hourly_rate    = data.hourly_rate    || null;
+      payload.min_pay_amount = data.min_pay_amount || null;
+      payload.min_pay_hours  = data.min_pay_hours  || null;
+    }
 
     const url = mode === "create" ? "/api/employees" : `/api/employees/${defaultValues?.id}`;
     const method = mode === "create" ? "POST" : "PATCH";
@@ -271,6 +283,7 @@ export function EmployeeForm({ mode, defaultValues }: EmployeeFormProps) {
                     <SelectItem value="chef">Шеф-повар</SelectItem>
                     <SelectItem value="owner">Владелец</SelectItem>
                     <SelectItem value="admin">Администратор</SelectItem>
+                    <SelectItem value="accountant">Бухгалтер</SelectItem>
                   </SelectContent>
                 </Select>
                 {errors.role && <p className="text-sm text-destructive">{errors.role.message}</p>}
@@ -298,6 +311,46 @@ export function EmployeeForm({ mode, defaultValues }: EmployeeFormProps) {
             </div>
           </CardContent>
         </Card>
+
+        {showPayroll && (
+          <Card>
+            <CardHeader><CardTitle className="text-base">Зарплата</CardTitle></CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="hourly_rate">Ставка в час (₽) *</Label>
+                <Input
+                  id="hourly_rate"
+                  type="number"
+                  placeholder="450"
+                  {...register("hourly_rate")}
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="min_pay_amount">Минималка (₽)</Label>
+                  <Input
+                    id="min_pay_amount"
+                    type="number"
+                    placeholder="5000"
+                    {...register("min_pay_amount")}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="min_pay_hours">Порог (ч)</Label>
+                  <Input
+                    id="min_pay_hours"
+                    type="number"
+                    placeholder="10"
+                    {...register("min_pay_hours")}
+                  />
+                </div>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Если не заполнено — используется дефолт: 5 000 ₽ за 10 ч
+              </p>
+            </CardContent>
+          </Card>
+        )}
 
         <Card>
           <CardHeader><CardTitle className="text-base">Пароль</CardTitle></CardHeader>

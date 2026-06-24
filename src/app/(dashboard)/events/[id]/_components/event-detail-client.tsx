@@ -12,12 +12,13 @@ import { useToast } from "@/hooks/use-toast";
 import {
   ArrowLeft, Pencil, Users, Package, MessageSquare,
   User, Clock, MapPin, UserCheck, UserX, Loader2,
-  Bell, BellRing, Plus, ExternalLink, Check, X, FileDown, Trash2, ChefHat, UserPlus,
+  Bell, BellRing, Plus, ExternalLink, Check, X, FileDown, Trash2, ChefHat, UserPlus, Warehouse,
 } from "lucide-react";
 import { ROLE_LABELS } from "@/lib/utils";
 
 import { EventMenuTab } from "./event-menu-tab";
 import { AddEmployeeDialog } from "./add-employee-dialog";
+import { ShiftCheckinCard } from "./shift-checkin-card";
 import { motion } from "framer-motion";
 import { Ring, StaffBar, MagneticCard, stagger, fadeUp } from "@/lib/motion";
 
@@ -26,6 +27,7 @@ type AssignmentStatus = "invited" | "confirmed" | "declined" | "expired" | "wait
 type Assignment = {
   id: string; status: AssignmentStatus; is_priority: boolean;
   invited_at: Date | string; responded_at?: Date | string | null;
+  goes_to_warehouse: boolean;
   employee: { id: string; full_name: string; phone: string; role: string; tier: string };
 };
 
@@ -64,9 +66,23 @@ const EVENT_STATUS: Record<string, { label: string; color: string }> = {
   done:       { label: "Завершено",      color: "hsl(var(--muted-foreground))" },
 };
 
-interface Props { event: EventDetail; isManager: boolean; role: string; currentUserId: string; }
+type TimeEntryData = {
+  checked_in_at: Date | string | null;
+  checked_out_at: Date | string | null;
+  calculated_hours: number | null;
+  calculated_pay: number | null;
+};
 
-export function EventDetailClient({ event, isManager, role, currentUserId }: Props) {
+interface Props {
+  event: EventDetail;
+  isManager: boolean;
+  role: string;
+  currentUserId: string;
+  timeEntry: TimeEntryData | null;
+  hasConfirmedAssignment: boolean;
+}
+
+export function EventDetailClient({ event, isManager, role, currentUserId, timeEntry, hasConfirmedAssignment }: Props) {
   const canEditMenu = ["manager", "owner", "admin", "sales"].includes(role);
   const canSeeMenu = canEditMenu || role === "chef";
   const router = useRouter();
@@ -111,6 +127,21 @@ export function EventDetailClient({ event, isManager, role, currentUserId }: Pro
     } catch {
       toast({ title: "Ошибка", description: "Нет соединения с сервером", variant: "destructive" });
     }
+  }
+
+  async function toggleWarehouse(positionId: number, assignmentId: string, current: boolean) {
+    try {
+      const res = await fetch(`/api/events/${event.id}/assignments/${assignmentId}`, {
+        method: "PATCH", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ goes_to_warehouse: !current }),
+      });
+      if (res.ok) {
+        setPositions((prev) => prev.map((p) => {
+          if (p.id !== positionId) return p;
+          return { ...p, assignments: p.assignments.map((a) => a.id === assignmentId ? { ...a, goes_to_warehouse: !current } : a) };
+        }));
+      }
+    } catch { /* non-critical */ }
   }
 
   async function removeAssignment(assignmentId: string) {
@@ -301,6 +332,14 @@ export function EventDetailClient({ event, isManager, role, currentUserId }: Pro
         )}
       </motion.div>
 
+      {(role === "waiter" || role === "cook") && (
+        <ShiftCheckinCard
+          eventId={event.id}
+          initialEntry={timeEntry}
+          hasConfirmedAssignment={hasConfirmedAssignment}
+        />
+      )}
+
       <Tabs defaultValue="recruiting">
         <TabsList className="w-full h-auto gap-1 bg-transparent p-0 flex overflow-x-auto flex-nowrap scrollbar-none pb-0.5">
           {[
@@ -414,6 +453,17 @@ export function EventDetailClient({ event, isManager, role, currentUserId }: Pro
                           <Badge variant={STATUS_BADGE[a.status]} className="text-xs shrink-0">
                             {STATUS_LABELS[a.status]}
                           </Badge>
+                          {isManager && a.status === "confirmed" && (
+                            <button
+                              onClick={() => toggleWarehouse(pos.id, a.id, a.goes_to_warehouse)}
+                              className="shrink-0 p-0.5 min-h-0 min-w-0 h-auto w-auto transition-colors"
+                              style={{ color: a.goes_to_warehouse ? "hsl(var(--primary))" : "hsl(var(--muted-foreground))" }}
+                              aria-label="Склад"
+                              title={a.goes_to_warehouse ? "Едет на склад" : "Едет прямо на площадку"}
+                            >
+                              <Warehouse className="h-3.5 w-3.5" />
+                            </button>
+                          )}
                           {isManager && (
                             <button onClick={() => removeAssignment(a.id)} disabled={removingId === a.id}
                               className="text-muted-foreground hover:text-destructive transition-colors shrink-0 p-0.5 min-h-0 min-w-0 h-auto w-auto"

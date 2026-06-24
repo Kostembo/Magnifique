@@ -6,6 +6,7 @@ export const EVENT_ROLES         = ["manager", "owner", "admin", "sales", "chef"
 export const EVENT_CREATOR_ROLES = ["manager", "owner", "admin", "sales"] as const;
 export const REQUISITION_ROLES   = ["manager", "owner", "admin", "warehouse"] as const;
 export const KITCHEN_ROLES       = ["manager", "owner", "admin", "chef"] as const;
+export const PAYROLL_ROLES       = ["manager", "owner", "admin", "accountant"] as const;
 
 export function isSuper(role: string): boolean {
   return (SUPER_ROLES as readonly string[]).includes(role);
@@ -29,4 +30,8 @@ export function canViewRequisitions(role: string): boolean {
 
 export function canManageKitchen(role: string): boolean {
   return (KITCHEN_ROLES as readonly string[]).includes(role);
+}
+
+export function canViewPayroll(role: string): boolean {
+  return (PAYROLL_ROLES as readonly string[]).includes(role);
 }
