@@ -42,6 +42,11 @@ export default async function TimesheetPage() {
   const eventIds = assignments.map((a) => a.event_id);
   const timeEntries = await prisma.timeEntry.findMany({
     where: { employee_id: session.user.id, event_id: { in: eventIds } },
+    select: {
+      id: true, event_id: true, start_time: true, end_time: true,
+      checked_in_at: true, checked_out_at: true,
+      calculated_hours: true, calculated_pay: true, pay_status: true,
+    },
   });
   const entriesByEvent = Object.fromEntries(timeEntries.map((e) => [e.event_id, e]));
   const initial = assignments.map((a) => ({ ...a, timeEntry: entriesByEvent[a.event_id] ?? null }));

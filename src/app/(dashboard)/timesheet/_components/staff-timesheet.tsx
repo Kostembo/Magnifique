@@ -3,13 +3,22 @@
 import { useState } from "react";
 import { format } from "date-fns";
 import { ru } from "date-fns/locale";
-import { Clock, CheckCircle2, ChevronDown, ChevronUp } from "lucide-react";
+import { Clock, CheckCircle2, ChevronDown, ChevronUp, Banknote } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { motion } from "framer-motion";
 import { stagger, fadeUp } from "@/lib/motion";
 
-interface TimeEntry { id: string; start_time: string; end_time: string; }
+interface TimeEntry {
+  id: string;
+  start_time: string | null;
+  end_time: string | null;
+  checked_in_at: string | null;
+  checked_out_at: string | null;
+  calculated_hours: number | null;
+  calculated_pay: number | null;
+  pay_status: "draft" | "confirmed" | "paid";
+}
 interface Assignment {
   id: string;
   event_id: string;
@@ -89,6 +98,17 @@ function TimeForm({ assignment, onSaved }: { assignment: Assignment; onSaved: (e
   );
 }
 
+const PAY_STATUS_COLOR: Record<string, string> = {
+  draft: "hsl(var(--muted-foreground))",
+  confirmed: "hsl(var(--warn))",
+  paid: "hsl(var(--ok))",
+};
+const PAY_STATUS_LABEL: Record<string, string> = {
+  draft: "Начислено",
+  confirmed: "Подтверждено",
+  paid: "Выплачено",
+};
+
 export function StaffTimesheet({ initial }: { initial: Assignment[] }) {
   const [assignments, setAssignments] = useState(initial);
   const [expanded, setExpanded] = useState<string | null>(null);
@@ -105,10 +125,15 @@ export function StaffTimesheet({ initial }: { initial: Assignment[] }) {
       )}
       {assignments.map((a) => {
         const isOpen = expanded === a.event_id;
-        const logged = !!a.timeEntry;
-        const startH = logged ? parseHour(a.timeEntry!.start_time) : null;
-        const endH = logged ? parseHour(a.timeEntry!.end_time) : null;
-        const total = startH !== null && endH !== null ? calcHours(startH, endH) : 0;
+        const te = a.timeEntry;
+        const hasAutoTime = !!(te?.checked_in_at && te?.checked_out_at);
+        const hasManualTime = !!(te?.start_time && te?.end_time);
+        const logged = !!(te && (hasAutoTime || hasManualTime));
+        const hours = te?.calculated_hours ? Number(te.calculated_hours) : null;
+        const pay = te?.calculated_pay ? Number(te.calculated_pay) : null;
+        const startH = hasManualTime ? parseHour(te!.start_time!) : null;
+        const endH = hasManualTime ? parseHour(te!.end_time!) : null;
+        const total = startH !== null && endH !== null ? calcHours(startH, endH) : null;
 
         return (
           <motion.div key={a.id} variants={fadeUp}
@@ -121,20 +146,33 @@ export function StaffTimesheet({ initial }: { initial: Assignment[] }) {
                   {a.event.location && ` · ${a.event.location}`}
                 </p>
                 {logged && !isOpen && (
-                  <p className="text-[13px] mt-1.5 flex items-center gap-1.5" style={{ color: "hsl(var(--ok))" }}>
-                    <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />
-                    {startH}:00 — {endH}:00 · {total} ч
-                  </p>
+                  <div className="mt-1.5 space-y-0.5">
+                    <p className="text-[13px] flex items-center gap-1.5" style={{ color: "hsl(var(--ok))" }}>
+                      <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />
+                      {hasAutoTime
+                        ? `${hours != null ? hours.toFixed(1) + " ч" : "—"}`
+                        : `${startH}:00 — ${endH}:00 · ${total} ч`}
+                    </p>
+                    {pay != null && (
+                      <p className="text-[13px] flex items-center gap-1.5"
+                        style={{ color: PAY_STATUS_COLOR[te?.pay_status ?? "draft"] }}>
+                        <Banknote className="h-3.5 w-3.5 shrink-0" />
+                        {Math.round(pay).toLocaleString("ru")} ₽ · {PAY_STATUS_LABEL[te?.pay_status ?? "draft"]}
+                      </p>
+                    )}
+                  </div>
                 )}
               </div>
-              <button
-                onClick={() => setExpanded(isOpen ? null : a.event_id)}
-                className="flex items-center gap-1.5 text-[13px] text-muted-foreground hover:text-foreground transition-colors shrink-0 mt-0.5 min-h-0 min-w-0 h-auto w-auto"
-              >
-                <Clock className="h-4 w-4" />
-                {logged ? "Изменить" : "Отметить"}
-                {isOpen ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
-              </button>
+              {!hasAutoTime && (
+                <button
+                  onClick={() => setExpanded(isOpen ? null : a.event_id)}
+                  className="flex items-center gap-1.5 text-[13px] text-muted-foreground hover:text-foreground transition-colors shrink-0 mt-0.5 min-h-0 min-w-0 h-auto w-auto"
+                >
+                  <Clock className="h-4 w-4" />
+                  {logged ? "Изменить" : "Отметить"}
+                  {isOpen ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+                </button>
+              )}
             </div>
             {isOpen && <TimeForm assignment={a} onSaved={(entry) => updateEntry(a.event_id, entry)} />}
           </motion.div>
