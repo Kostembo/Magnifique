@@ -81,6 +81,68 @@ self.addEventListener("push", (event) => {
   );
 });
 
+// ─── Background Sync — offline check-in / checkout ───────────────────────────
+
+const SHIFT_STORE = "pending-shifts";
+
+function swOpenShiftDB() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open("magnifique-shifts", 1);
+    req.onupgradeneeded = () => {
+      req.result.createObjectStore(SHIFT_STORE, { keyPath: "id" });
+    };
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+async function swGetPending() {
+  const db = await swOpenShiftDB();
+  return new Promise((resolve, reject) => {
+    const req = db.transaction(SHIFT_STORE, "readonly").objectStore(SHIFT_STORE).getAll();
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+async function swRemove(id) {
+  const db = await swOpenShiftDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(SHIFT_STORE, "readwrite");
+    tx.objectStore(SHIFT_STORE).delete(id);
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
+async function syncShifts() {
+  const shifts = await swGetPending();
+  for (const shift of shifts) {
+    const endpoint = shift.action === "checkin"
+      ? "/api/time-entries/checkin"
+      : "/api/time-entries/checkout";
+    try {
+      const res = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ event_id: shift.event_id, timestamp: shift.timestamp }),
+      });
+      // Remove on success or unrecoverable error (4xx) — retryable errors (5xx) stay in queue
+      if (res.ok || (res.status >= 400 && res.status < 500)) {
+        await swRemove(shift.id);
+      }
+    } catch {
+      // Network still down — leave in queue, will retry on next sync
+    }
+  }
+}
+
+self.addEventListener("sync", (event) => {
+  if (event.tag === "shift-sync") {
+    event.waitUntil(syncShifts());
+  }
+});
+
 // Клик по уведомлению — открываем нужную страницу
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
