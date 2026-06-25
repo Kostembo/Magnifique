@@ -100,22 +100,27 @@ export async function PATCH(
   const { starts_at, positions, status, ...rest } = parsed.data;
 
   if (status !== undefined) {
-    const ALLOWED: Record<string, string[]> = {
-      draft:      ["recruiting"],
-      recruiting: ["staffed", "draft"],
-      staffed:    ["recruiting", "done"],
-      done:       [],
-    };
     const current = await prisma.event.findUnique({
       where: { id: params.id },
       select: { status: true },
     });
     if (!current) return NextResponse.json({ error: "Не найдено" }, { status: 404 });
-    if (!(ALLOWED[current.status] ?? []).includes(status)) {
-      return NextResponse.json(
-        { error: `Переход «${current.status}» → «${status}» недопустим` },
-        { status: 422 }
-      );
+
+    // Owner/admin могут переставить статус в любое состояние вручную
+    const isSuper = ["owner", "admin"].includes(session!.user!.role ?? "");
+    if (!isSuper) {
+      const ALLOWED: Record<string, string[]> = {
+        draft:      ["recruiting"],
+        recruiting: ["staffed", "done", "draft"],
+        staffed:    ["recruiting", "done"],
+        done:       ["staffed", "recruiting"],
+      };
+      if (!(ALLOWED[current.status] ?? []).includes(status)) {
+        return NextResponse.json(
+          { error: `Переход «${current.status}» → «${status}» недопустим` },
+          { status: 422 }
+        );
+      }
     }
   }
 

@@ -54,7 +54,7 @@ export async function DELETE(
 
   const assignment = await prisma.assignment.findUnique({
     where: { id: params.assignmentId },
-    include: { event: { select: { title: true, starts_at: true } } },
+    include: { event: { select: { title: true, starts_at: true, status: true } } },
   });
 
   if (!assignment || assignment.event_id !== params.id) {
@@ -63,16 +63,36 @@ export async function DELETE(
 
   await prisma.assignment.delete({ where: { id: params.assignmentId } });
 
+  // Если удалённый был confirmed и мероприятие было staffed — проверяем, нужен ли откат
+  if (assignment.status === "confirmed" && assignment.event.status === "staffed") {
+    const allPositions = await prisma.eventPosition.findMany({
+      where: { event_id: assignment.event_id },
+      select: {
+        needed_count: true,
+        _count: { select: { assignments: { where: { status: "confirmed" } } } },
+      },
+    });
+    const stillStaffed = allPositions.length > 0 && allPositions.every((p) => p._count.assignments >= p.needed_count);
+    if (!stillStaffed) {
+      await prisma.event.update({
+        where: { id: assignment.event_id },
+        data: { status: "recruiting" },
+      });
+    }
+  }
+
   const dateStr = assignment.event.starts_at
     ? new Date(assignment.event.starts_at).toLocaleDateString("ru-RU")
     : "";
 
-  await sendPushToEmployee(assignment.employee_id, {
-    title: "Вы удалены из мероприятия",
-    body: `${assignment.event.title}${dateStr ? ` — ${dateStr}` : ""}`,
-    url: "/events",
-    tag: `removed-${params.assignmentId}`,
-  });
+  try {
+    await sendPushToEmployee(assignment.employee_id, {
+      title: "Вы удалены из мероприятия",
+      body: `${assignment.event.title}${dateStr ? ` — ${dateStr}` : ""}`,
+      url: "/events",
+      tag: `removed-${params.assignmentId}`,
+    });
+  } catch { /* push некритичен */ }
 
   return NextResponse.json({ ok: true });
 }

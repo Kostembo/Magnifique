@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { isPrivileged } from "@/lib/roles";
+import { isPrivileged, canViewRequisitions } from "@/lib/roles";
 import { sendPushToWarehouse } from "@/lib/push";
 import { z } from "zod";
 
@@ -10,7 +10,7 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
   if (!session?.user) return NextResponse.json({ error: "Нет доступа" }, { status: 401 });
 
   const { role } = session.user;
-  if (!["manager", "warehouse"].includes(role)) {
+  if (!canViewRequisitions(role)) {
     return NextResponse.json({ error: "Нет доступа" }, { status: 403 });
   }
 
@@ -38,7 +38,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   if (!session?.user) return NextResponse.json({ error: "Нет доступа" }, { status: 401 });
 
   const { role } = session.user;
-  if (!["manager", "warehouse"].includes(role)) {
+  if (!canViewRequisitions(role)) {
     return NextResponse.json({ error: "Нет доступа" }, { status: 403 });
   }
 

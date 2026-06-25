@@ -45,6 +45,10 @@ export async function POST(req: NextRequest) {
   if (now <= entry.checked_in_at) {
     return NextResponse.json({ error: "Время завершения не может быть раньше начала" }, { status: 400 });
   }
+  const MAX_SHIFT_MS = 30 * 60 * 60 * 1000; // 30 часов
+  if (now.getTime() - entry.checked_in_at.getTime() > MAX_SHIFT_MS) {
+    return NextResponse.json({ error: "Смена не может длиться более 30 часов" }, { status: 400 });
+  }
 
   const assignment = await prisma.assignment.findFirst({
     where: { employee_id: employeeId, event_id, status: "confirmed" },

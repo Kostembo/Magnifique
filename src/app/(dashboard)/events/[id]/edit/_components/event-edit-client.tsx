@@ -15,6 +15,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, ArrowLeft } from "lucide-react";
 import Link from "next/link";
+import { DateTimePicker } from "@/components/date-time-picker";
 
 const editSchema = z.object({
   title: z.string().min(1),
@@ -41,7 +42,7 @@ export function EventEditClient({ event }: Props) {
   const router = useRouter();
   const { toast } = useToast();
 
-  const { register, handleSubmit, setValue, formState: { errors, isSubmitting } } = useForm<FormData>({
+  const { register, handleSubmit, setValue, watch, formState: { errors, isSubmitting } } = useForm<FormData>({
     resolver: zodResolver(editSchema),
     defaultValues: {
       title: event.title,
@@ -98,7 +99,11 @@ export function EventEditClient({ event }: Props) {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Дата и время</Label>
-                <Input type="datetime-local" {...register("starts_at")} />
+                <DateTimePicker
+                  mode="datetime"
+                  value={watch("starts_at") ?? ""}
+                  onChange={(v) => setValue("starts_at", v, { shouldValidate: true })}
+                />
               </div>
               <div className="space-y-2">
                 <Label>Статус</Label>

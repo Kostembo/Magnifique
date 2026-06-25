@@ -15,6 +15,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, ArrowLeft, Plus, Trash2 } from "lucide-react";
 import Link from "next/link";
+import { DateTimePicker } from "@/components/date-time-picker";
 
 const positionSchema = z.object({
   role: z.enum(["waiter", "cook", "warehouse"]),
@@ -118,7 +119,11 @@ export function EventForm() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="starts_at">Дата и время начала *</Label>
-                <Input id="starts_at" type="datetime-local" {...register("starts_at")} />
+                <DateTimePicker
+                  mode="datetime"
+                  value={watch("starts_at") ?? ""}
+                  onChange={(v) => setValue("starts_at", v, { shouldValidate: true })}
+                />
                 {errors.starts_at && <p className="text-sm text-destructive">{errors.starts_at.message}</p>}
               </div>
               <div className="space-y-2">
@@ -136,11 +141,19 @@ export function EventForm() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="warehouse_time">Склад (сбор инвентаря)</Label>
-                <Input id="warehouse_time" type="datetime-local" {...register("warehouse_time")} />
+                <DateTimePicker
+                  mode="datetime"
+                  value={watch("warehouse_time") ?? ""}
+                  onChange={(v) => setValue("warehouse_time", v)}
+                />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="venue_time">Площадка (начало смены)</Label>
-                <Input id="venue_time" type="datetime-local" {...register("venue_time")} />
+                <DateTimePicker
+                  mode="datetime"
+                  value={watch("venue_time") ?? ""}
+                  onChange={(v) => setValue("venue_time", v)}
+                />
               </div>
             </div>
             <p className="text-xs text-muted-foreground">
@@ -227,10 +240,10 @@ export function EventForm() {
                   </div>
                   <div className="space-y-1">
                     <Label className="text-xs">Дедлайн костяка</Label>
-                    <Input
-                      type="datetime-local"
-                      className="h-10"
-                      {...register(`positions.${index}.priority_deadline`)}
+                    <DateTimePicker
+                      mode="datetime"
+                      value={watch(`positions.${index}.priority_deadline`) ?? ""}
+                      onChange={(v) => setValue(`positions.${index}.priority_deadline`, v)}
                     />
                   </div>
                 </div>

@@ -4,7 +4,7 @@ import { format } from "date-fns";
 import { ru } from "date-fns/locale";
 import { Pencil } from "lucide-react";
 
-export type DayEntry = { mins: number; entryId: string; startTime: string; endTime: string };
+export type DayEntry = { mins: number; entryId: string; startTime: string | null; endTime: string | null };
 export type EmpRow = { name: string; role: string; days: Record<number, DayEntry>; totalMins: number };
 
 const ROLE_LABELS: Record<string, string> = {
@@ -64,7 +64,7 @@ export function MobileTimesheetView({ employees, month, onEdit }: Props) {
                         {format(month, "LLL", { locale: ru })}
                       </span>
                       <span className="text-foreground text-[13px]">
-                        {startTime.slice(0, 5)} — {endTime.slice(0, 5)}
+                        {startTime?.slice(0, 5) ?? "—"} — {endTime?.slice(0, 5) ?? "—"}
                       </span>
                     </div>
                     <div className="flex items-center gap-3 shrink-0">

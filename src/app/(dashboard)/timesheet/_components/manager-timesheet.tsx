@@ -15,8 +15,11 @@ interface TimeEntry {
   id: string;
   employee_id: string;
   work_date: string;
-  start_time: string;
-  end_time: string;
+  start_time: string | null;
+  end_time: string | null;
+  checked_in_at: string | null;
+  checked_out_at: string | null;
+  calculated_hours: string | number | null;
   employee: { id: string; full_name: string; role: string };
 }
 
@@ -24,14 +27,32 @@ interface EditTarget {
   entryId: string;
   employeeName: string;
   day: number;
-  start_time: string;
-  end_time: string;
+  start_time: string | null;
+  end_time: string | null;
 }
 
-function calcMins(start: string, end: string): number {
+function resolveHHMM(manual: string | null | undefined, auto: string | null | undefined): string | null {
+  if (manual) return manual;
+  if (auto) {
+    const d = new Date(auto);
+    return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+  }
+  return null;
+}
+
+function calcMins(start: string | null, end: string | null): number {
+  if (!start || !end) return 0;
   const [sh, sm] = start.split(":").map(Number);
   const [eh, em] = end.split(":").map(Number);
   return Math.max(0, (eh * 60 + em) - (sh * 60 + sm));
+}
+
+function calcMinsFromEntry(entry: TimeEntry): number {
+  if (entry.calculated_hours != null) return Math.round(Number(entry.calculated_hours) * 60);
+  return calcMins(
+    resolveHHMM(entry.start_time, entry.checked_in_at),
+    resolveHHMM(entry.end_time, entry.checked_out_at),
+  );
 }
 
 function fmtHours(mins: number): string {
@@ -74,14 +95,16 @@ export function ManagerTimesheet({ initial, initialMonth }: { initial: TimeEntry
   function nextMonth() { const m = addMonths(month, 1); setMonth(m); loadMonth(m); }
 
   function openEdit(entry: TimeEntry) {
+    const start = resolveHHMM(entry.start_time, entry.checked_in_at);
+    const end = resolveHHMM(entry.end_time, entry.checked_out_at);
     setEditTarget({
       entryId: entry.id,
       employeeName: entry.employee.full_name,
       day: parseInt(new Date(entry.work_date).toISOString().slice(8, 10), 10),
-      start_time: entry.start_time,
-      end_time: entry.end_time,
+      start_time: start,
+      end_time: end,
     });
-    setEditHours(String(calcMins(entry.start_time, entry.end_time) / 60));
+    setEditHours(String(calcMinsFromEntry(entry) / 60));
   }
 
   function openEditById(entryId: string) {
@@ -96,7 +119,7 @@ export function ManagerTimesheet({ initial, initialMonth }: { initial: TimeEntry
       toast({ title: "Укажите корректное количество часов", variant: "destructive" });
       return;
     }
-    const [sh, sm] = editTarget.start_time.split(":").map(Number);
+    const [sh, sm] = (editTarget.start_time ?? "00:00").split(":").map(Number);
     const endTotal = sh * 60 + sm + Math.round(hours * 60);
     const newEnd = `${String(Math.floor(endTotal / 60) % 24).padStart(2, "0")}:${String(endTotal % 60).padStart(2, "0")}`;
     setSaving(true);
@@ -139,8 +162,10 @@ export function ManagerTimesheet({ initial, initialMonth }: { initial: TimeEntry
     }
     const row = employeeMap.get(entry.employee_id)!;
     const day = parseInt(new Date(entry.work_date).toISOString().slice(8, 10), 10);
-    const mins = calcMins(entry.start_time, entry.end_time);
-    row.days[day] = { mins, entryId: entry.id, startTime: entry.start_time, endTime: entry.end_time };
+    const mins = calcMinsFromEntry(entry);
+    const startTime = resolveHHMM(entry.start_time, entry.checked_in_at);
+    const endTime = resolveHHMM(entry.end_time, entry.checked_out_at);
+    row.days[day] = { mins, entryId: entry.id, startTime, endTime };
     row.totalMins += mins;
   }
 

@@ -75,6 +75,21 @@ export async function POST(req: NextRequest) {
     },
   });
 
+  // После прямого подтверждения — проверяем укомплектованность
+  if (direct) {
+    const allPositions = await prisma.eventPosition.findMany({
+      where: { event_id },
+      select: {
+        needed_count: true,
+        _count: { select: { assignments: { where: { status: "confirmed" } } } },
+      },
+    });
+    const allStaffed = allPositions.every((p) => p._count.assignments >= p.needed_count);
+    if (allStaffed) {
+      await prisma.event.update({ where: { id: event_id }, data: { status: "staffed" } });
+    }
+  }
+
   // Push уведомление — некритично, не ломаем ответ при сбое
   try {
     if (direct) {

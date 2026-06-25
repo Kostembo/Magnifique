@@ -17,6 +17,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Loader2, ArrowLeft, Eye, EyeOff, Camera, User, UserX } from "lucide-react";
 import Link from "next/link";
 import { ImageCropModal } from "./image-crop-modal";
+import { DateTimePicker } from "@/components/date-time-picker";
 
 const baseSchema = z.object({
   full_name: z.string().min(2, "Укажите ФИО"),
