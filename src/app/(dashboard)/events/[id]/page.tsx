@@ -46,10 +46,10 @@ export default async function EventDetailPage({ params }: { params: { id: string
   const role = session.user.role;
   const isManager = isPrivileged(role) || canCreateEvents(role) || canManageKitchen(role);
 
-  // waiter/cook видят мероприятие только если есть любой assignment (invited или confirmed)
+  // waiter/cook видят мероприятие только при подтверждённом назначении
   if (role === "waiter" || role === "cook") {
     const hasAssignment = event.positions.some((p) =>
-      p.assignments.some((a) => a.employee_id === session.user.id)
+      p.assignments.some((a) => a.employee_id === session.user.id && a.status === "confirmed")
     );
     if (!hasAssignment) redirect("/events");
   }

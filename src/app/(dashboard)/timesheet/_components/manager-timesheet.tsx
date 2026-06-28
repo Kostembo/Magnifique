@@ -34,8 +34,9 @@ interface EditTarget {
 function resolveHHMM(manual: string | null | undefined, auto: string | null | undefined): string | null {
   if (manual) return manual;
   if (auto) {
-    const d = new Date(auto);
-    return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+    // UTC+3 (МСК), как и formatTimeMoscow в lib/payroll
+    const d = new Date(new Date(auto).getTime() + 3 * 60 * 60 * 1000);
+    return `${String(d.getUTCHours()).padStart(2, "0")}:${String(d.getUTCMinutes()).padStart(2, "0")}`;
   }
   return null;
 }
@@ -121,7 +122,7 @@ export function ManagerTimesheet({ initial, initialMonth }: { initial: TimeEntry
     }
     const [sh, sm] = (editTarget.start_time ?? "00:00").split(":").map(Number);
     const endTotal = sh * 60 + sm + Math.round(hours * 60);
-    const newEnd = `${String(Math.floor(endTotal / 60) % 24).padStart(2, "0")}:${String(endTotal % 60).padStart(2, "0")}`;
+    const newEnd = `${String(Math.floor(endTotal / 60)).padStart(2, "0")}:${String(endTotal % 60).padStart(2, "0")}`;
     setSaving(true);
     const res = await fetch(`/api/time-entries/${editTarget.entryId}`, {
       method: "PATCH",

@@ -57,6 +57,10 @@ export async function POST(req: NextRequest) {
     },
   });
 
+  if (!assignment) {
+    return NextResponse.json({ error: "Подтверждённое назначение не найдено" }, { status: 403 });
+  }
+
   const scheduledTime =
     assignment?.scheduled_time ??
     (assignment?.goes_to_warehouse ? assignment?.event.warehouse_time : null) ??

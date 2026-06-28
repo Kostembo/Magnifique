@@ -39,11 +39,12 @@ export async function POST(req: NextRequest) {
 
   const now = timestamp ? new Date(timestamp) : new Date();
 
-  // Validate: not before event start - 2h, not more than 30min in the future
+  // Validate: not before event start - 2h, not more than 30min in the future, not older 48h
   const eventStart = new Date(assignment.event.starts_at);
   const minTime = new Date(eventStart.getTime() - 2 * 3600000);
   const maxTime = new Date(Date.now() + 30 * 60000);
-  if (now < minTime || now > maxTime) {
+  const maxPast = new Date(Date.now() - 48 * 3600000);
+  if (now < minTime || now > maxTime || now < maxPast) {
     return NextResponse.json({ error: "Некорректное время чек-ина" }, { status: 400 });
   }
 

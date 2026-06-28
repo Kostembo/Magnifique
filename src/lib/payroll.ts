@@ -2,11 +2,11 @@
 export const DEFAULT_MIN_PAY_AMOUNT = 5000;
 export const DEFAULT_MIN_PAY_HOURS  = 10;
 
-// GMT+3
+// GMT+3 (чистый UTC-сдвиг, не зависит от TZ сервера)
 const TZ_OFFSET_MS = 3 * 60 * 60 * 1000;
 
 function toMoscow(date: Date): Date {
-  return new Date(date.getTime() + TZ_OFFSET_MS - date.getTimezoneOffset() * 60000);
+  return new Date(date.getTime() + TZ_OFFSET_MS);
 }
 
 /**
@@ -37,19 +37,16 @@ export function calcCheckinTime(checkedInAt: Date, scheduledTime: Date): Date {
  * - Закончил в :15 или позже → округляем вверх (следующий час)
  */
 export function calcCheckoutTime(checkedOutAt: Date): Date {
-  const m = toMoscow(checkedOutAt);
-  const minutes = m.getMinutes();
+  const m = toMoscow(checkedOutAt); // сдвинуто в UTC+3
+  const minutes = m.getUTCMinutes();
 
-  const result = new Date(checkedOutAt);
   if (minutes >= 15) {
-    // В пользу сотрудника — следующий час
-    result.setMinutes(0, 0, 0);
-    result.setHours(result.getHours() + 1);
+    m.setUTCMinutes(0, 0, 0);
+    m.setUTCHours(m.getUTCHours() + 1);
   } else {
-    // Текущий час
-    result.setMinutes(0, 0, 0);
+    m.setUTCMinutes(0, 0, 0);
   }
-  return result;
+  return new Date(m.getTime() - TZ_OFFSET_MS); // обратно в UTC
 }
 
 /**
@@ -110,5 +107,5 @@ export function calculateTimeEntry(params: {
 /** Форматирует DateTime → "HH:mm" в GMT+3 */
 export function formatTimeMoscow(date: Date): string {
   const m = toMoscow(date);
-  return `${String(m.getHours()).padStart(2, "0")}:${String(m.getMinutes()).padStart(2, "0")}`;
+  return `${String(m.getUTCHours()).padStart(2, "0")}:${String(m.getUTCMinutes()).padStart(2, "0")}`;
 }

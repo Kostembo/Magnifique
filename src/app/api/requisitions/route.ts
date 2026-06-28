@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { canViewRequisitions } from "@/lib/roles";
 import { Prisma } from "@prisma/client";
 
 export async function GET() {
@@ -8,7 +9,7 @@ export async function GET() {
   if (!session?.user) return NextResponse.json({ error: "Нет доступа" }, { status: 401 });
 
   const { role } = session.user;
-  if (!["manager", "warehouse"].includes(role)) {
+  if (!canViewRequisitions(role)) {
     return NextResponse.json({ error: "Нет доступа" }, { status: 403 });
   }
 

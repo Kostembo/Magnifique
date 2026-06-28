@@ -55,13 +55,11 @@ export async function POST(req: NextRequest) {
   if (existing)
     return NextResponse.json({ error: "Сотрудник уже приглашён на эту позицию" }, { status: 409 });
 
-  if (!direct) {
-    const confirmedCount = await prisma.assignment.count({
-      where: { position_id, status: "confirmed" },
-    });
-    if (confirmedCount >= position.needed_count)
-      return NextResponse.json({ error: "Все слоты заняты" }, { status: 409 });
-  }
+  const confirmedCount = await prisma.assignment.count({
+    where: { position_id, status: "confirmed" },
+  });
+  if (confirmedCount >= position.needed_count)
+    return NextResponse.json({ error: "Все слоты заняты" }, { status: 409 });
 
   const status = direct ? "confirmed" : "invited";
   const assignment = await prisma.assignment.create({
@@ -112,8 +110,7 @@ export async function POST(req: NextRequest) {
   }
 
   return NextResponse.json(assignment);
-  } catch (e) {
-    const msg = e instanceof Error ? e.message : String(e);
-    return NextResponse.json({ error: msg }, { status: 500 });
+  } catch {
+    return NextResponse.json({ error: "Внутренняя ошибка" }, { status: 500 });
   }
 }

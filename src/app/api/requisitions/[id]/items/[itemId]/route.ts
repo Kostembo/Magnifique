@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { isPrivileged } from "@/lib/roles";
+import { canViewRequisitions, isPrivileged } from "@/lib/roles";
 
 export async function PATCH(
   req: NextRequest,
@@ -11,7 +11,7 @@ export async function PATCH(
   if (!session?.user) return NextResponse.json({ error: "Нет доступа" }, { status: 401 });
 
   const { role } = session.user;
-  if (!["manager", "warehouse"].includes(role)) {
+  if (!canViewRequisitions(role)) {
     return NextResponse.json({ error: "Нет доступа" }, { status: 403 });
   }
 
