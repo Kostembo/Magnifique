@@ -3,7 +3,6 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { z } from "zod";
 import { canCreateEvents } from "@/lib/roles";
-import { sendPushToManagers } from "@/lib/push";
 
 function requireEventCreator(session: { user?: { role?: string } } | null) {
   if (!session?.user || !canCreateEvents(session.user.role ?? "")) {
@@ -112,14 +111,6 @@ export async function POST(req: NextRequest) {
       positions: true,
     },
   });
-
-  // Fire-and-forget push to managers/owners/admins
-  sendPushToManagers({
-    title: "Новое мероприятие",
-    body: event.title,
-    url: `/events/${event.id}`,
-    tag: `new-event-${event.id}`,
-  }).catch(() => {});
 
   return NextResponse.json(event, { status: 201 });
 }

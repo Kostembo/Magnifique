@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { sendPushToManagers, sendPushToMany } from "@/lib/push";
 import { z } from "zod";
 
 const respondSchema = z.object({
@@ -54,11 +53,6 @@ export async function POST(
         where: { id: params.id },
         data: { status: "waitlisted", responded_at: new Date() },
       });
-      void sendPushToManagers({
-        title: `⏳ Хочет подтвердить: ${assignment.employee.full_name}`,
-        body: `${assignment.event.title} — мест нет, но сотрудник хочет участвовать`,
-        url: `/events/${assignment.event_id}`,
-      });
       return NextResponse.json({ status: "waitlisted" });
     }
 
@@ -87,12 +81,6 @@ export async function POST(
       });
     }
 
-    void sendPushToManagers({
-      title: `✅ Подтверждение: ${assignment.employee.full_name}`,
-      body: `${assignment.event.title} — ${new Date(assignment.event.starts_at).toLocaleDateString("ru-RU")}`,
-      url: `/events/${assignment.event_id}`,
-    });
-
     return NextResponse.json({ status: "confirmed" });
   }
 
@@ -119,21 +107,9 @@ export async function POST(
       });
       const slotsLeft = pos.needed_count - confirmedCount;
 
-      if (slotsLeft > 0) {
-        void sendPushToManagers({
-          title: `Слот освободился: ${assignment.event.title}`,
-          body: `Откройте пул для позиции — осталось ${slotsLeft} мест`,
-          url: `/events/${assignment.event_id}`,
-        });
-      }
+      // слот освободился — менеджер увидит при следующем открытии мероприятия
     }
   }
-
-  void sendPushToManagers({
-    title: `❌ Отказ: ${assignment.employee.full_name}`,
-    body: `${assignment.event.title} — ${new Date(assignment.event.starts_at).toLocaleDateString("ru-RU")}`,
-    url: `/events/${assignment.event_id}`,
-  });
 
   return NextResponse.json({ status: "declined" });
 }
