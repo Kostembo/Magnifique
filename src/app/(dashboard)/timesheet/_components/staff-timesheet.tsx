@@ -42,8 +42,8 @@ const selectCls = [
 
 function TimeForm({ assignment, onSaved }: { assignment: Assignment; onSaved: (entry: TimeEntry) => void }) {
   const eventDate = format(new Date(assignment.event.starts_at), "yyyy-MM-dd");
-  const [startH, setStartH] = useState(() => assignment.timeEntry ? parseHour(assignment.timeEntry.start_time) : 9);
-  const [endH, setEndH] = useState(() => assignment.timeEntry ? parseHour(assignment.timeEntry.end_time) : 18);
+  const [startH, setStartH] = useState(() => assignment.timeEntry?.start_time ? parseHour(assignment.timeEntry.start_time) : 9);
+  const [endH, setEndH] = useState(() => assignment.timeEntry?.end_time ? parseHour(assignment.timeEntry.end_time) : 18);
   const [saving, setSaving] = useState(false);
   const { toast } = useToast();
   const total = calcHours(startH, endH);
@@ -151,7 +151,7 @@ export function StaffTimesheet({ initial }: { initial: Assignment[] }) {
                       <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />
                       {hasAutoTime
                         ? `${hours != null ? Math.floor(hours) + " ч" : "—"}`
-                        : `${pad(startH)} — ${pad(endH)} · ${total} ч`}
+                        : `${pad(startH!)} — ${pad(endH!)} · ${total} ч`}
                     </p>
                     {pay != null && (
                       <p className="text-[13px] flex items-center gap-1.5"
