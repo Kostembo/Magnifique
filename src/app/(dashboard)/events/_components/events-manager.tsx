@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo } from "react";
 import Link from "next/link";
 import { EventCard, type EventCardData } from "@/components/events/event-card";
 import { Plus, AlertTriangle, LayoutList, CalendarDays } from "lucide-react";
@@ -22,9 +22,6 @@ interface Props { events: EventCardData[]; canCreate?: boolean }
 export function EventsManager({ events, canCreate = false }: Props) {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [view, setView] = useState<View>("list");
-  useEffect(() => {
-    if (window.innerWidth >= 768) setView("calendar");
-  }, []);
 
   const needsStaff = events.filter((e) => {
     const conf = e.positions.reduce((s, p) => s + p._count.assignments, 0);
@@ -52,9 +49,7 @@ export function EventsManager({ events, canCreate = false }: Props) {
 
   return (
     <div
-      className={view === "calendar"
-        ? "px-4 pt-4 pb-4 md:px-6 flex flex-col gap-3"
-        : "px-4 pb-28 pt-4 md:px-6 md:pb-6 space-y-4 max-w-5xl mx-auto"}
+      className="px-4 pt-4 pb-4 md:px-6 flex flex-col gap-3"
       style={view === "calendar" ? { height: "80dvh" } : undefined}
     >
 

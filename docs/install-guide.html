@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Magnifique — Инструкция по установке</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+      background: #f5f5f5;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      min-height: 100vh;
+      padding: 40px 20px;
+    }
+
+    .page {
+      background: #fff;
+      width: 210mm;
+      min-height: 297mm;
+      padding: 20mm 18mm;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.12);
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      border-bottom: 2.5px solid #1a1a1a;
+      padding-bottom: 12px;
+    }
+    h1 { font-size: 26px; font-weight: 800; letter-spacing: -0.5px; }
+    .header-sub { font-size: 13px; color: #999; }
+
+    .url-line {
+      font-size: 14px;
+      color: #444;
+    }
+    .url {
+      font-family: monospace;
+      background: #f0f0f0;
+      padding: 2px 7px;
+      border-radius: 4px;
+      font-size: 14px;
+      color: #1a1a1a;
+      font-weight: 600;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+
+    .block {
+      border: 1.5px solid #e5e5e5;
+      border-radius: 10px;
+      padding: 16px 18px;
+    }
+
+    h2 {
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    ol {
+      padding-left: 18px;
+    }
+    ol li {
+      font-size: 14px;
+      line-height: 1.7;
+      color: #222;
+    }
+    ol li + li {
+      margin-top: 1px;
+    }
+
+    .note {
+      background: #f8f8f8;
+      border-left: 3px solid #ddd;
+      padding: 8px 12px;
+      border-radius: 4px;
+      font-size: 13px;
+      color: #666;
+      margin-top: 12px;
+    }
+    .note strong { color: #444; }
+
+    @media print {
+      @page { margin: 0; size: A4; }
+      body {
+        background: #fff;
+        padding: 0;
+        display: block;
+      }
+      .page {
+        box-shadow: none;
+        width: 100%;
+        min-height: 297mm;
+        padding: 20mm 18mm;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+
+    <div class="header">
+      <h1>Magnifique</h1>
+      <span class="header-sub">Инструкция по установке приложения</span>
+    </div>
+
+    <p class="url-line">Адрес: <span class="url">magnifique-app.ru</span> — откройте в браузере на вашем устройстве</p>
+
+    <div class="grid-2">
+      <div class="block">
+        <h2>🍎 iPhone / iPad</h2>
+        <ol>
+          <li>Откройте <strong>Safari</strong> (только Safari)</li>
+          <li>Перейдите на <span class="url">magnifique-app.ru</span></li>
+          <li>Нажмите <strong>«Поделиться»</strong> внизу — квадрат со стрелкой ↑</li>
+          <li>Выберите <strong>«На экран "Домой"»</strong></li>
+          <li>Нажмите <strong>«Добавить»</strong></li>
+        </ol>
+        <div class="note">Значок появится на главном экране.</div>
+      </div>
+
+      <div class="block">
+        <h2>🤖 Android</h2>
+        <ol>
+          <li>Откройте <strong>Chrome</strong></li>
+          <li>Перейдите на <span class="url">magnifique-app.ru</span></li>
+          <li>Нажмите <strong>⋮</strong> (три точки) в правом верхнем углу</li>
+          <li>Выберите <strong>«Добавить на главный экран»</strong> или <strong>«Установить приложение»</strong></li>
+          <li>Нажмите <strong>«Установить»</strong></li>
+        </ol>
+        <div class="note">Значок появится на главном экране.</div>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div class="block">
+        <h2>💻 Компьютер (Windows / Mac)</h2>
+        <ol>
+          <li>Откройте <strong>Google Chrome</strong> или <strong>Microsoft Edge</strong></li>
+          <li>Перейдите на <span class="url">magnifique-app.ru</span></li>
+        </ol>
+        <div class="note">Приложение откроется в браузере.</div>
+      </div>
+
+      <div class="block">
+        <h2>🔑 Вход в приложение</h2>
+        <ol>
+          <li>Введите ваш <strong>номер телефона</strong></li>
+          <li>Введите <strong>пароль</strong>, который выдал менеджер</li>
+          <li>Нажмите <strong>«Войти»</strong></li>
+        </ol>
+        <div class="note"><strong>Проблемы со входом?</strong> Обратитесь к менеджеру.</div>
+      </div>
+    </div>
+
+  </div>
+</body>
+</html>
