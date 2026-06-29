@@ -49,11 +49,12 @@ function calcMins(start: string | null, end: string | null): number {
 }
 
 function calcMinsFromEntry(entry: TimeEntry): number {
-  if (entry.calculated_hours != null) return Math.round(Number(entry.calculated_hours) * 60);
-  return calcMins(
+  if (entry.calculated_hours != null) return Math.floor(Number(entry.calculated_hours)) * 60;
+  const raw = calcMins(
     resolveHHMM(entry.start_time, entry.checked_in_at),
     resolveHHMM(entry.end_time, entry.checked_out_at),
   );
+  return Math.floor(raw / 60) * 60;
 }
 
 function fmtHours(mins: number): string {
@@ -242,10 +243,15 @@ export function ManagerTimesheet({ initial, initialMonth }: { initial: TimeEntry
                         {cell ? (
                           <button
                             onClick={() => openEditById(cell.entryId)}
-                            className="font-display font-bold hover:underline transition-colors min-h-0 min-w-0 h-auto w-auto tabular-nums"
+                            className="font-display font-bold hover:underline transition-colors min-h-0 min-w-0 h-auto w-auto tabular-nums flex flex-col items-center gap-0.5"
                             style={{ color: "hsl(var(--primary))" }}
                           >
                             {fmtHours(cell.mins)}
+                            {cell.startTime && cell.endTime && (
+                              <span className="text-[10px] font-normal tabular-nums" style={{ color: "hsl(var(--muted-foreground))" }}>
+                                {cell.startTime.slice(0, 5)}–{cell.endTime.slice(0, 5)}
+                              </span>
+                            )}
                           </button>
                         ) : (
                           <span className="text-muted-foreground opacity-30">—</span>
@@ -292,7 +298,7 @@ export function ManagerTimesheet({ initial, initialMonth }: { initial: TimeEntry
               <div className="space-y-1.5">
                 <Label htmlFor="edit-hours">Часов отработано</Label>
                 <Input
-                  id="edit-hours" type="number" min="0.5" max="24" step="0.5"
+                  id="edit-hours" type="number" min="1" max="24" step="1"
                   value={editHours} onChange={(e) => setEditHours(e.target.value)}
                   className="rounded-2xl"
                 />

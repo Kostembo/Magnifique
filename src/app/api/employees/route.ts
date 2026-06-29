@@ -16,6 +16,8 @@ const createSchema = z.object({
   role: z.nativeEnum(Role),
   tier: z.nativeEnum(Tier).default(Tier.regular),
   passport_data: z.string().optional(),
+  telegram: z.string().optional().nullable(),
+  messenger_max: z.string().optional().nullable(),
   hourly_rate: z.number().positive().optional(),
   min_pay_amount: z.number().positive().optional(),
   min_pay_hours: z.number().int().positive().optional(),
@@ -69,7 +71,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Ошибка валидации", details: parsed.error.flatten() }, { status: 400 });
   }
 
-  const { full_name, phone, password, role, tier, passport_data, hourly_rate, min_pay_amount, min_pay_hours } = parsed.data;
+  const { full_name, phone, password, role, tier, passport_data, telegram, messenger_max, hourly_rate, min_pay_amount, min_pay_hours } = parsed.data;
   const normalizedPhone = normalizePhone(phone);
 
   const existing = await prisma.employee.findUnique({ where: { phone: normalizedPhone } });
@@ -83,6 +85,8 @@ export async function POST(req: NextRequest) {
   const employee = await prisma.employee.create({
     data: {
       full_name, phone: normalizedPhone, password_hash, role, tier, passport_data_enc,
+      ...(telegram !== undefined && { telegram }),
+      ...(messenger_max !== undefined && { messenger_max }),
       ...(hourly_rate !== undefined && { hourly_rate }),
       ...(min_pay_amount !== undefined && { min_pay_amount }),
       ...(min_pay_hours !== undefined && { min_pay_hours }),

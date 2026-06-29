@@ -30,6 +30,7 @@ export async function GET(
       id: true, full_name: true, phone: true, role: true, tier: true,
       created_at: true, passport_data_enc: true, photo_url: true,
       hourly_rate: true, min_pay_amount: true, min_pay_hours: true,
+      telegram: true, messenger_max: true,
     },
   });
 
@@ -48,6 +49,8 @@ const updateSchema = z.object({
   role: z.nativeEnum(Role).optional(),
   tier: z.nativeEnum(Tier).optional(),
   passport_data: z.string().optional().nullable(),
+  telegram: z.string().optional().nullable(),
+  messenger_max: z.string().optional().nullable(),
   hourly_rate: z.number().positive().optional().nullable(),
   min_pay_amount: z.number().positive().optional().nullable(),
   min_pay_hours: z.number().int().positive().optional().nullable(),

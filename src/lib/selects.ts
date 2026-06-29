@@ -11,4 +11,6 @@ export const employeeListSelect = {
   hourly_rate: true,
   min_pay_amount: true,
   min_pay_hours: true,
+  telegram: true,
+  messenger_max: true,
 } as const;

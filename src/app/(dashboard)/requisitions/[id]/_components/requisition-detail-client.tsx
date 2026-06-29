@@ -141,7 +141,7 @@ export function RequisitionDetailClient({ requisition: initial, isManager }: Pro
   }
 
   return (
-    <div className="px-4 pb-28 pt-4 md:px-6 md:pb-6 max-w-2xl mx-auto space-y-4">
+    <div className="px-4 pb-28 pt-4 md:px-6 md:pb-6 space-y-4 max-w-5xl mx-auto">
 
       {/* Back */}
       <div className="flex items-center gap-3">

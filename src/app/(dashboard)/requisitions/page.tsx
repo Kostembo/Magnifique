@@ -1,4 +1,4 @@
-import { auth } from "@/lib/auth";
+﻿import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { Prisma } from "@prisma/client";
@@ -43,7 +43,7 @@ export default async function RequisitionsPage() {
   });
 
   return (
-    <div className="px-4 pb-28 pt-4 md:px-6 md:pb-6 space-y-5 max-w-3xl mx-auto">
+    <div className="px-4 pb-28 pt-4 md:px-6 md:pb-6 space-y-5 max-w-5xl mx-auto">
       <div>
         <h1 className="font-display text-[28px] font-extrabold tracking-[-0.03em]">Заявки на сбор</h1>
         <p className="text-[13px] text-muted-foreground mt-0.5">

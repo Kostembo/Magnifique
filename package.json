@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev -H 0.0.0.0",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
@@ -12,7 +12,13 @@
     "db:migrate": "prisma migrate dev",
     "db:seed": "ts-node --project tsconfig.seed.json prisma/seed.ts",
     "db:studio": "prisma studio",
-    "db:backup": "ts-node --project tsconfig.seed.json scripts/backup.ts"
+    "db:backup": "ts-node --project tsconfig.seed.json scripts/backup.ts",
+    "stress:seed": "ts-node --project tsconfig.seed.json scripts/stress-seed.ts",
+    "stress:auth": "ts-node --project tsconfig.seed.json scripts/stress-auth.ts",
+    "stress:setup": "ts-node --project tsconfig.seed.json scripts/stress-setup.ts",
+    "stress:cleanup": "ts-node --project tsconfig.seed.json scripts/stress-cleanup.ts",
+    "demo:seed": "ts-node --project tsconfig.seed.json scripts/demo-seed.ts",
+    "demo:cleanup": "ts-node --project tsconfig.seed.json scripts/demo-cleanup.ts"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.7.2",

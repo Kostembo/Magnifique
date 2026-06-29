@@ -1,9 +1,11 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
 import { EventCard, type EventCardData } from "@/components/events/event-card";
-import { Plus, AlertTriangle } from "lucide-react";
+import { Plus, AlertTriangle, LayoutList, CalendarDays } from "lucide-react";
+import { MonthGrid } from "./month-grid";
+import { WeekList } from "./week-list";
 
 const STATUS_FILTERS = [
   ["all",        "Все"],
@@ -13,10 +15,16 @@ const STATUS_FILTERS = [
   ["done",       "Завершены"],
 ] as const;
 
+type View = "list" | "calendar";
+
 interface Props { events: EventCardData[]; canCreate?: boolean }
 
 export function EventsManager({ events, canCreate = false }: Props) {
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [view, setView] = useState<View>("list");
+  useEffect(() => {
+    if (window.innerWidth >= 768) setView("calendar");
+  }, []);
 
   const needsStaff = events.filter((e) => {
     const conf = e.positions.reduce((s, p) => s + p._count.assignments, 0);
@@ -37,20 +45,55 @@ export function EventsManager({ events, canCreate = false }: Props) {
       });
   }, [events, statusFilter]);
 
+  const calEvents = useMemo(
+    () => displayed.map((e) => ({ id: e.id, title: e.title, starts_at: e.starts_at, status: e.status })),
+    [displayed]
+  );
+
   return (
-    <div className="px-4 pb-28 pt-4 md:px-6 md:pb-6 space-y-4 max-w-3xl mx-auto md:max-w-none">
+    <div
+      className={view === "calendar"
+        ? "px-4 pt-4 pb-4 md:px-6 flex flex-col gap-3"
+        : "px-4 pb-28 pt-4 md:px-6 md:pb-6 space-y-4 max-w-5xl mx-auto"}
+      style={view === "calendar" ? { height: "80dvh" } : undefined}
+    >
 
       <div className="flex items-center justify-between gap-3">
         <h1 className="font-display text-[28px] font-extrabold tracking-[-0.03em]">Мероприятия</h1>
-        {canCreate && (
-          <Link
-            href="/events/new"
-            aria-label="Создать мероприятие"
-            className="hidden md:flex items-center justify-center w-9 h-9 rounded-xl bg-primary text-primary-foreground hover:opacity-90 transition-opacity min-h-0"
-          >
-            <Plus className="h-4 w-4" />
-          </Link>
-        )}
+        <div className="flex items-center gap-2">
+          {/* Переключалка вид */}
+          <div className="flex items-center rounded-xl overflow-hidden" style={{ border: "1px solid hsl(var(--border))" }}>
+            <button
+              onClick={() => setView("list")}
+              className="flex items-center justify-center w-8 h-8 transition-colors"
+              style={view === "list"
+                ? { background: "hsl(var(--primary))", color: "hsl(var(--primary-foreground))" }
+                : { color: "hsl(var(--muted-foreground))" }}
+              aria-label="Список"
+            >
+              <LayoutList className="h-4 w-4" />
+            </button>
+            <button
+              onClick={() => setView("calendar")}
+              className="flex items-center justify-center w-8 h-8 transition-colors"
+              style={view === "calendar"
+                ? { background: "hsl(var(--primary))", color: "hsl(var(--primary-foreground))" }
+                : { color: "hsl(var(--muted-foreground))" }}
+              aria-label="Календарь"
+            >
+              <CalendarDays className="h-4 w-4" />
+            </button>
+          </div>
+          {canCreate && (
+            <Link
+              href="/events/new"
+              aria-label="Создать мероприятие"
+              className="hidden md:flex items-center justify-center w-9 h-9 rounded-xl bg-primary text-primary-foreground hover:opacity-90 transition-opacity min-h-0"
+            >
+              <Plus className="h-4 w-4" />
+            </Link>
+          )}
+        </div>
       </div>
 
       {needsStaff > 0 && (
@@ -82,20 +125,25 @@ export function EventsManager({ events, canCreate = false }: Props) {
         })}
       </div>
 
-      {displayed.length === 0 && (
-        <div className="text-center text-muted-foreground py-16">
-          <p className="text-lg font-medium mb-2">Нет мероприятий</p>
-          {statusFilter === "all" && canCreate && (
-            <Link href="/events/new" className="text-sm text-primary hover:underline">
-              Создать первое
-            </Link>
+      {view === "list" && (
+        <>
+          {displayed.length === 0 && (
+            <div className="text-center text-muted-foreground py-16">
+              <p className="text-lg font-medium mb-2">Нет мероприятий</p>
+              {statusFilter === "all" && canCreate && (
+                <Link href="/events/new" className="text-sm text-primary hover:underline">
+                  Создать первое
+                </Link>
+              )}
+            </div>
           )}
-        </div>
+          <div className="flex flex-col gap-3 md:grid md:grid-cols-2 xl:grid-cols-3">
+            {displayed.map((event) => <EventCard key={event.id} event={event} />)}
+          </div>
+        </>
       )}
 
-      <div className="flex flex-col gap-3 md:grid md:grid-cols-2 xl:grid-cols-3">
-        {displayed.map((event) => <EventCard key={event.id} event={event} />)}
-      </div>
+      {view === "calendar" && <MonthGrid events={calEvents} />}
 
       {canCreate && (
         <Link

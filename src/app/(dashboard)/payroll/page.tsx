@@ -1,4 +1,4 @@
-import { auth } from "@/lib/auth";
+﻿import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { canViewPayroll } from "@/lib/roles";
@@ -27,7 +27,7 @@ export default async function PayrollPage() {
   });
 
   return (
-    <div className="p-4 md:p-6 max-w-2xl mx-auto">
+    <div className="p-4 md:p-6">
       <h1 className="text-xl font-semibold mb-6">Зарплаты</h1>
       <PayrollList initial={entries as PayrollEntry[]} initialMonth={month} />
     </div>

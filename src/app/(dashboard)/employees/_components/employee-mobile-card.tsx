@@ -12,9 +12,9 @@ import { fadeUp } from "@/lib/motion";
 import type { CSSProperties } from "react";
 
 const TIER_CHIP: Record<string, CSSProperties> = {
-  core:    { background: "hsl(143 55% 18%)", color: "hsl(143 60% 68%)" },
-  regular: { background: "hsl(var(--muted))", color: "hsl(var(--muted-foreground))" },
-  trainee: { background: "hsl(38 55% 18%)",  color: "hsl(38 70% 65%)" },
+  core:    { background: "hsl(270 50% 18%)", color: "hsl(270 65% 72%)" },
+  regular: { background: "hsl(30 50% 16%)",  color: "hsl(30 70% 62%)" },
+  trainee: { background: "hsl(143 55% 18%)", color: "hsl(143 60% 68%)" },
 };
 
 type Employee = {

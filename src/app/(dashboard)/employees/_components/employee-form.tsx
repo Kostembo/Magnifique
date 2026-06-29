@@ -27,6 +27,8 @@ const baseSchema = z.object({
   }),
   tier: z.enum(["core", "regular", "trainee"]),
   passport_data: z.string().optional(),
+  telegram: z.string().optional(),
+  messenger_max: z.string().optional(),
   photo_url: z.string().optional(),
   hourly_rate:    z.coerce.number().positive().optional().or(z.literal("")),
   min_pay_amount: z.coerce.number().positive().optional().or(z.literal("")),
@@ -46,7 +48,7 @@ type EditData = z.infer<typeof editSchema>;
 
 interface EmployeeFormProps {
   mode: "create" | "edit";
-  defaultValues?: Partial<EditData & { id: string; hasPassportData?: boolean }>;
+  defaultValues?: Partial<EditData & { id: string; hasPassportData?: boolean; telegram?: string | null; messenger_max?: string | null }>;
 }
 
 export function EmployeeForm({ mode, defaultValues }: EmployeeFormProps) {
@@ -69,6 +71,8 @@ export function EmployeeForm({ mode, defaultValues }: EmployeeFormProps) {
       role: defaultValues?.role,
       tier: defaultValues?.tier ?? "regular",
       passport_data: "",
+      telegram: defaultValues?.telegram ?? "",
+      messenger_max: defaultValues?.messenger_max ?? "",
       password: "000000",
       hourly_rate: defaultValues?.hourly_rate ?? "",
       min_pay_amount: defaultValues?.min_pay_amount ?? "",
@@ -146,6 +150,8 @@ export function EmployeeForm({ mode, defaultValues }: EmployeeFormProps) {
     };
 
     if (showPassport) payload.passport_data = data.passport_data ?? "";
+    payload.telegram = data.telegram || null;
+    payload.messenger_max = data.messenger_max || null;
     if (data.password) payload.password = data.password;
     if (showPayroll) {
       payload.hourly_rate    = data.hourly_rate    || null;
@@ -416,6 +422,20 @@ export function EmployeeForm({ mode, defaultValues }: EmployeeFormProps) {
               {mode === "edit" && showPassport && " Оставьте пустым, чтобы удалить паспортные данные."}
               {mode === "edit" && !showPassport && defaultValues?.hasPassportData && " Данные сохранены."}
             </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader><CardTitle className="text-base">Мессенджеры</CardTitle></CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="telegram">Telegram</Label>
+              <Input id="telegram" placeholder="@username" {...register("telegram")} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="messenger_max">Max</Label>
+              <Input id="messenger_max" placeholder="@username или ссылка" {...register("messenger_max")} />
+            </div>
           </CardContent>
         </Card>
 

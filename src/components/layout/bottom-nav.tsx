@@ -42,7 +42,7 @@ export function BottomNav({ role }: { role: string }) {
                 key={item.label}
                 href={item.href}
                 className={cn(
-                  "relative flex flex-col items-center justify-center gap-0.5 flex-1 py-2 min-h-[56px] text-[10px] font-medium transition-colors select-none",
+                  "relative flex flex-col items-center justify-center gap-0.5 flex-1 min-w-0 overflow-hidden py-1.5 min-h-[52px] text-[9px] font-medium transition-colors select-none",
                   active ? "text-primary" : "text-muted-foreground"
                 )}
               >

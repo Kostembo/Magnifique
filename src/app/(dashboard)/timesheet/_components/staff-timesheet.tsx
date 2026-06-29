@@ -150,8 +150,8 @@ export function StaffTimesheet({ initial }: { initial: Assignment[] }) {
                     <p className="text-[13px] flex items-center gap-1.5" style={{ color: "hsl(var(--ok))" }}>
                       <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />
                       {hasAutoTime
-                        ? `${hours != null ? hours.toFixed(1) + " ч" : "—"}`
-                        : `${startH}:00 — ${endH}:00 · ${total} ч`}
+                        ? `${hours != null ? Math.floor(hours) + " ч" : "—"}`
+                        : `${pad(startH)} — ${pad(endH)} · ${total} ч`}
                     </p>
                     {pay != null && (
                       <p className="text-[13px] flex items-center gap-1.5"

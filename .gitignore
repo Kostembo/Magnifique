@@ -46,3 +46,4 @@ test-cycle.mjs
 
 # credentials (keep local only)
 ACCOUNTS.txt
+backups/

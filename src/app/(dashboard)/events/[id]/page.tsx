@@ -10,7 +10,7 @@ export default async function EventDetailPage({ params }: { params: { id: string
   const session = await auth();
   if (!session?.user) redirect("/login");
 
-  const [event, timeEntry] = await Promise.all([
+  const [event, timeEntry, menuItemCount] = await Promise.all([
     prisma.event.findUnique({
       where: { id: params.id },
       include: {
@@ -39,6 +39,7 @@ export default async function EventDetailPage({ params }: { params: { id: string
       where: { employee_id_event_id: { employee_id: session.user.id, event_id: params.id } },
       select: { checked_in_at: true, checked_out_at: true, calculated_hours: true, calculated_pay: true },
     }),
+    prisma.eventMenuItem.count({ where: { event_id: params.id } }),
   ]);
 
   if (!event) notFound();
@@ -71,6 +72,7 @@ export default async function EventDetailPage({ params }: { params: { id: string
         calculated_pay: timeEntry.calculated_pay ? Number(timeEntry.calculated_pay) : null,
       } : null}
       hasConfirmedAssignment={hasConfirmedAssignment}
+      menuItemCount={menuItemCount}
     />
   );
 }

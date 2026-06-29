@@ -138,7 +138,7 @@ export function ShiftCheckinCard({ eventId, initialEntry, hasConfirmedAssignment
         )}
         {isCheckedOut && entry?.calculated_hours != null && (
           <p className="text-xs" style={{ color: "hsl(var(--ok))" }}>
-            {Number(entry.calculated_hours).toFixed(1)} ч
+            {Math.floor(Number(entry.calculated_hours))} ч
             {entry.calculated_pay != null && ` · ${Math.round(Number(entry.calculated_pay))} ₽`}
           </p>
         )}

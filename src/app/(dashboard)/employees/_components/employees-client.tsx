@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useMemo } from "react";
 import Link from "next/link";
@@ -30,9 +30,9 @@ type Employee = {
 };
 
 const TIER_CHIP: Record<string, CSSProperties> = {
-  core:    { background: "hsl(143 55% 18%)", color: "hsl(143 60% 68%)" },
-  regular: { background: "hsl(var(--muted))", color: "hsl(var(--muted-foreground))" },
-  trainee: { background: "hsl(38 55% 18%)",  color: "hsl(38 70% 65%)" },
+  core:    { background: "hsl(270 50% 18%)", color: "hsl(270 65% 72%)" },
+  regular: { background: "hsl(30 50% 16%)",  color: "hsl(30 70% 62%)" },
+  trainee: { background: "hsl(143 55% 18%)", color: "hsl(143 60% 68%)" },
 };
 
 interface Props { initialEmployees: Employee[] }
@@ -87,7 +87,7 @@ export function EmployeesClient({ initialEmployees }: Props) {
   }
 
   return (
-    <div className="px-4 pb-28 pt-4 md:px-6 md:pb-6 space-y-5 max-w-6xl mx-auto">
+    <div className="px-4 pb-28 pt-4 md:px-6 md:pb-6 space-y-5 max-w-5xl mx-auto">
 
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-3">

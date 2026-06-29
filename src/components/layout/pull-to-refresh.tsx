@@ -78,7 +78,7 @@ export function PullToRefresh({ children }: { children: React.ReactNode }) {
           }}
         />
       </div>
-      <div className="pb-[calc(3.5rem+env(safe-area-inset-bottom,0px))] md:pb-0">
+      <div className="pb-[calc(3.5rem+env(safe-area-inset-bottom,0px))] md:pb-0 min-h-full">
         {children}
       </div>
     </div>

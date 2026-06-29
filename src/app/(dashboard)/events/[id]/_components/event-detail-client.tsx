@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { ROLE_LABELS } from "@/lib/utils";
 
+import { ActiveShiftTab } from "./active-shift-tab";
 import { EventMenuTab } from "./event-menu-tab";
 import { AddEmployeeDialog } from "./add-employee-dialog";
 import { ShiftCheckinCard } from "./shift-checkin-card";
@@ -80,9 +81,10 @@ interface Props {
   currentUserId: string;
   timeEntry: TimeEntryData | null;
   hasConfirmedAssignment: boolean;
+  menuItemCount: number;
 }
 
-export function EventDetailClient({ event, isManager, role, currentUserId, timeEntry, hasConfirmedAssignment }: Props) {
+export function EventDetailClient({ event, isManager, role, currentUserId, timeEntry, hasConfirmedAssignment, menuItemCount }: Props) {
   const canEditMenu = ["manager", "owner", "admin", "sales"].includes(role);
   const canSeeMenu = canEditMenu || role === "chef";
   const router = useRouter();
@@ -105,6 +107,10 @@ export function EventDetailClient({ event, isManager, role, currentUserId, timeE
   const pct = totalNeeded ? totalConfirmed / totalNeeded : 0;
   const sm = EVENT_STATUS[event.status] ?? EVENT_STATUS.draft;
   const isLive = event.status === "live";
+
+  const isRecruitingDone = totalNeeded > 0 && pct >= 1;
+  const isRequisitionDone = !!requisition && requisition.status === "done";
+  const isMenuDone = menuItemCount > 0;
 
   async function inviteAction(mode: "core" | "pool" | "remind", positionId?: number) {
     try {
@@ -251,7 +257,7 @@ export function EventDetailClient({ event, isManager, role, currentUserId, timeE
   }
 
   return (
-    <div className="px-4 pb-28 pt-4 md:px-6 md:pb-6 max-w-4xl mx-auto space-y-4">
+    <div className="px-4 pb-28 pt-4 md:px-6 md:pb-6 space-y-4 max-w-5xl mx-auto">
 
       {/* Back + manager actions */}
       <div className="flex items-center justify-between gap-3">
@@ -297,40 +303,43 @@ export function EventDetailClient({ event, isManager, role, currentUserId, timeE
           <div className="absolute -right-12 -top-12 w-48 h-48 rounded-full pointer-events-none"
             style={{ background: "radial-gradient(circle, rgba(246,183,60,0.22), transparent 70%)" }} />
         )}
-        <div className="relative flex items-center justify-between">
-          <span
-            className="inline-flex h-7 items-center gap-1.5 rounded-full px-2.5 text-[12px] font-semibold"
-            style={{ color: sm.color, background: `${sm.color}1f` }}
-          >
-            <span className="h-1.5 w-1.5 rounded-full" style={{ background: sm.color }} />
-            {sm.label}
-          </span>
+        <div className="relative flex items-start justify-between gap-3">
+          <div className="flex-1 min-w-0">
+            <span
+              className="inline-flex h-7 items-center gap-1.5 rounded-full px-2.5 text-[12px] font-semibold"
+              style={{ color: sm.color, background: `${sm.color}1f` }}
+            >
+              <span className="h-1.5 w-1.5 rounded-full" style={{ background: sm.color }} />
+              {sm.label}
+            </span>
+            <motion.h1 layout className="relative font-display font-extrabold text-[26px] leading-[1.08] tracking-[-0.03em] mt-3">
+              {event.title}
+            </motion.h1>
+            {event.client && <p className="relative text-[14px] text-muted-foreground mt-1.5">{event.client}</p>}
+          </div>
+          <div className="shrink-0 text-right mt-0.5">
+            <div className="flex items-center justify-end gap-1">
+              <Clock className="h-3.5 w-3.5 text-primary shrink-0" />
+              <p className="text-[13px] font-semibold leading-tight">
+                {format(new Date(event.starts_at), "d MMM yyyy", { locale: ru })}
+              </p>
+            </div>
+            <p className="text-[12px] text-muted-foreground mt-0.5">
+              {format(new Date(event.starts_at), "HH:mm", { locale: ru })}
+            </p>
+            {event.location && (
+              <div className="mt-2.5">
+                <div className="flex items-center justify-end gap-1">
+                  <MapPin className="h-3.5 w-3.5 text-primary shrink-0" />
+                  <p className="text-[13px] font-semibold leading-tight max-w-[120px] truncate">{event.location}</p>
+                </div>
+                <p className="text-[12px] text-muted-foreground mt-0.5">Площадка</p>
+              </div>
+            )}
+          </div>
         </div>
-        <motion.h1 layout className="relative font-display font-extrabold text-[26px] leading-[1.08] tracking-[-0.03em] mt-3">
-          {event.title}
-        </motion.h1>
-        {event.client && <p className="relative text-[14px] text-muted-foreground mt-1.5">{event.client}</p>}
       </MagneticCard>
 
-      {/* Meta grid */}
-      <motion.div variants={stagger} initial="hidden" animate="show" className="grid grid-cols-2 gap-2.5">
-        <motion.div variants={fadeUp} className="rounded-2xl p-3.5 mq-hair" style={{ background: "hsl(var(--card))" }}>
-          <Clock className="h-4 w-4 text-primary" />
-          <p className="text-[14px] font-semibold mt-2 leading-tight">
-            {format(new Date(event.starts_at), "d MMMM yyyy", { locale: ru })}
-          </p>
-          <p className="text-[12px] text-muted-foreground mt-0.5">
-            {format(new Date(event.starts_at), "HH:mm", { locale: ru })}
-          </p>
-        </motion.div>
-        {event.location && (
-          <motion.div variants={fadeUp} className="rounded-2xl p-3.5 mq-hair" style={{ background: "hsl(var(--card))" }}>
-            <MapPin className="h-4 w-4 text-primary" />
-            <p className="text-[14px] font-semibold mt-2 leading-tight truncate">{event.location}</p>
-            <p className="text-[12px] text-muted-foreground mt-0.5">Площадка</p>
-          </motion.div>
-        )}
-      </motion.div>
 
       {(role === "waiter" || role === "cook") && (
         <ShiftCheckinCard
@@ -341,18 +350,25 @@ export function EventDetailClient({ event, isManager, role, currentUserId, timeE
       )}
 
       <Tabs defaultValue="recruiting">
-        <TabsList className="w-full h-auto gap-1 bg-transparent p-0 flex overflow-x-auto flex-nowrap scrollbar-none pb-0.5">
+        <TabsList className="w-full h-auto gap-1 bg-transparent p-0 grid grid-cols-2 md:flex md:flex-nowrap md:overflow-x-auto">
           {[
-            { value: "recruiting", icon: <Users className="h-4 w-4" />, label: "Набор" },
-            { value: "requisition", icon: <Package className="h-4 w-4" />, label: "Сбор" },
-            ...(canSeeMenu ? [{ value: "menu", icon: <ChefHat className="h-4 w-4" />, label: "Меню" }] : []),
-            { value: "discussion", icon: <MessageSquare className="h-4 w-4" />, label: "Обсуждение", badge: comments.length },
-          ].map(({ value, icon, label, badge }) => (
+            { value: "recruiting", icon: <Users className="h-4 w-4" />, label: "Набор", done: isRecruitingDone },
+            { value: "requisition", icon: <Package className="h-4 w-4" />, label: "Сбор", done: isRequisitionDone },
+            ...(canSeeMenu ? [{ value: "menu", icon: <ChefHat className="h-4 w-4" />, label: "Меню", done: isMenuDone }] : []),
+            { value: "discussion", icon: <MessageSquare className="h-4 w-4" />, label: "Обсуждение", badge: comments.length, done: false },
+          ...(isManager ? [{ value: "shift", icon: <Clock className="h-4 w-4" />, label: "Смена", done: false }] : []),
+          ].map(({ value, icon, label, badge, done }) => (
             <TabsTrigger key={value} value={value}
-              className="flex-shrink-0 flex-1 min-w-0 gap-1.5 rounded-2xl text-[13px] px-3 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=inactive]:bg-card data-[state=inactive]:border data-[state=inactive]:border-border"
+              className="min-w-0 md:flex-1 gap-1.5 rounded-2xl text-[13px] px-3 py-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=inactive]:bg-card data-[state=inactive]:border data-[state=inactive]:border-border"
             >
               {icon}{label}
-              {badge > 0 && (
+              {isManager && done && (
+                <span className="relative inline-flex items-center justify-center shrink-0" style={{ width: 15, height: 15 }}>
+                  <Check className="absolute" style={{ width: 15, height: 15, color: "#000", strokeWidth: 4 }} />
+                  <Check className="absolute" style={{ width: 15, height: 15, color: "hsl(var(--ok))", strokeWidth: 2.5 }} />
+                </span>
+              )}
+              {badge != null && badge > 0 && (
                 <Badge variant="secondary" className="ml-1 text-xs h-4 px-1">{badge}</Badge>
               )}
             </TabsTrigger>
@@ -382,17 +398,17 @@ export function EventDetailClient({ event, isManager, role, currentUserId, timeE
         {/* ===== НАБОР ===== */}
         <TabsContent value="recruiting" className="space-y-4 mt-4">
           {isManager && (
-            <div className="grid grid-cols-4 gap-2">
-              <Button variant="outline" size="sm" className="rounded-xl justify-start" onClick={() => inviteAction("core")} disabled={isPending}>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+              <Button variant="outline" size="sm" className="rounded-xl justify-center" onClick={() => inviteAction("core")} disabled={isPending}>
                 <Bell className="h-4 w-4 mr-1.5 flex-shrink-0" />Позвать костяк
               </Button>
-              <Button variant="outline" size="sm" className="rounded-xl justify-start" onClick={() => inviteAction("pool")} disabled={isPending}>
+              <Button variant="outline" size="sm" className="rounded-xl justify-center" onClick={() => inviteAction("pool")} disabled={isPending}>
                 <BellRing className="h-4 w-4 mr-1.5 flex-shrink-0" />Открыть пул
               </Button>
-              <Button variant="outline" size="sm" className="rounded-xl justify-start" onClick={() => inviteAction("remind")} disabled={isPending}>
+              <Button variant="outline" size="sm" className="rounded-xl justify-center" onClick={() => inviteAction("remind")} disabled={isPending}>
                 <span style={{ filter: "grayscale(1)", marginRight: 6, fontSize: "1rem", flexShrink: 0 }}>🤫</span>Напомнить
               </Button>
-              <Button variant="outline" size="sm" className="rounded-xl justify-start" onClick={exportPdf}>
+              <Button variant="outline" size="sm" className="rounded-xl justify-center" onClick={exportPdf}>
                 <FileDown className="h-4 w-4 mr-1.5 flex-shrink-0" />PDF
               </Button>
             </div>
@@ -596,6 +612,12 @@ export function EventDetailClient({ event, isManager, role, currentUserId, timeE
             </Button>
           </form>
         </TabsContent>
+
+        {isManager && (
+          <TabsContent value="shift" className="mt-4">
+            <ActiveShiftTab eventId={event.id} />
+          </TabsContent>
+        )}
       </Tabs>
 
       <AddEmployeeDialog

@@ -62,6 +62,8 @@ model Employee {
   role              Role
   tier              Tier      @default(regular)
   passport_data_enc String?
+  telegram          String?
+  messenger_max     String?
   photo_url         String?
   push_subscription Json?
   created_at        DateTime  @default(now())
