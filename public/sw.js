@@ -68,6 +68,8 @@ self.addEventListener("push", (event) => {
 
   const { title = "Magnifique", body = "", url = "/", tag } = payload;
 
+  const isInvite = tag === "invite";
+
   event.waitUntil(
     self.registration.showNotification(title, {
       body,
@@ -76,7 +78,13 @@ self.addEventListener("push", (event) => {
       tag: tag ?? "magnifique-notification",
       data: { url },
       vibrate: [200, 100, 200],
-      requireInteraction: false,
+      requireInteraction: isInvite,
+      ...(isInvite ? {
+        actions: [
+          { action: "confirm", title: "Принять" },
+          { action: "decline", title: "Отказаться" },
+        ],
+      } : {}),
     })
   );
 });
@@ -143,11 +151,27 @@ self.addEventListener("sync", (event) => {
   }
 });
 
-// Клик по уведомлению — открываем нужную страницу
+// Клик по уведомлению — открываем нужную страницу или обрабатываем действие
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
 
   const url = event.notification.data?.url ?? "/";
+  const action = event.action; // "confirm" | "decline" | "" (body click)
+
+  // Inline action: POST respond without opening a window
+  if (action === "confirm" || action === "decline") {
+    const assignmentId = event.notification.data?.assignmentId;
+    if (assignmentId) {
+      event.waitUntil(
+        fetch(`/api/assignments/${assignmentId}/respond`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action }),
+        }).catch(() => {})
+      );
+      return;
+    }
+  }
 
   event.waitUntil(
     self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((clients) => {

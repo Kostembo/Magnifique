@@ -47,10 +47,13 @@ export default async function EventDetailPage({ params }: { params: { id: string
   const role = session.user.role;
   const isManager = isPrivileged(role) || canCreateEvents(role) || canManageKitchen(role);
 
-  // waiter/cook видят мероприятие только при подтверждённом назначении
+  // waiter/cook видят мероприятие только при подтверждённом или приглашённом назначении
   if (role === "waiter" || role === "cook") {
     const hasAssignment = event.positions.some((p) =>
-      p.assignments.some((a) => a.employee_id === session.user.id && a.status === "confirmed")
+      p.assignments.some((a) =>
+        a.employee_id === session.user.id &&
+        (a.status === "confirmed" || a.status === "invited")
+      )
     );
     if (!hasAssignment) redirect("/events");
   }
@@ -58,6 +61,10 @@ export default async function EventDetailPage({ params }: { params: { id: string
   const hasConfirmedAssignment = event.positions.some((p) =>
     p.assignments.some((a) => a.employee_id === session.user.id && a.status === "confirmed")
   );
+
+  const invitedAssignment = event.positions
+    .flatMap((p) => p.assignments)
+    .find((a) => a.employee_id === session.user.id && a.status === "invited");
 
   return (
     <EventDetailClient
@@ -73,6 +80,7 @@ export default async function EventDetailPage({ params }: { params: { id: string
       } : null}
       hasConfirmedAssignment={hasConfirmedAssignment}
       menuItemCount={menuItemCount}
+      invitedAssignmentId={invitedAssignment?.id ?? null}
     />
   );
 }

@@ -72,12 +72,12 @@ export async function POST(req: NextRequest) {
   let calculated_hours: number | null = null;
   let calculated_pay: number | null = null;
 
-  if (hourlyRate && scheduledTime) {
+  if (scheduledTime) {
     const calc = calculateTimeEntry({
       checkedInAt: entry.checked_in_at,
       checkedOutAt: now,
       scheduledTime: new Date(scheduledTime),
-      hourlyRate,
+      hourlyRate: hourlyRate ?? 0,
       minPayAmount: entry.employee.min_pay_amount ? Number(entry.employee.min_pay_amount) : undefined,
       minPayHours: entry.employee.min_pay_hours ?? undefined,
     });

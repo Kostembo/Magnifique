@@ -82,14 +82,16 @@ interface Props {
   timeEntry: TimeEntryData | null;
   hasConfirmedAssignment: boolean;
   menuItemCount: number;
+  invitedAssignmentId: string | null;
 }
 
-export function EventDetailClient({ event, isManager, role, currentUserId, timeEntry, hasConfirmedAssignment, menuItemCount }: Props) {
+export function EventDetailClient({ event, isManager, role, currentUserId, timeEntry, hasConfirmedAssignment, menuItemCount, invitedAssignmentId }: Props) {
   const canEditMenu = ["manager", "owner", "admin", "sales"].includes(role);
   const canSeeMenu = canEditMenu || role === "chef";
   const router = useRouter();
   const { toast } = useToast();
   const [isPending, startTransition] = useTransition();
+  const [inviteStatus, setInviteStatus] = useState<"invited" | "confirmed" | "declined" | null>(invitedAssignmentId ? "invited" : null);
   const [comments, setComments] = useState(event.comments);
   const [commentText, setCommentText] = useState("");
   const [sendingComment, setSendingComment] = useState(false);
@@ -341,6 +343,14 @@ export function EventDetailClient({ event, isManager, role, currentUserId, timeE
       </MagneticCard>
 
 
+      {inviteStatus === "invited" && invitedAssignmentId && (
+        <InviteResponseCard
+          assignmentId={invitedAssignmentId}
+          onConfirm={() => setInviteStatus("confirmed")}
+          onDecline={() => setInviteStatus("declined")}
+        />
+      )}
+
       {(role === "waiter" || role === "cook") && (
         <ShiftCheckinCard
           eventId={event.id}
@@ -349,11 +359,13 @@ export function EventDetailClient({ event, isManager, role, currentUserId, timeE
         />
       )}
 
-      <Tabs defaultValue="recruiting">
+      <Tabs defaultValue={isManager ? "recruiting" : "discussion"}>
         <TabsList className="w-full h-auto gap-1 bg-transparent p-0 grid grid-cols-2 md:flex md:flex-nowrap md:overflow-x-auto">
           {[
-            { value: "recruiting", icon: <Users className="h-4 w-4" />, label: "Набор", done: isRecruitingDone },
-            { value: "requisition", icon: <Package className="h-4 w-4" />, label: "Сбор", done: isRequisitionDone },
+            ...(isManager ? [
+              { value: "recruiting", icon: <Users className="h-4 w-4" />, label: "Набор", done: isRecruitingDone },
+              { value: "requisition", icon: <Package className="h-4 w-4" />, label: "Сбор", done: isRequisitionDone },
+            ] : []),
             ...(canSeeMenu ? [{ value: "menu", icon: <ChefHat className="h-4 w-4" />, label: "Меню", done: isMenuDone }] : []),
             { value: "discussion", icon: <MessageSquare className="h-4 w-4" />, label: "Обсуждение", badge: comments.length, done: false },
           ...(isManager ? [{ value: "shift", icon: <Clock className="h-4 w-4" />, label: "Смена", done: false }] : []),
@@ -641,6 +653,56 @@ export function EventDetailClient({ event, isManager, role, currentUserId, timeE
           startTransition(() => router.refresh());
         }}
       />
+    </div>
+  );
+}
+
+function InviteResponseCard({ assignmentId, onConfirm, onDecline }: {
+  assignmentId: string;
+  onConfirm: () => void;
+  onDecline: () => void;
+}) {
+  const { toast } = useToast();
+  const [loading, setLoading] = useState(false);
+
+  async function respond(action: "confirm" | "decline") {
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/assignments/${assignmentId}/respond`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action }),
+      });
+      if (res.ok) {
+        toast({ title: action === "confirm" ? "Смена принята" : "Смена отклонена", variant: "success" });
+        action === "confirm" ? onConfirm() : onDecline();
+      } else {
+        const data = await res.json().catch(() => ({}));
+        toast({ title: (data as { error?: string }).error ?? "Ошибка", variant: "destructive" });
+      }
+    } catch {
+      toast({ title: "Нет соединения", variant: "destructive" });
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <div className="rounded-3xl p-4 mq-hair space-y-3" style={{ background: "hsl(var(--card))", borderColor: "hsl(var(--warn))" }}>
+      <div className="flex items-center gap-2">
+        <BellRing className="h-4 w-4 shrink-0" style={{ color: "hsl(var(--warn))" }} />
+        <p className="text-[14px] font-semibold">Вас приглашают на эту смену</p>
+      </div>
+      <div className="flex gap-2">
+        <Button size="sm" className="flex-1 rounded-xl gap-1.5" onClick={() => respond("confirm")} disabled={loading}>
+          {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
+          Принять
+        </Button>
+        <Button size="sm" variant="outline" className="flex-1 rounded-xl gap-1.5 border-destructive/40 text-destructive hover:bg-destructive/10" onClick={() => respond("decline")} disabled={loading}>
+          <X className="h-4 w-4" />
+          Отказаться
+        </Button>
+      </div>
     </div>
   );
 }
