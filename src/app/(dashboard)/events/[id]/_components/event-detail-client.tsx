@@ -631,7 +631,7 @@ export function EventDetailClient({ event, isManager, role, currentUserId, timeE
                 ...p,
                 assignments: [...p.assignments, {
                   id: params.assignmentId, status: "confirmed" as const,
-                  is_priority: false, invited_at: new Date().toISOString(), responded_at: new Date().toISOString(),
+                  is_priority: false, goes_to_warehouse: false, invited_at: new Date().toISOString(), responded_at: new Date().toISOString(),
                   employee: { id: params.employeeId, full_name: params.employeeName, phone: "", role: invitePosition.role, tier: params.employeeTier },
                 }],
               };
