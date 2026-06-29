@@ -1,12 +1,12 @@
 import type { Metadata, Viewport } from "next";
-import { Sora, Hanken_Grotesk, Sorts_Mill_Goudy } from "next/font/google";
+import { Montserrat, Hanken_Grotesk, Sorts_Mill_Goudy } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
 import { ServiceWorkerRegistrar } from "@/components/sw-register";
 import { ThemeProvider } from "@/lib/theme";
 
-const sora = Sora({
-  subsets: ["latin", "latin-ext"],
+const sora = Montserrat({
+  subsets: ["latin", "latin-ext", "cyrillic"],
   weight: ["500", "600", "700", "800"],
   variable: "--font-sora",
   display: "swap",

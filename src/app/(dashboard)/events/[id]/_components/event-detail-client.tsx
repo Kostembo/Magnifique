@@ -388,7 +388,7 @@ export function EventDetailClient({ event, isManager, role, currentUserId, timeE
         </TabsList>
 
         {/* Staffing summary */}
-        {totalNeeded > 0 && (
+        {isManager && totalNeeded > 0 && (
           <div className="rounded-3xl p-4 mq-hair flex items-center gap-4 mt-3" style={{ background: "hsl(var(--card))" }}>
             <Ring value={pct} size={64} stroke={6} color={pct >= 1 ? "hsl(var(--ok))" : undefined}>
               <span className="font-display font-extrabold text-[15px] leading-none flex items-baseline gap-[1px]">
