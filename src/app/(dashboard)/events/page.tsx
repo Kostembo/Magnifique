@@ -1,5 +1,6 @@
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
+import { startOfDay } from "date-fns";
 import { prisma } from "@/lib/db";
 import { canCreateEvents } from "@/lib/roles";
 import { EventsManager } from "./_components/events-manager";
@@ -39,7 +40,7 @@ export default async function EventsPage() {
       where: {
         employee_id: session.user.id,
         status: "confirmed",
-        event: { starts_at: { gte: new Date() } },
+        event: { starts_at: { gte: startOfDay(new Date()) } },
       },
       include: {
         event: { select: { id: true, title: true, client: true, location: true, starts_at: true, status: true } },
