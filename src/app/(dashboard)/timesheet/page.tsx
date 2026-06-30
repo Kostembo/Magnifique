@@ -26,7 +26,7 @@ export default async function TimesheetPage() {
 
     return (
       <div className="p-4 md:p-6 max-w-full">
-        <h1 className="text-xl font-semibold text-zinc-900 mb-6">Табель</h1>
+        <h1 className="font-display text-[28px] font-extrabold tracking-[-0.03em] mb-6">Табель</h1>
         <ManagerTimesheet initial={entries as any} initialMonth={month} />
       </div>
     );
@@ -53,7 +53,7 @@ export default async function TimesheetPage() {
 
   return (
     <div className="p-4 md:p-6 max-w-2xl">
-      <h1 className="text-xl font-semibold text-zinc-900 mb-6">Мои часы</h1>
+      <h1 className="font-display text-[28px] font-extrabold tracking-[-0.03em] mb-6">Мои часы</h1>
       <StaffTimesheet initial={initial as any} />
     </div>
   );
