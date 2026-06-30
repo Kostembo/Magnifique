@@ -54,7 +54,7 @@ export function EventsManager({ events, canCreate = false }: Props) {
     >
 
       <div className="flex items-center justify-between gap-3">
-        <h1 className="font-display text-[28px] font-extrabold tracking-[-0.03em]">Мероприятия</h1>
+        <h1 className="font-display text-[28px] font-extrabold tracking-[-0.03em] md:text-center">Мероприятия</h1>
         <div className="flex items-center gap-2">
           {/* Переключалка вид */}
           <div className="flex items-center rounded-xl overflow-hidden" style={{ border: "1px solid hsl(var(--border))" }}>

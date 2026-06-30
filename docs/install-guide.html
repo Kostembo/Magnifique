@@ -20,10 +20,10 @@
       background: #fff;
       width: 210mm;
       min-height: 297mm;
-      padding: 20mm 18mm;
+      padding: 13mm 16mm;
       display: flex;
       flex-direction: column;
-      gap: 16px;
+      gap: 10px;
       box-shadow: 0 4px 24px rgba(0,0,0,0.12);
     }
 
@@ -32,14 +32,16 @@
       justify-content: space-between;
       align-items: baseline;
       border-bottom: 2.5px solid #1a1a1a;
-      padding-bottom: 12px;
+      padding-bottom: 10px;
+      flex-shrink: 0;
     }
-    h1 { font-size: 26px; font-weight: 800; letter-spacing: -0.5px; }
-    .header-sub { font-size: 13px; color: #999; }
+    h1 { font-size: 24px; font-weight: 800; letter-spacing: -0.5px; }
+    .header-sub { font-size: 12px; color: #999; }
 
     .url-line {
       font-size: 14px;
       color: #444;
+      flex-shrink: 0;
     }
     .url {
       font-family: monospace;
@@ -54,34 +56,37 @@
     .grid-2 {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 14px;
+      gap: 10px;
+      flex: 1;
     }
 
     .block {
       border: 1.5px solid #e5e5e5;
       border-radius: 10px;
       padding: 16px 18px;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
     }
 
     h2 {
-      font-size: 16px;
+      font-size: 15px;
       font-weight: 700;
       margin-bottom: 12px;
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
+      flex-shrink: 0;
     }
 
     ol {
       padding-left: 18px;
+      flex: 1;
     }
     ol li {
       font-size: 14px;
-      line-height: 1.7;
+      line-height: 1.85;
       color: #222;
-    }
-    ol li + li {
-      margin-top: 1px;
     }
 
     .note {
@@ -92,8 +97,50 @@
       font-size: 13px;
       color: #666;
       margin-top: 12px;
+      flex-shrink: 0;
     }
     .note strong { color: #444; }
+
+    /* Уведомления */
+    .block-notif {
+      flex: 1;
+    }
+    .notif-intro {
+      font-size: 13.5px;
+      color: #444;
+      margin-bottom: 10px;
+      line-height: 1.5;
+    }
+    .notif-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 10px;
+    }
+    .notif-col {
+      background: #f8f8f8;
+      border-radius: 8px;
+      padding: 13px 14px;
+    }
+    .notif-label {
+      font-size: 13px;
+      font-weight: 700;
+      margin-bottom: 7px;
+      color: #333;
+    }
+    .notif-col ol {
+      padding-left: 15px;
+      flex: none;
+    }
+    .notif-col ol li {
+      font-size: 13px;
+      line-height: 1.7;
+      color: #333;
+    }
+    .notif-tip {
+      font-size: 11.5px;
+      color: #888;
+      margin-top: 7px;
+    }
 
     @media print {
       @page { margin: 0; size: A4; }
@@ -105,8 +152,9 @@
       .page {
         box-shadow: none;
         width: 100%;
-        min-height: 297mm;
-        padding: 20mm 18mm;
+        height: 297mm;
+        min-height: unset;
+        padding: 13mm 16mm;
       }
     }
   </style>
@@ -165,6 +213,41 @@
           <li>Нажмите <strong>«Войти»</strong></li>
         </ol>
         <div class="note"><strong>Проблемы со входом?</strong> Обратитесь к менеджеру.</div>
+      </div>
+    </div>
+
+    <div class="block block-notif">
+      <h2>🔔 Уведомления о сменах</h2>
+      <p class="notif-intro">Войдите в приложение → откройте <strong>Настройки</strong> → нажмите <strong>«Включить уведомления»</strong> → разрешите в запросе системы.</p>
+      <div class="notif-grid">
+        <div class="notif-col">
+          <div class="notif-label">🍎 iPhone / iPad</div>
+          <ol>
+            <li>Установите через Safari</li>
+            <li>Откройте приложение</li>
+            <li>Настройки → Включить уведомления</li>
+            <li>В запросе iOS — «Разрешить»</li>
+          </ol>
+          <p class="notif-tip">Требуется iOS 16.4+</p>
+        </div>
+        <div class="notif-col">
+          <div class="notif-label">🤖 Android</div>
+          <ol>
+            <li>Откройте приложение или сайт</li>
+            <li>Настройки → Включить уведомления</li>
+            <li>В запросе Chrome — «Разрешить»</li>
+          </ol>
+          <p class="notif-tip">Работает в браузере и PWA</p>
+        </div>
+        <div class="notif-col">
+          <div class="notif-label">💻 Компьютер</div>
+          <ol>
+            <li>Откройте сайт в Chrome / Edge</li>
+            <li>Настройки → Включить уведомления</li>
+            <li>В запросе браузера — «Разрешить»</li>
+          </ol>
+          <p class="notif-tip">Работает без установки</p>
+        </div>
       </div>
     </div>
 

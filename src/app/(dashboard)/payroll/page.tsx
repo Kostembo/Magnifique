@@ -28,7 +28,7 @@ export default async function PayrollPage() {
 
   return (
     <div className="p-4 md:p-6">
-      <h1 className="font-display text-[28px] font-extrabold tracking-[-0.03em] mb-6">Зарплаты</h1>
+      <h1 className="font-display text-[28px] font-extrabold tracking-[-0.03em] mb-6 md:text-center">Зарплаты</h1>
       <PayrollList initial={entries as PayrollEntry[]} initialMonth={month} />
     </div>
   );
