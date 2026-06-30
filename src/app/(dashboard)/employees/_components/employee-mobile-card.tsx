@@ -1,12 +1,13 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { MoreHorizontal, Pencil, KeyRound, User, CalendarPlus } from "lucide-react";
+import { MoreHorizontal, KeyRound, User, CalendarPlus } from "lucide-react";
 import { ROLE_LABELS, TIER_LABELS, formatPhone } from "@/lib/utils";
 import { fadeUp } from "@/lib/motion";
 import type { CSSProperties } from "react";
@@ -29,18 +30,20 @@ type Employee = {
 interface Props {
   emp: Employee;
   index: number;
-  onEdit: (id: string) => void;
   onResetPassword: (emp: Employee) => void;
   onInvite: (emp: Employee) => void;
 }
 
-export function EmployeeMobileCard({ emp, index, onEdit, onResetPassword, onInvite }: Props) {
+export function EmployeeMobileCard({ emp, index, onResetPassword, onInvite }: Props) {
+  const router = useRouter();
+
   return (
     <motion.div
       variants={fadeUp}
       custom={index}
-      className="rounded-3xl mq-hair p-4 space-y-3"
+      className="rounded-3xl mq-hair p-4 space-y-3 cursor-pointer"
       style={{ background: "hsl(var(--card))" }}
+      onClick={() => router.push(`/employees/${emp.id}`)}
     >
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-3">
@@ -57,18 +60,21 @@ export function EmployeeMobileCard({ emp, index, onEdit, onResetPassword, onInvi
         </div>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" aria-label="Действия" className="rounded-xl">
+            <Button
+              variant="ghost"
+              size="icon"
+              aria-label="Действия"
+              className="rounded-xl"
+              onClick={(e) => e.stopPropagation()}
+            >
               <MoreHorizontal className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => onEdit(emp.id)}>
-              <Pencil className="h-4 w-4 mr-2" /> Редактировать
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => onResetPassword(emp)}>
+            <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onResetPassword(emp); }}>
               <KeyRound className="h-4 w-4 mr-2" /> Сбросить пароль
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => onInvite(emp)}>
+            <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onInvite(emp); }}>
               <CalendarPlus className="h-4 w-4 mr-2" /> Пригласить на мероприятие
             </DropdownMenuItem>
           </DropdownMenuContent>

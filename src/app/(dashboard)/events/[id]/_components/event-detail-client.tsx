@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import {
   ArrowLeft, Pencil, Users, Package, MessageSquare,
-  User, Clock, MapPin, UserCheck, UserX, Loader2,
+  User, Clock, MapPin, Phone, UserCheck, UserX, Loader2,
   Bell, BellRing, Plus, ExternalLink, Check, X, FileDown, Trash2, ChefHat, UserPlus, Warehouse,
 } from "lucide-react";
 import { ROLE_LABELS } from "@/lib/utils";
@@ -49,6 +49,7 @@ type EventDetail = {
   id: string; title: string; client?: string | null; location?: string | null;
   starts_at: Date | string; status: string; positions: Position[];
   requisitions: Requisition[] | null[]; comments: Comment[];
+  organizer_name?: string | null; organizer_phone?: string | null;
 };
 
 const STATUS_LABELS: Record<AssignmentStatus, string> = {
@@ -336,6 +337,22 @@ export function EventDetailClient({ event, isManager, role, currentUserId, timeE
                   <p className="text-[13px] font-semibold leading-tight max-w-[120px] truncate">{event.location}</p>
                 </div>
                 <p className="text-[12px] text-muted-foreground mt-0.5">Площадка</p>
+              </div>
+            )}
+            {(event.organizer_name || event.organizer_phone) && (
+              <div className="mt-2.5">
+                <div className="flex items-center justify-end gap-1">
+                  <Phone className="h-3.5 w-3.5 text-primary shrink-0" />
+                  <p className="text-[13px] font-semibold leading-tight max-w-[130px] truncate">
+                    {event.organizer_name ?? event.organizer_phone}
+                  </p>
+                </div>
+                {event.organizer_name && event.organizer_phone && (
+                  <p className="text-[12px] text-muted-foreground mt-0.5 text-right">{event.organizer_phone}</p>
+                )}
+                {!event.organizer_phone && (
+                  <p className="text-[12px] text-muted-foreground mt-0.5">Организатор</p>
+                )}
               </div>
             )}
           </div>

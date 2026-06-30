@@ -12,7 +12,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Search, MoreHorizontal, Pencil, KeyRound, Loader2, User, CalendarPlus } from "lucide-react";
+import { Plus, Search, MoreHorizontal, KeyRound, Loader2, User, CalendarPlus } from "lucide-react";
 import { ROLE_LABELS, TIER_LABELS, formatPhone } from "@/lib/utils";
 import { EmployeeMobileCard } from "./employee-mobile-card";
 import { InviteToEventDialog } from "./invite-to-event-dialog";
@@ -158,7 +158,11 @@ export function EmployeesClient({ initialEmployees }: Props) {
               </TableRow>
             )}
             {filtered.map((emp) => (
-              <TableRow key={emp.id}>
+              <TableRow
+                key={emp.id}
+                className="cursor-pointer"
+                onClick={() => router.push(`/employees/${emp.id}`)}
+              >
                 <TableCell className="font-medium">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-2xl bg-muted border border-border overflow-hidden flex-shrink-0 flex items-center justify-center">
@@ -182,7 +186,7 @@ export function EmployeesClient({ initialEmployees }: Props) {
                     {TIER_LABELS[emp.tier] ?? emp.tier}
                   </span>
                 </TableCell>
-                <TableCell>
+                <TableCell onClick={(e) => e.stopPropagation()}>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button variant="ghost" size="icon" className="rounded-xl" aria-label="Действия">
@@ -190,9 +194,6 @@ export function EmployeesClient({ initialEmployees }: Props) {
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => router.push(`/employees/${emp.id}/edit`)}>
-                        <Pencil className="h-4 w-4 mr-2" /> Редактировать
-                      </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => { setResetTarget(emp); setNewPassword(""); }}>
                         <KeyRound className="h-4 w-4 mr-2" /> Сбросить пароль
                       </DropdownMenuItem>
@@ -218,7 +219,6 @@ export function EmployeesClient({ initialEmployees }: Props) {
             key={emp.id}
             emp={emp}
             index={i}
-            onEdit={(id) => router.push(`/employees/${id}/edit`)}
             onResetPassword={(e) => { setResetTarget(e); setNewPassword(""); }}
             onInvite={(e) => setInviteTarget(e)}
           />

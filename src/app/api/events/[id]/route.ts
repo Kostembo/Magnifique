@@ -80,6 +80,8 @@ const updateSchema = z.object({
   guests_count: z.number().int().min(1).optional().nullable(),
   starts_at: z.string().datetime().optional(),
   status: z.enum(["draft", "recruiting", "staffed", "done"]).optional(),
+  organizer_name: z.string().optional().nullable(),
+  organizer_phone: z.string().optional().nullable(),
   positions: z.array(positionSchema).optional(),
 });
 

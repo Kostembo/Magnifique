@@ -14,6 +14,7 @@ export default async function EditEventPage({ params }: { params: { id: string }
     where: { id: params.id },
     select: {
       id: true, title: true, client: true, location: true, starts_at: true, status: true,
+      organizer_name: true, organizer_phone: true,
     },
   });
 

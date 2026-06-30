@@ -23,6 +23,8 @@ const editSchema = z.object({
   location: z.string().optional(),
   starts_at: z.string().min(1),
   status: z.enum(["draft", "recruiting", "staffed", "done"]),
+  organizer_name: z.string().optional(),
+  organizer_phone: z.string().optional(),
 });
 
 type FormData = z.infer<typeof editSchema>;
@@ -35,6 +37,8 @@ interface Props {
     location?: string | null;
     starts_at: Date;
     status: string;
+    organizer_name?: string | null;
+    organizer_phone?: string | null;
   };
 }
 
@@ -50,6 +54,8 @@ export function EventEditClient({ event }: Props) {
       location: event.location ?? "",
       starts_at: format(new Date(event.starts_at), "yyyy-MM-dd'T'HH:mm"),
       status: event.status as FormData["status"],
+      organizer_name: event.organizer_name ?? "",
+      organizer_phone: event.organizer_phone ?? "",
     },
   });
 
@@ -94,6 +100,17 @@ export function EventEditClient({ event }: Props) {
               <div className="space-y-2">
                 <Label>Место</Label>
                 <Input {...register("location")} />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Организатор</Label>
+                <Input placeholder="Имя организатора" {...register("organizer_name")} />
+              </div>
+              <div className="space-y-2">
+                <Label>Телефон организатора</Label>
+                <Input placeholder="+7 900 000-00-00" {...register("organizer_phone")} />
               </div>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

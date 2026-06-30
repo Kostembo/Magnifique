@@ -26,6 +26,9 @@ const createSchema = z.object({
   starts_at: z.string().datetime(),
   warehouse_time: z.string().datetime().optional().nullable(),
   venue_time: z.string().datetime().optional().nullable(),
+  organizer_name: z.string().optional(),
+  organizer_phone: z.string().optional(),
+  template_id: z.number().int().optional().nullable(),
   positions: z.array(positionSchema).min(1, "Добавьте хотя бы одну позицию"),
 });
 
@@ -90,7 +93,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Ошибка валидации", details: parsed.error.flatten() }, { status: 400 });
   }
 
-  const { positions, warehouse_time, venue_time, ...eventData } = parsed.data;
+  const { positions, warehouse_time, venue_time, template_id, ...eventData } = parsed.data;
 
   const event = await prisma.event.create({
     data: {
@@ -107,10 +110,46 @@ export async function POST(req: NextRequest) {
         })),
       },
     },
-    include: {
-      positions: true,
-    },
+    include: { positions: true },
   });
+
+  // Применяем шаблон: меню и складская заявка
+  if (template_id) {
+    const template = await prisma.eventTemplate.findUnique({
+      where: { id: template_id },
+      include: { menu_items: true, warehouse_items: true },
+    });
+    if (template) {
+      const ops: Promise<unknown>[] = [];
+      if (template.menu_items.length > 0) {
+        ops.push(prisma.eventMenuItem.createMany({
+          data: template.menu_items.map((i) => ({
+            event_id: event.id,
+            name: i.name,
+            quantity: i.quantity,
+            unit: i.unit,
+            note: i.note,
+          })),
+        }));
+      }
+      if (template.warehouse_items.length > 0) {
+        ops.push(prisma.requisition.create({
+          data: {
+            event_id: event.id,
+            status: "draft",
+            items: {
+              create: template.warehouse_items.map((i) => ({
+                name: i.name,
+                quantity: i.quantity,
+                unit: i.unit,
+              })),
+            },
+          },
+        }));
+      }
+      await Promise.all(ops);
+    }
+  }
 
   return NextResponse.json(event, { status: 201 });
 }

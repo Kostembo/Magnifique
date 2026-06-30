@@ -93,6 +93,10 @@ model Event {
   created_by   String
   created_at   DateTime    @default(now())
 
+  // Контакт организатора
+  organizer_name  String?
+  organizer_phone String?
+
   // Времена прибытия
   warehouse_time DateTime?
   venue_time     DateTime?
@@ -253,4 +257,40 @@ model WarehouseItem {
   created_at DateTime @default(now())
 
   @@map("warehouse_items")
+}
+
+model EventTemplate {
+  id         Int      @id @default(autoincrement())
+  name       String
+  created_at DateTime @default(now())
+
+  menu_items      TemplateMenuItem[]
+  warehouse_items TemplateWarehouseItem[]
+
+  @@map("event_templates")
+}
+
+model TemplateMenuItem {
+  id          Int     @id @default(autoincrement())
+  template_id Int
+  name        String
+  quantity    Decimal @db.Decimal(10, 2)
+  unit        String  @default("порц")
+  note        String?
+
+  template EventTemplate @relation(fields: [template_id], references: [id], onDelete: Cascade)
+
+  @@map("template_menu_items")
+}
+
+model TemplateWarehouseItem {
+  id          Int     @id @default(autoincrement())
+  template_id Int
+  name        String
+  quantity    Decimal @db.Decimal(10, 2)
+  unit        String  @default("шт")
+
+  template EventTemplate @relation(fields: [template_id], references: [id], onDelete: Cascade)
+
+  @@map("template_warehouse_items")
 }

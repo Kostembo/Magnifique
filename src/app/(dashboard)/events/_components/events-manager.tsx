@@ -3,7 +3,7 @@
 import { useState, useMemo } from "react";
 import Link from "next/link";
 import { EventCard, type EventCardData } from "@/components/events/event-card";
-import { Plus, AlertTriangle, LayoutList, CalendarDays } from "lucide-react";
+import { Plus, AlertTriangle, LayoutList, CalendarDays, LayoutTemplate } from "lucide-react";
 import { MonthGrid } from "./month-grid";
 import { WeekList } from "./week-list";
 
@@ -80,13 +80,24 @@ export function EventsManager({ events, canCreate = false }: Props) {
             </button>
           </div>
           {canCreate && (
-            <Link
-              href="/events/new"
-              aria-label="Создать мероприятие"
-              className="hidden md:flex items-center justify-center w-9 h-9 rounded-xl bg-primary text-primary-foreground hover:opacity-90 transition-opacity min-h-0"
-            >
-              <Plus className="h-4 w-4" />
-            </Link>
+            <>
+              <Link
+                href="/templates"
+                aria-label="Шаблоны"
+                title="Шаблоны"
+                className="hidden md:flex items-center justify-center w-9 h-9 rounded-xl border border-border hover:bg-muted transition-colors min-h-0"
+                style={{ color: "hsl(var(--muted-foreground))" }}
+              >
+                <LayoutTemplate className="h-4 w-4" />
+              </Link>
+              <Link
+                href="/events/new"
+                aria-label="Создать мероприятие"
+                className="hidden md:flex items-center justify-center w-9 h-9 rounded-xl bg-primary text-primary-foreground hover:opacity-90 transition-opacity min-h-0"
+              >
+                <Plus className="h-4 w-4" />
+              </Link>
+            </>
           )}
         </div>
       </div>
