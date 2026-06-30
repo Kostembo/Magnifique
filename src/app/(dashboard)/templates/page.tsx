@@ -10,10 +10,16 @@ export default async function TemplatesPage() {
   const session = await auth();
   if (!session?.user || !isPrivileged(session.user.role ?? "")) redirect("/");
 
-  const templates = await prisma.eventTemplate.findMany({
+  const raw = await prisma.eventTemplate.findMany({
     include: { menu_items: true, warehouse_items: true },
     orderBy: { created_at: "desc" },
   });
+
+  const templates = raw.map((t) => ({
+    ...t,
+    menu_items: t.menu_items.map((i) => ({ ...i, quantity: Number(i.quantity) })),
+    warehouse_items: t.warehouse_items.map((i) => ({ ...i, quantity: Number(i.quantity) })),
+  }));
 
   return <TemplatesClient initialTemplates={templates} />;
 }
