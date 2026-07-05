@@ -3,7 +3,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { encryptPassportData } from "@/lib/crypto";
 import { isPrivileged } from "@/lib/roles";
-import { Role, Tier } from "@prisma/client";
+import { Gender, Role, Tier } from "@prisma/client";
 import { z } from "zod";
 import bcrypt from "bcryptjs";
 import { normalizePhone } from "@/lib/utils";
@@ -13,6 +13,7 @@ const createSchema = z.object({
   full_name: z.string().min(2, "Укажите ФИО"),
   phone: z.string().min(10, "Укажите телефон"),
   password: z.string().min(6, "Пароль минимум 6 символов"),
+  gender: z.nativeEnum(Gender),
   role: z.nativeEnum(Role),
   tier: z.nativeEnum(Tier).default(Tier.regular),
   passport_data: z.string().optional(),
@@ -71,7 +72,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Ошибка валидации", details: parsed.error.flatten() }, { status: 400 });
   }
 
-  const { full_name, phone, password, role, tier, passport_data, telegram, messenger_max, hourly_rate, min_pay_amount, min_pay_hours } = parsed.data;
+  const { full_name, phone, password, gender, role, tier, passport_data, telegram, messenger_max, hourly_rate, min_pay_amount, min_pay_hours } = parsed.data;
   const normalizedPhone = normalizePhone(phone);
 
   const existing = await prisma.employee.findUnique({ where: { phone: normalizedPhone } });
@@ -84,7 +85,7 @@ export async function POST(req: NextRequest) {
 
   const employee = await prisma.employee.create({
     data: {
-      full_name, phone: normalizedPhone, password_hash, role, tier, passport_data_enc,
+      full_name, phone: normalizedPhone, password_hash, gender, role, tier, passport_data_enc,
       ...(telegram !== undefined && { telegram }),
       ...(messenger_max !== undefined && { messenger_max }),
       ...(hourly_rate !== undefined && { hourly_rate }),

@@ -22,6 +22,7 @@ type Employee = {
   id: string;
   full_name: string;
   phone: string;
+  gender: "male" | "female";
   role: string;
   tier: string;
   photo_url?: string | null;
@@ -54,7 +55,10 @@ export function EmployeeMobileCard({ emp, index, onResetPassword, onInvite }: Pr
               : <User className="h-5 w-5 text-muted-foreground" />}
           </div>
           <div>
-            <p className="font-display font-bold text-[15px] leading-tight">{emp.full_name}</p>
+            <p className="font-display font-bold text-[15px] leading-tight">
+              <span className="text-muted-foreground mr-1 font-normal">{emp.gender === "male" ? "♂" : "♀"}</span>
+              {emp.full_name}
+            </p>
             <p className="text-[13px] text-muted-foreground mt-0.5 tabular-nums">{formatPhone(emp.phone)}</p>
           </div>
         </div>

@@ -23,6 +23,7 @@ type Employee = {
   id: string;
   full_name: string;
   phone: string;
+  gender: "male" | "female";
   role: string;
   tier: string;
   created_at?: Date;
@@ -171,7 +172,10 @@ export function EmployeesClient({ initialEmployees }: Props) {
                         ? <img src={emp.photo_url} alt="" className="w-full h-full object-cover" />
                         : <User className="h-5 w-5 text-muted-foreground" />}
                     </div>
-                    <span className="font-display font-semibold">{emp.full_name}</span>
+                    <span className="font-display font-semibold">
+                      <span className="text-muted-foreground mr-1">{emp.gender === "male" ? "♂" : "♀"}</span>
+                      {emp.full_name}
+                    </span>
                   </div>
                 </TableCell>
                 <TableCell className="text-muted-foreground tabular-nums">{formatPhone(emp.phone)}</TableCell>

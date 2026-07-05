@@ -4,6 +4,7 @@ export const employeeListSelect = {
   id: true,
   full_name: true,
   phone: true,
+  gender: true,
   role: true,
   tier: true,
   created_at: true,

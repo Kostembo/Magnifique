@@ -18,7 +18,7 @@ export default async function EventDetailPage({ params }: { params: { id: string
           include: {
             assignments: {
               include: {
-                employee: { select: { id: true, full_name: true, phone: true, role: true, tier: true } },
+                employee: { select: { id: true, full_name: true, phone: true, gender: true, role: true, tier: true } },
               },
               orderBy: { invited_at: "asc" },
             },

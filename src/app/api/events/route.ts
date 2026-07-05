@@ -14,6 +14,7 @@ function requireEventCreator(session: { user?: { role?: string } } | null) {
 const positionSchema = z.object({
   role: z.enum(["waiter", "cook", "warehouse", "chef"]),
   needed_count: z.number().int().min(1),
+  males_needed: z.number().int().min(0).optional().nullable(),
   reserved_for_core: z.number().int().min(0).default(0),
   priority_deadline: z.string().datetime().optional().nullable(),
 });

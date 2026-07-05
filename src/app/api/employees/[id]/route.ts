@@ -6,7 +6,7 @@ import { isPrivileged, isSuper } from "@/lib/roles";
 import { z } from "zod";
 import bcrypt from "bcryptjs";
 import { normalizePhone } from "@/lib/utils";
-import { Prisma, Role, Tier } from "@prisma/client";
+import { Gender, Prisma, Role, Tier } from "@prisma/client";
 import { employeeListSelect } from "@/lib/selects";
 
 function requireManager(session: { user?: { role?: string } } | null) {
@@ -27,7 +27,7 @@ export async function GET(
   const employee = await prisma.employee.findUnique({
     where: { id: params.id },
     select: {
-      id: true, full_name: true, phone: true, role: true, tier: true,
+      id: true, full_name: true, phone: true, gender: true, role: true, tier: true,
       created_at: true, passport_data_enc: true, photo_url: true,
       hourly_rate: true, min_pay_amount: true, min_pay_hours: true,
       telegram: true, messenger_max: true,
@@ -46,6 +46,7 @@ const updateSchema = z.object({
   full_name: z.string().min(2).optional(),
   phone: z.string().min(10).optional(),
   password: z.string().min(6).optional(),
+  gender: z.nativeEnum(Gender).optional(),
   role: z.nativeEnum(Role).optional(),
   tier: z.nativeEnum(Tier).optional(),
   passport_data: z.string().optional().nullable(),

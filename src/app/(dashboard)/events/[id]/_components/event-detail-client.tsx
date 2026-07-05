@@ -29,12 +29,12 @@ type Assignment = {
   id: string; status: AssignmentStatus; is_priority: boolean;
   invited_at: Date | string; responded_at?: Date | string | null;
   goes_to_warehouse: boolean;
-  employee: { id: string; full_name: string; phone: string; role: string; tier: string };
+  employee: { id: string; full_name: string; phone: string; gender: string; role: string; tier: string };
 };
 
 type Position = {
-  id: number; role: string; needed_count: number; reserved_for_core: number;
-  priority_deadline?: Date | string | null; assignments: Assignment[];
+  id: number; role: string; needed_count: number; males_needed?: number | null;
+  reserved_for_core: number; priority_deadline?: Date | string | null; assignments: Assignment[];
 };
 
 type Comment = {
@@ -453,6 +453,10 @@ export function EventDetailClient({ event, isManager, role, currentUserId, timeE
                 : pos.assignments;
               const posPct = pos.needed_count ? confirmed / pos.needed_count : 0;
 
+              const confirmedAssignments = pos.assignments.filter((a) => a.status === "confirmed");
+              const confirmedMales = confirmedAssignments.filter((a) => a.employee.gender === "male").length;
+              const genderWarning = pos.males_needed != null && confirmedMales < pos.males_needed;
+
               return (
                 <motion.div key={pos.id} variants={fadeUp}
                   className="rounded-3xl mq-hair p-4 space-y-3" style={{ background: "hsl(var(--card))" }}>
@@ -467,6 +471,12 @@ export function EventDetailClient({ event, isManager, role, currentUserId, timeE
                       )}
                     </div>
                     <div className="flex items-center gap-2">
+                      {pos.males_needed != null && (
+                        <span className="text-xs tabular-nums font-medium"
+                          style={{ color: genderWarning ? "hsl(var(--warn))" : "hsl(var(--ok))" }}>
+                          ♂ {confirmedMales}/{pos.males_needed}
+                        </span>
+                      )}
                       <span className="font-display font-bold text-[14px] tabular-nums"
                         style={{ color: posPct >= 1 ? "hsl(var(--ok))" : "hsl(var(--primary))" }}>
                         {confirmed}/{pos.needed_count}
@@ -493,7 +503,10 @@ export function EventDetailClient({ event, isManager, role, currentUserId, timeE
                             : a.status === "declined"
                             ? <UserX className="h-4 w-4 shrink-0" style={{ color: "hsl(var(--bad))" }} />
                             : <User className="h-4 w-4 text-muted-foreground shrink-0" />}
-                          <span className="flex-1 truncate">{a.employee.full_name}</span>
+                          <span className="flex-1 truncate">
+                            <span className="text-muted-foreground mr-1 text-xs">{a.employee.gender === "male" ? "♂" : "♀"}</span>
+                            {a.employee.full_name}
+                          </span>
                           {a.is_priority && <span className="text-xs" style={{ color: "hsl(var(--primary))" }}>★</span>}
                           <Badge variant={STATUS_BADGE[a.status]} className="text-xs shrink-0">
                             {STATUS_LABELS[a.status]}
@@ -661,7 +674,7 @@ export function EventDetailClient({ event, isManager, role, currentUserId, timeE
                 assignments: [...p.assignments, {
                   id: params.assignmentId, status: "confirmed" as const,
                   is_priority: false, goes_to_warehouse: false, invited_at: new Date().toISOString(), responded_at: new Date().toISOString(),
-                  employee: { id: params.employeeId, full_name: params.employeeName, phone: "", role: invitePosition.role, tier: params.employeeTier },
+                  employee: { id: params.employeeId, full_name: params.employeeName, phone: "", gender: "", role: invitePosition.role, tier: params.employeeTier },
                 }],
               };
             }));

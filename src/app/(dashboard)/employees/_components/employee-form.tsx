@@ -22,6 +22,7 @@ import { DateTimePicker } from "@/components/date-time-picker";
 const baseSchema = z.object({
   full_name: z.string().min(2, "Укажите ФИО"),
   phone: z.string().min(10, "Укажите телефон"),
+  gender: z.enum(["male", "female"], { required_error: "Укажите пол" }),
   role: z.enum(["waiter", "cook", "warehouse", "manager", "sales", "chef", "owner", "admin", "accountant"], {
     required_error: "Выберите роль",
   }),
@@ -48,7 +49,7 @@ type EditData = z.infer<typeof editSchema>;
 
 interface EmployeeFormProps {
   mode: "create" | "edit";
-  defaultValues?: Partial<EditData & { id: string; hasPassportData?: boolean; telegram?: string | null; messenger_max?: string | null }>;
+  defaultValues?: Partial<EditData & { id: string; gender?: "male" | "female"; hasPassportData?: boolean; telegram?: string | null; messenger_max?: string | null }>;
 }
 
 export function EmployeeForm({ mode, defaultValues }: EmployeeFormProps) {
@@ -68,6 +69,7 @@ export function EmployeeForm({ mode, defaultValues }: EmployeeFormProps) {
     defaultValues: {
       full_name: defaultValues?.full_name ?? "",
       phone: defaultValues?.phone ?? "",
+      gender: defaultValues?.gender,
       role: defaultValues?.role,
       tier: defaultValues?.tier ?? "regular",
       passport_data: "",
@@ -145,6 +147,7 @@ export function EmployeeForm({ mode, defaultValues }: EmployeeFormProps) {
     const payload: Record<string, unknown> = {
       full_name: data.full_name,
       phone: data.phone,
+      gender: data.gender,
       role: data.role,
       tier: data.tier,
     };
@@ -266,6 +269,23 @@ export function EmployeeForm({ mode, defaultValues }: EmployeeFormProps) {
                 )}
               />
               {errors.phone && <p className="text-sm text-destructive">{errors.phone.message}</p>}
+            </div>
+
+            <div className="space-y-2">
+              <Label>Пол *</Label>
+              <Select
+                defaultValue={defaultValues?.gender}
+                onValueChange={(v) => setValue("gender", v as "male" | "female")}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Выберите пол" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="male">♂ Мужской</SelectItem>
+                  <SelectItem value="female">♀ Женский</SelectItem>
+                </SelectContent>
+              </Select>
+              {errors.gender && <p className="text-sm text-destructive">{errors.gender.message}</p>}
             </div>
 
             <div className="grid grid-cols-2 gap-4">

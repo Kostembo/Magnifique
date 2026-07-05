@@ -41,6 +41,11 @@ enum AssignmentStatus {
   waitlisted
 }
 
+enum Gender {
+  male
+  female
+}
+
 enum RequisitionStatus {
   draft
   sent
@@ -59,6 +64,7 @@ model Employee {
   full_name         String
   phone             String    @unique
   password_hash     String
+  gender            Gender    @default(male)
   role              Role
   tier              Tier      @default(regular)
   passport_data_enc String?
@@ -117,6 +123,7 @@ model EventPosition {
   event_id          String
   role              Role
   needed_count      Int
+  males_needed      Int?
   reserved_for_core Int      @default(0)
   priority_deadline DateTime?
 

@@ -38,7 +38,7 @@ export default async function EmployeeDetailPage({ params }: { params: { id: str
   const emp = await prisma.employee.findUnique({
     where: { id: params.id },
     select: {
-      id: true, full_name: true, phone: true, role: true, tier: true,
+      id: true, full_name: true, phone: true, gender: true, role: true, tier: true,
       photo_url: true, telegram: true, messenger_max: true,
       hourly_rate: true, min_pay_amount: true, min_pay_hours: true,
       created_at: true,
@@ -74,7 +74,7 @@ export default async function EmployeeDetailPage({ params }: { params: { id: str
             <h1 className="font-display text-xl font-bold leading-tight">{emp.full_name}</h1>
             <div className="flex flex-wrap gap-1.5 mt-2">
               <span className="inline-flex items-center px-2.5 py-0.5 rounded-xl bg-muted text-[12px] font-medium">
-                {ROLE_LABELS[emp.role] ?? emp.role}
+                {emp.gender === "male" ? "♂" : "♀"} {ROLE_LABELS[emp.role] ?? emp.role}
               </span>
               <span className="inline-flex items-center px-2.5 py-0.5 rounded-xl text-[12px] font-medium" style={tierStyle}>
                 {TIER_LABELS[emp.tier] ?? emp.tier}

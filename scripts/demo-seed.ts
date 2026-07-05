@@ -63,6 +63,7 @@ async function seedEmployees(hash: string) {
       full_name:      name,
       phone,
       password_hash:  hash,
+      gender:         (i % 3 === 0 ? "female" : "male") as "male" | "female",
       role,
       tier,
       hourly_rate:    HOURLY_RATE,

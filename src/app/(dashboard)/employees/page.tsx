@@ -13,8 +13,8 @@ export default async function EmployeesPage() {
   const employees = await prisma.employee.findMany({
     orderBy: [{ role: "asc" }, { full_name: "asc" }],
     select: {
-      id: true, full_name: true, phone: true, role: true,
-      tier: true, created_at: true, photo_url: true,
+      id: true, full_name: true, phone: true, gender: true,
+      role: true, tier: true, created_at: true, photo_url: true,
     },
   });
 

@@ -41,6 +41,7 @@ async function main() {
             full_name: acc.full_name,
             phone: acc.phone,
             password_hash,
+            gender: "male" as const,
             role: acc.role,
             tier: "regular",
           },

@@ -26,7 +26,7 @@ export async function GET(
           assignments: {
             include: {
               employee: {
-                select: { id: true, full_name: true, phone: true, role: true, tier: true },
+                select: { id: true, full_name: true, phone: true, gender: true, role: true, tier: true },
               },
             },
             orderBy: { invited_at: "asc" },
@@ -69,6 +69,7 @@ export async function GET(
 const positionSchema = z.object({
   role: z.enum(["waiter", "cook", "warehouse"]),
   needed_count: z.number().int().min(1),
+  males_needed: z.number().int().min(0).optional().nullable(),
   reserved_for_core: z.number().int().min(0).default(0),
   priority_deadline: z.string().datetime().optional().nullable(),
 });

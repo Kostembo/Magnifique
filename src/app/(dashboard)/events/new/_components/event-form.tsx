@@ -21,6 +21,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 const positionSchema = z.object({
   role: z.enum(["waiter", "cook", "warehouse"]),
   needed_count: z.coerce.number().int().min(1),
+  males_needed: z.coerce.number().int().min(0).optional().nullable(),
   reserved_for_core: z.coerce.number().int().min(0).default(0),
   priority_deadline: z.string().optional(),
 });
@@ -282,7 +283,7 @@ export function EventForm() {
                   )}
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-3 gap-3">
                   <div className="space-y-1">
                     <Label className="text-xs">Роль *</Label>
                     <Select
@@ -307,6 +308,16 @@ export function EventForm() {
                       min={1}
                       className="h-10"
                       {...register(`positions.${index}.needed_count`)}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs">Из них ♂</Label>
+                    <Input
+                      type="number"
+                      min={0}
+                      className="h-10"
+                      placeholder="—"
+                      {...register(`positions.${index}.males_needed`)}
                     />
                   </div>
                 </div>
