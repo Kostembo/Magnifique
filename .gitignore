@@ -47,6 +47,9 @@ test-cycle.mjs
 # graphify knowledge graph (generated per-machine)
 .graphify/
 
+# personal Claude Code settings (machine-specific paths, personal hooks)
+.claude/settings.local.json
+
 # credentials (keep local only)
 ACCOUNTS.txt
 backups/
