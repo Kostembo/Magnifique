@@ -44,6 +44,9 @@ public/uploads/
 # dev tools
 test-cycle.mjs
 
+# graphify knowledge graph (generated per-machine)
+.graphify/
+
 # credentials (keep local only)
 ACCOUNTS.txt
 backups/
